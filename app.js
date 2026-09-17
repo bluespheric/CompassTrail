@@ -7442,16 +7442,16 @@ function showJourneyDetails() {
       aria-labelledby="journey-details-title"
     >
       <p class="eyebrow">
-        One Small Step
+        Plan This Journey
       </p>
 
       <h2 id="journey-details-title">
-        What are you working toward?
+        What are you working on?
       </h2>
 
       <p class="hero-text">
-        You don't need to explain everything.
-        A few words are enough.
+        Give Compass Trail only the information
+        that helps you make a useful plan.
       </p>
 
       <form
@@ -7459,15 +7459,10 @@ function showJourneyDetails() {
         class="journey-form"
       >
         <label for="journey-title">
-          <strong>
-            What are you working on?
-          </strong>
-
+          <strong>Task or goal</strong>
           <span>
-            For example:
-            science presentation,
-            maths homework
-            or a chapter to read.
+            For example: science presentation,
+            maths homework or a chapter to read.
           </span>
         </label>
 
@@ -7479,24 +7474,83 @@ function showJourneyDetails() {
           required
         />
 
-        <label for="journey-goal">
-          <strong>
-            What would feel good
-            to accomplish?
-          </strong>
+        <fieldset class="journey-planning-fieldset">
+          <legend>
+            <strong>What kind of task is this?</strong>
+          </legend>
+          <p class="hero-text">
+            Choose one if you know. If you are not sure,
+            Compass Trail can use the title and your materials.
+          </p>
 
+          <select id="journey-task-type">
+            <option value="auto">I'm not sure — help me choose</option>
+            <option value="reading">Reading</option>
+            <option value="writing">Writing / essay</option>
+            <option value="questions">Questions / worksheet</option>
+            <option value="study">Exam study / revision</option>
+            <option value="research">Research</option>
+            <option value="presentation">Presentation</option>
+            <option value="maths">Maths practice</option>
+            <option value="project">Project / creative task</option>
+            <option value="general">Something else</option>
+          </select>
+        </fieldset>
+
+        <label for="journey-current-state">
+          <strong>Where are you now?</strong>
           <span>
-            You can leave this blank
-            if you're not sure yet.
+            This changes where the suggested path starts.
+          </span>
+        </label>
+
+        <select id="journey-current-state">
+          <option value="not-started">I haven't started yet</option>
+          <option value="started">I've started, but there is more to do</option>
+          <option value="stuck">I'm stuck and need a different entry point</option>
+          <option value="nearly-done">I'm nearly done</option>
+        </select>
+
+        <label for="journey-today-done">
+          <strong>What does done look like today?</strong>
+          <span>
+            Optional. Make this concrete and small enough for today.
+          </span>
+        </label>
+
+        <textarea
+          id="journey-today-done"
+          rows="3"
+          maxlength="300"
+          placeholder="For example: finish the first three slides."
+        ></textarea>
+
+        <label for="journey-goal">
+          <strong>Overall goal</strong>
+          <span>
+            Optional. What needs to be true when this whole Journey is complete?
           </span>
         </label>
 
         <textarea
           id="journey-goal"
-          rows="4"
+          rows="3"
           maxlength="400"
-          placeholder="I want to get the first three slides ready."
+          placeholder="For example: have the presentation ready to give."
         ></textarea>
+
+        <label for="journey-deadline">
+          <strong>Deadline</strong>
+          <span>
+            Optional. If you add one, Compass Trail will spread
+            the suggested steps across the available days.
+          </span>
+        </label>
+
+        <input
+          type="date"
+          id="journey-deadline"
+        />
 
         <div class="hero-actions">
           <button
@@ -7518,6 +7572,28 @@ function showJourneyDetails() {
     </section>
   `;
 
+  const deadlineInput =
+    document.getElementById(
+      "journey-deadline"
+    );
+
+  if (deadlineInput) {
+    const today =
+      new Date();
+
+    const localToday =
+      new Date(
+        today.getTime() -
+        today.getTimezoneOffset() *
+          60000
+      )
+        .toISOString()
+        .slice(0, 10);
+
+    deadlineInput.min =
+      localToday;
+  }
+
   document
     .getElementById(
       "details-back-button"
@@ -7536,26 +7612,35 @@ function showJourneyDetails() {
       (event) => {
         event.preventDefault();
 
-        const journeyTitle =
-          document
-            .getElementById(
-              "journey-title"
-            )
-            .value
-            .trim();
-
-        const journeyGoal =
-          document
-            .getElementById(
-              "journey-goal"
-            )
-            .value
-            .trim();
+        const valueOf =
+          (id) =>
+            document
+              .getElementById(id)
+              ?.value
+              ?.trim() || "";
 
         const journey =
           buildJourneySuggestion(
-            journeyTitle,
-            journeyGoal
+            valueOf("journey-title"),
+            valueOf("journey-goal"),
+            {
+              selectedTaskType:
+                valueOf(
+                  "journey-task-type"
+                ),
+              currentState:
+                valueOf(
+                  "journey-current-state"
+                ),
+              todayDone:
+                valueOf(
+                  "journey-today-done"
+                ),
+              deadline:
+                valueOf(
+                  "journey-deadline"
+                ),
+            }
           );
 
         showFirstJourneyPath(
@@ -7564,7 +7649,6 @@ function showJourneyDetails() {
       }
     );
 }
-
 function getJourneySourceText() {
   return materialBasket
     .map((material) => {
@@ -7591,7 +7675,8 @@ function getJourneySourceText() {
 
 function buildJourneySuggestion(
   journeyTitle,
-  journeyGoal
+  journeyGoal,
+  planning = {}
 ) {
   const sourceText =
     getJourneySourceText();
@@ -7599,35 +7684,246 @@ function buildJourneySuggestion(
   const analysisText = [
     journeyTitle,
     journeyGoal,
+    planning.todayDone || "",
     sourceText,
   ]
     .join("\n")
     .toLowerCase();
 
-  const taskType =
+  const detectedTaskType =
     detectJourneyTaskType(
       analysisText
     );
 
-  return {
+  const taskType =
+    planning.selectedTaskType &&
+    planning.selectedTaskType !==
+      "auto"
+      ? planning.selectedTaskType
+      : detectedTaskType;
+
+  let steps =
+    createJourneySteps(
+      taskType
+    ).map(
+      (step) => ({
+        id: crypto.randomUUID(),
+        title: step.title,
+        description:
+          step.description,
+      })
+    );
+
+  steps =
+    adaptJourneyStepsToCurrentState(
+      steps,
+      planning.currentState
+    );
+
+  const journey = {
     title: journeyTitle,
     goal: journeyGoal,
     taskType,
+    taskTypeWasSuggested:
+      !planning.selectedTaskType ||
+      planning.selectedTaskType ===
+        "auto",
     sourceText,
-    steps:
-      createJourneySteps(
-        taskType
-      ).map(
-        (step) => ({
-          id: crypto.randomUUID(),
-          title: step.title,
-          description:
-            step.description,
-        })
-      ),
+    currentState:
+      planning.currentState ||
+      "not-started",
+    todayDone:
+      planning.todayDone || "",
+    deadline:
+      planning.deadline || "",
+    steps,
   };
+
+  applyJourneySchedule(
+    journey
+  );
+
+  return journey;
 }
 
+function adaptJourneyStepsToCurrentState(
+  steps,
+  currentState
+) {
+  if (
+    currentState ===
+      "nearly-done" &&
+    steps.length > 2
+  ) {
+    return steps.slice(-2);
+  }
+
+  if (
+    currentState ===
+      "started" &&
+    steps.length > 3
+  ) {
+    return steps.slice(1);
+  }
+
+  if (
+    currentState ===
+      "stuck"
+  ) {
+    return [
+      {
+        id: crypto.randomUUID(),
+        title: "Choose a Smaller Entry Point",
+        description:
+          "Pick one concrete part you can work on without solving the whole task first.",
+      },
+      ...steps,
+    ];
+  }
+
+  return steps;
+}
+
+function getLocalDateOnly(
+  date = new Date()
+) {
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate()
+  );
+}
+
+function parseLocalDate(
+  value
+) {
+  if (!value) return null;
+
+  const parts =
+    value
+      .split("-")
+      .map(Number);
+
+  if (
+    parts.length !== 3 ||
+    parts.some(
+      (part) =>
+        !Number.isFinite(part)
+    )
+  ) {
+    return null;
+  }
+
+  return new Date(
+    parts[0],
+    parts[1] - 1,
+    parts[2]
+  );
+}
+
+function formatJourneyDate(
+  date
+) {
+  return new Intl.DateTimeFormat(
+    undefined,
+    {
+      month: "short",
+      day: "numeric",
+    }
+  ).format(date);
+}
+
+function applyJourneySchedule(
+  journey
+) {
+  journey.scheduleNote = "";
+  journey.scheduleWarning = "";
+
+  const deadline =
+    parseLocalDate(
+      journey.deadline
+    );
+
+  if (
+    !deadline ||
+    !journey.steps.length
+  ) {
+    return;
+  }
+
+  const today =
+    getLocalDateOnly();
+
+  const millisecondsPerDay =
+    24 * 60 * 60 * 1000;
+
+  const daysAvailable =
+    Math.floor(
+      (
+        deadline.getTime() -
+        today.getTime()
+      ) /
+        millisecondsPerDay
+    ) + 1;
+
+  if (daysAvailable <= 0) {
+    journey.scheduleWarning =
+      "The selected deadline has already passed. The path is unchanged.";
+
+    return;
+  }
+
+  journey.steps.forEach(
+    (step, index) => {
+      const dayOffset =
+        journey.steps.length === 1
+          ? Math.max(
+              0,
+              daysAvailable - 1
+            )
+          : Math.round(
+              index *
+                Math.max(
+                  0,
+                  daysAvailable - 1
+                ) /
+                Math.max(
+                  1,
+                  journey.steps.length - 1
+                )
+            );
+
+      const targetDate =
+        new Date(today);
+
+      targetDate.setDate(
+        today.getDate() +
+          dayOffset
+      );
+
+      step.suggestedDate =
+        targetDate
+          .toISOString()
+          .slice(0, 10);
+
+      step.suggestedDateLabel =
+        formatJourneyDate(
+          targetDate
+        );
+    }
+  );
+
+  if (
+    daysAvailable <
+    journey.steps.length
+  ) {
+    journey.scheduleWarning =
+      `There are ${journey.steps.length} suggested steps and ${daysAvailable} available day${daysAvailable === 1 ? "" : "s"}. Some steps share a day. You can change the path or the dates.`;
+  } else {
+    journey.scheduleNote =
+      `The ${journey.steps.length} suggested steps are spread across ${daysAvailable} available day${daysAvailable === 1 ? "" : "s"}. These dates are suggestions.`;
+  }
+}
 function detectJourneyTaskType(text) {
   const scores = {
     reading: 0,
@@ -8171,6 +8467,56 @@ function showFirstJourneyPath(
           You can still change every step.
         </p>
 
+        ${
+          journey.todayDone
+            ? `
+              <p class="hero-text">
+                <strong>Done for today:</strong>
+                ${escapeHtml(
+                  journey.todayDone
+                )}
+              </p>
+            `
+            : ""
+        }
+
+        ${
+          journey.deadline
+            ? `
+              <p class="hero-text">
+                <strong>Deadline:</strong>
+                ${escapeHtml(
+                  journey.deadline
+                )}
+              </p>
+            `
+            : ""
+        }
+
+        ${
+          journey.scheduleWarning
+            ? `
+              <div
+                class="path-note"
+                role="status"
+              >
+                <strong>Plan check:</strong>
+                ${escapeHtml(
+                  journey.scheduleWarning
+                )}
+              </div>
+            `
+            : journey.scheduleNote
+              ? `
+                <p class="path-note">
+                  ${escapeHtml(
+                    journey.scheduleNote
+                  )}
+                </p>
+              `
+              : ""
+        }
+
         <p class="path-note">
           This path is a suggestion.
           Make it yours.
@@ -8313,6 +8659,21 @@ function editablePathStep(
             step.description
           )}
         </p>
+
+        ${
+          step.suggestedDateLabel
+            ? `
+              <p class="path-note">
+                Suggested date:
+                <strong>
+                  ${escapeHtml(
+                    step.suggestedDateLabel
+                  )}
+                </strong>
+              </p>
+            `
+            : ""
+        }
 
         <div class="material-card-actions">
           <button
