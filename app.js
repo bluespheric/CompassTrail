@@ -6,8 +6,14 @@ const beginJourneyButtons = [
 beginJourneyButtons.forEach((button) => {
   const label = button.textContent.trim();
 
-  if (label === "Begin My Journey" || label === "Create a Journey") {
-    button.addEventListener("click", showJourneyStartScreen);
+  if (
+    label === "Begin My Journey" ||
+    label === "Create a Journey"
+  ) {
+    button.addEventListener(
+      "click",
+      showJourneyStartScreen
+    );
   }
 });
 
@@ -94,11 +100,13 @@ function showJourneyStartScreen() {
       window.location.reload();
     });
 
-  document.querySelectorAll(".journey-option").forEach((option) => {
-    option.addEventListener("click", () => {
-      showMaterialBasket(option.dataset.journeyInput);
+  document
+    .querySelectorAll(".journey-option")
+    .forEach((option) => {
+      option.addEventListener("click", () => {
+        showMaterialBasket(option.dataset.journeyInput);
+      });
     });
-  });
 }
 
 function journeyOption(icon, title, description, type) {
@@ -118,10 +126,7 @@ function showMaterialBasket(selectedType = "mixed") {
   const main = document.querySelector("main");
 
   main.innerHTML = `
-    <section
-      class="material-page"
-      aria-labelledby="material-title"
-    >
+    <section class="material-page" aria-labelledby="material-title">
       <div class="material-heading">
         <p class="eyebrow">My Material Basket</p>
 
@@ -135,10 +140,7 @@ function showMaterialBasket(selectedType = "mixed") {
         </p>
       </div>
 
-      <section
-        class="material-actions"
-        aria-label="Add learning material"
-      >
+      <section class="material-actions" aria-label="Add learning material">
         ${materialAction(
           "📷",
           "Add Photos",
@@ -192,42 +194,29 @@ function showMaterialBasket(selectedType = "mixed") {
         hidden
       />
 
-      <section
-        class="basket-section"
-        aria-labelledby="basket-title"
-      >
+      <section class="basket-section" aria-labelledby="basket-title">
         <div class="basket-header">
           <div>
             <p class="eyebrow">Your Basket</p>
             <h3 id="basket-title">Materials</h3>
           </div>
 
-          <span
-            id="material-count"
-            class="material-count"
-          >
+          <span id="material-count" class="material-count">
             0 items
           </span>
         </div>
 
         <div id="undo-area"></div>
 
-        <div
-          id="material-list"
-          class="material-list"
-        ></div>
+        <div id="material-list" class="material-list"></div>
 
-        <div
-          id="empty-basket"
-          class="empty-basket"
-        >
+        <div id="empty-basket" class="empty-basket">
           <span aria-hidden="true">🧺</span>
 
           <h4>Your basket is empty.</h4>
 
           <p>
-            Add a photo, PDF, document or some text
-            when you're ready.
+            Add a photo, PDF, document or some text when you're ready.
           </p>
         </div>
       </section>
@@ -267,7 +256,10 @@ function showMaterialBasket(selectedType = "mixed") {
     document.getElementById("document-input").click();
   }
 
-  if (selectedType === "paste" || selectedType === "write") {
+  if (
+    selectedType === "paste" ||
+    selectedType === "write"
+  ) {
     showPasteTextPanel();
   }
 }
@@ -293,21 +285,15 @@ function connectMaterialBasketEvents() {
 
   document
     .getElementById("add-photo-button")
-    .addEventListener("click", () => {
-      photoInput.click();
-    });
+    .addEventListener("click", () => photoInput.click());
 
   document
     .getElementById("add-pdf-button")
-    .addEventListener("click", () => {
-      pdfInput.click();
-    });
+    .addEventListener("click", () => pdfInput.click());
 
   document
     .getElementById("add-document-button")
-    .addEventListener("click", () => {
-      documentInput.click();
-    });
+    .addEventListener("click", () => documentInput.click());
 
   document
     .getElementById("paste-text-button")
@@ -351,6 +337,7 @@ function addFilesToBasket(fileList, type) {
           : null,
       extractedText: "",
       extractionStatus: "not-reviewed",
+      photoResult: null,
     });
   });
 
@@ -358,16 +345,20 @@ function addFilesToBasket(fileList, type) {
 }
 
 function showPasteTextPanel() {
-  const existingPanel = document.getElementById("paste-text-panel");
+  const existingPanel =
+    document.getElementById("paste-text-panel");
 
   if (existingPanel) {
     existingPanel.querySelector("textarea").focus();
     return;
   }
 
-  const basketSection = document.querySelector(".basket-section");
+  const basketSection =
+    document.querySelector(".basket-section");
 
-  const panel = document.createElement("section");
+  const panel =
+    document.createElement("section");
+
   panel.id = "paste-text-panel";
   panel.className = "paste-text-panel";
 
@@ -410,14 +401,14 @@ function showPasteTextPanel() {
 
   document
     .getElementById("cancel-paste-button")
-    .addEventListener("click", () => {
-      panel.remove();
-    });
+    .addEventListener("click", () => panel.remove());
 
   document
     .getElementById("save-paste-button")
     .addEventListener("click", () => {
-      const textarea = document.getElementById("pasted-material");
+      const textarea =
+        document.getElementById("pasted-material");
+
       const text = textarea.value.trim();
 
       if (!text) {
@@ -438,12 +429,17 @@ function showPasteTextPanel() {
       renderMaterialBasket();
     });
 
-  document.getElementById("pasted-material").focus();
+  document
+    .getElementById("pasted-material")
+    .focus();
 }
 
 function createTextMaterialName(text) {
-  const firstLine = text.split("\n")[0].trim();
-  const shortened = firstLine.slice(0, 45);
+  const firstLine =
+    text.split("\n")[0].trim();
+
+  const shortened =
+    firstLine.slice(0, 45);
 
   if (!shortened) {
     return "Pasted text";
@@ -455,10 +451,17 @@ function createTextMaterialName(text) {
 }
 
 function renderMaterialBasket() {
-  const list = document.getElementById("material-list");
-  const emptyBasket = document.getElementById("empty-basket");
-  const count = document.getElementById("material-count");
-  const buildButton = document.getElementById("build-path-button");
+  const list =
+    document.getElementById("material-list");
+
+  const emptyBasket =
+    document.getElementById("empty-basket");
+
+  const count =
+    document.getElementById("material-count");
+
+  const buildButton =
+    document.getElementById("build-path-button");
 
   if (!list || !emptyBasket || !count || !buildButton) {
     return;
@@ -483,97 +486,98 @@ function renderMaterialBasket() {
 
   emptyBasket.hidden = true;
 
-  list.innerHTML = materialBasket
-    .map((material, index) => {
-      const reviewStatus =
-        material.extractionStatus === "confirmed"
-          ? `
-            <span class="material-reviewed">
-              ✓ Text checked
-            </span>
-          `
-          : "";
+  list.innerHTML =
+    materialBasket
+      .map((material, index) => {
+        const reviewStatus =
+          material.extractionStatus === "confirmed"
+            ? `
+              <span class="material-reviewed">
+                ✓ Text checked
+              </span>
+            `
+            : "";
 
-      return `
-        <article class="material-card">
-          <div
-            class="material-card-icon"
-            aria-hidden="true"
-          >
-            ${getMaterialIcon(material.type)}
-          </div>
-
-          <div class="material-card-content">
-            <p class="material-position">
-              Material ${index + 1}
-            </p>
-
-            <h4>
-              ${escapeHtml(material.name)}
-            </h4>
-
-            <p>
-              ${getMaterialDescription(material)}
-            </p>
-
-            ${reviewStatus}
-
-            <div class="material-card-actions">
-              <button
-                type="button"
-                class="small-action-button review-material-button"
-                data-material-id="${material.id}"
-              >
-                Review Text
-              </button>
-
-              <button
-                type="button"
-                class="small-action-button preview-material-button"
-                data-material-id="${material.id}"
-              >
-                Preview
-              </button>
-
-              <button
-                type="button"
-                class="small-action-button rename-material-button"
-                data-material-id="${material.id}"
-              >
-                Rename
-              </button>
-
-              <button
-                type="button"
-                class="small-action-button move-up-button"
-                data-material-id="${material.id}"
-                ${index === 0 ? "disabled" : ""}
-              >
-                Move Up
-              </button>
-
-              <button
-                type="button"
-                class="small-action-button move-down-button"
-                data-material-id="${material.id}"
-                ${index === materialBasket.length - 1 ? "disabled" : ""}
-              >
-                Move Down
-              </button>
-
-              <button
-                type="button"
-                class="small-action-button remove-material-button"
-                data-material-id="${material.id}"
-              >
-                Remove
-              </button>
+        return `
+          <article class="material-card">
+            <div
+              class="material-card-icon"
+              aria-hidden="true"
+            >
+              ${getMaterialIcon(material.type)}
             </div>
-          </div>
-        </article>
-      `;
-    })
-    .join("");
+
+            <div class="material-card-content">
+              <p class="material-position">
+                Material ${index + 1}
+              </p>
+
+              <h4>
+                ${escapeHtml(material.name)}
+              </h4>
+
+              <p>
+                ${getMaterialDescription(material)}
+              </p>
+
+              ${reviewStatus}
+
+              <div class="material-card-actions">
+                <button
+                  type="button"
+                  class="small-action-button review-material-button"
+                  data-material-id="${material.id}"
+                >
+                  Review Text
+                </button>
+
+                <button
+                  type="button"
+                  class="small-action-button preview-material-button"
+                  data-material-id="${material.id}"
+                >
+                  Preview
+                </button>
+
+                <button
+                  type="button"
+                  class="small-action-button rename-material-button"
+                  data-material-id="${material.id}"
+                >
+                  Rename
+                </button>
+
+                <button
+                  type="button"
+                  class="small-action-button move-up-button"
+                  data-material-id="${material.id}"
+                  ${index === 0 ? "disabled" : ""}
+                >
+                  Move Up
+                </button>
+
+                <button
+                  type="button"
+                  class="small-action-button move-down-button"
+                  data-material-id="${material.id}"
+                  ${index === materialBasket.length - 1 ? "disabled" : ""}
+                >
+                  Move Down
+                </button>
+
+                <button
+                  type="button"
+                  class="small-action-button remove-material-button"
+                  data-material-id="${material.id}"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          </article>
+        `;
+      })
+      .join("");
 
   connectMaterialCardEvents();
   renderUndoArea();
@@ -584,7 +588,9 @@ function connectMaterialCardEvents() {
     .querySelectorAll(".review-material-button")
     .forEach((button) => {
       button.addEventListener("click", () => {
-        reviewMaterialText(button.dataset.materialId);
+        reviewMaterialText(
+          button.dataset.materialId
+        );
       });
     });
 
@@ -592,7 +598,9 @@ function connectMaterialCardEvents() {
     .querySelectorAll(".preview-material-button")
     .forEach((button) => {
       button.addEventListener("click", () => {
-        previewMaterial(button.dataset.materialId);
+        previewMaterial(
+          button.dataset.materialId
+        );
       });
     });
 
@@ -600,7 +608,9 @@ function connectMaterialCardEvents() {
     .querySelectorAll(".rename-material-button")
     .forEach((button) => {
       button.addEventListener("click", () => {
-        renameMaterial(button.dataset.materialId);
+        renameMaterial(
+          button.dataset.materialId
+        );
       });
     });
 
@@ -608,7 +618,10 @@ function connectMaterialCardEvents() {
     .querySelectorAll(".move-up-button")
     .forEach((button) => {
       button.addEventListener("click", () => {
-        moveMaterial(button.dataset.materialId, -1);
+        moveMaterial(
+          button.dataset.materialId,
+          -1
+        );
       });
     });
 
@@ -616,7 +629,10 @@ function connectMaterialCardEvents() {
     .querySelectorAll(".move-down-button")
     .forEach((button) => {
       button.addEventListener("click", () => {
-        moveMaterial(button.dataset.materialId, 1);
+        moveMaterial(
+          button.dataset.materialId,
+          1
+        );
       });
     });
 
@@ -624,49 +640,58 @@ function connectMaterialCardEvents() {
     .querySelectorAll(".remove-material-button")
     .forEach((button) => {
       button.addEventListener("click", () => {
-        removeMaterial(button.dataset.materialId);
+        removeMaterial(
+          button.dataset.materialId
+        );
       });
     });
 }
 
 function renameMaterial(materialId) {
-  const material = materialBasket.find(
-    (item) => item.id === materialId
-  );
+  const material =
+    materialBasket.find(
+      (item) => item.id === materialId
+    );
 
   if (!material) {
     return;
   }
 
-  const newName = window.prompt(
-    "Choose a new name for this material:",
-    material.name
-  );
+  const newName =
+    window.prompt(
+      "Choose a new name for this material:",
+      material.name
+    );
 
   if (newName === null) {
     return;
   }
 
-  const cleanedName = newName.trim();
+  const cleanedName =
+    newName.trim();
 
   if (!cleanedName) {
     return;
   }
 
-  material.name = cleanedName.slice(0, 120);
+  material.name =
+    cleanedName.slice(0, 120);
+
   renderMaterialBasket();
 }
 
 function moveMaterial(materialId, direction) {
-  const currentIndex = materialBasket.findIndex(
-    (item) => item.id === materialId
-  );
+  const currentIndex =
+    materialBasket.findIndex(
+      (item) => item.id === materialId
+    );
 
   if (currentIndex === -1) {
     return;
   }
 
-  const newIndex = currentIndex + direction;
+  const newIndex =
+    currentIndex + direction;
 
   if (
     newIndex < 0 ||
@@ -675,23 +700,34 @@ function moveMaterial(materialId, direction) {
     return;
   }
 
-  const [material] = materialBasket.splice(currentIndex, 1);
+  const [material] =
+    materialBasket.splice(
+      currentIndex,
+      1
+    );
 
-  materialBasket.splice(newIndex, 0, material);
+  materialBasket.splice(
+    newIndex,
+    0,
+    material
+  );
 
   renderMaterialBasket();
 }
 
 function removeMaterial(materialId) {
-  const index = materialBasket.findIndex(
-    (material) => material.id === materialId
-  );
+  const index =
+    materialBasket.findIndex(
+      (material) => material.id === materialId
+    );
 
   if (index === -1) {
     return;
   }
 
-  lastRemovedMaterial = materialBasket[index];
+  lastRemovedMaterial =
+    materialBasket[index];
+
   lastRemovedIndex = index;
 
   materialBasket.splice(index, 1);
@@ -700,7 +736,8 @@ function removeMaterial(materialId) {
 }
 
 function renderUndoArea() {
-  const undoArea = document.getElementById("undo-area");
+  const undoArea =
+    document.getElementById("undo-area");
 
   if (!undoArea) {
     return;
@@ -734,7 +771,10 @@ function renderUndoArea() {
 
   document
     .getElementById("undo-remove-button")
-    .addEventListener("click", undoRemoveMaterial);
+    .addEventListener(
+      "click",
+      undoRemoveMaterial
+    );
 }
 
 function undoRemoveMaterial() {
@@ -763,15 +803,17 @@ function undoRemoveMaterial() {
 }
 
 function previewMaterial(materialId) {
-  const material = materialBasket.find(
-    (item) => item.id === materialId
-  );
+  const material =
+    materialBasket.find(
+      (item) => item.id === materialId
+    );
 
   if (!material) {
     return;
   }
 
-  const main = document.querySelector("main");
+  const main =
+    document.querySelector("main");
 
   let previewContent = "";
 
@@ -786,7 +828,9 @@ function previewMaterial(materialId) {
         class="material-preview-image"
       />
     `;
-  } else if (material.type === "text") {
+  } else if (
+    material.type === "text"
+  ) {
     previewContent = `
       <div class="text-preview">
         ${escapeHtml(material.text).replaceAll("\n", "<br>")}
@@ -804,26 +848,16 @@ function previewMaterial(materialId) {
         </h3>
 
         <p>
-          A visual preview for this file type
-          is not available yet.
-        </p>
-
-        <p>
-          ${escapeHtml(getMaterialDescription(material))}
+          Use Review Text to read the usable text from this file.
         </p>
       </div>
     `;
   }
 
   main.innerHTML = `
-    <section
-      class="material-page"
-      aria-labelledby="preview-title"
-    >
+    <section class="material-page" aria-labelledby="preview-title">
       <div class="material-heading">
-        <p class="eyebrow">
-          Material Preview
-        </p>
+        <p class="eyebrow">Material Preview</p>
 
         <h2 id="preview-title">
           ${escapeHtml(material.name)}
@@ -854,25 +888,22 @@ function previewMaterial(materialId) {
 }
 
 async function reviewMaterialText(materialId) {
-  const material = materialBasket.find(
-    (item) => item.id === materialId
-  );
+  const material =
+    materialBasket.find(
+      (item) => item.id === materialId
+    );
 
   if (!material) {
     return;
   }
 
-  const main = document.querySelector("main");
+  const main =
+    document.querySelector("main");
 
   main.innerHTML = `
-    <section
-      class="material-page"
-      aria-labelledby="review-title"
-    >
+    <section class="material-page" aria-labelledby="review-title">
       <div class="material-heading">
-        <p class="eyebrow">
-          Check What I Found
-        </p>
+        <p class="eyebrow">Check What I Found</p>
 
         <h2 id="review-title">
           ${escapeHtml(material.name)}
@@ -880,8 +911,8 @@ async function reviewMaterialText(materialId) {
 
         <p class="hero-text">
           Compass Trail is reading this material.
-          You will always be able to check and
-          change extracted text before it is used.
+          You will always be able to check and change
+          extracted text before it is used.
         </p>
       </div>
 
@@ -915,65 +946,685 @@ async function reviewMaterialText(materialId) {
     });
 
   try {
-    const result = await extractTextFromMaterial(material);
+    const result =
+      await extractTextFromMaterial(material);
 
-    showExtractionResult(material, result);
+    if (
+      material.type === "photo" &&
+      (
+        result.status === "ready" ||
+        result.status === "empty"
+      )
+    ) {
+      material.photoResult = result;
+
+      showPhotoPreparationReview(
+        material,
+        result
+      );
+
+      return;
+    }
+
+    showExtractionResult(
+      material,
+      result
+    );
   } catch (error) {
-    console.error("Material extraction failed:", error);
+    console.error(
+      "Material extraction failed:",
+      error
+    );
 
-    const status = document.getElementById("extraction-status");
+    const status =
+      document.getElementById("extraction-status");
 
     status.textContent =
       "I couldn't read this material yet. Your original file is still safe here.";
   }
 }
 
-function showExtractionResult(material, result) {
-  const status = document.getElementById("extraction-status");
-  const resultArea = document.getElementById("extraction-result");
+function showPhotoPreparationReview(
+  material,
+  result
+) {
+  const main =
+    document.querySelector("main");
 
-  if (!status || !resultArea) {
-    return;
-  }
+  const perspectiveText =
+    result.perspectiveCorrected
+      ? "Compass Trail found a page shape and straightened it."
+      : "Compass Trail could not confidently find all four page edges, so it prepared the full image instead.";
 
-  if (result.status === "ready") {
-    status.textContent =
-      "Here's what I found. Have a quick look. You can change anything that doesn't look right.";
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="photo-review-title"
+    >
+      <div class="material-heading">
+        <p class="eyebrow">
+          Check the Page
+        </p>
 
-    resultArea.innerHTML = `
-      <label for="extracted-text">
-        <strong>
-          Extracted text
-        </strong>
-      </label>
+        <h2 id="photo-review-title">
+          Compass Trail saw your page like this.
+        </h2>
 
-      <textarea
-        id="extracted-text"
-        rows="16"
-      >${escapeHtml(result.text)}</textarea>
+        <p class="hero-text">
+          ${perspectiveText}
+          You can keep this version or adjust the corners yourself.
+        </p>
+      </div>
 
-      <div class="paste-actions">
+      <div class="photo-compare-grid">
+        <section class="photo-compare-card">
+          <p class="eyebrow">Original</p>
+
+          <img
+            src="${result.originalImage}"
+            alt="Original uploaded page"
+            class="material-preview-image"
+          />
+        </section>
+
+        <section class="photo-compare-card">
+          <p class="eyebrow">Prepared for reading</p>
+
+          <img
+            src="${result.processedImage}"
+            alt="Prepared page used for text recognition"
+            class="material-preview-image"
+          />
+        </section>
+      </div>
+
+      <div class="hero-actions">
         <button
           type="button"
           class="primary-button"
-          id="confirm-extracted-text"
+          id="photo-looks-good-button"
         >
-          Looks Right
+          Looks Good
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="adjust-corners-button"
+        >
+          Adjust Corners
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="photo-review-back-button"
+        >
+          Back to My Basket
         </button>
       </div>
+    </section>
+  `;
+
+  document
+    .getElementById("photo-looks-good-button")
+    .addEventListener("click", () => {
+      showExtractionResult(
+        material,
+        result
+      );
+    });
+
+  document
+    .getElementById("adjust-corners-button")
+    .addEventListener("click", () => {
+      showCornerEditor(
+        material,
+        result
+      );
+    });
+
+  document
+    .getElementById("photo-review-back-button")
+    .addEventListener("click", () => {
+      showMaterialBasket();
+    });
+}
+
+function showCornerEditor(
+  material,
+  result
+) {
+  const main =
+    document.querySelector("main");
+
+  const imageWidth =
+    result.originalWidth;
+
+  const imageHeight =
+    result.originalHeight;
+
+  const corners =
+    result.detectedCorners &&
+    result.detectedCorners.length === 4
+      ? result.detectedCorners.map((point) => ({
+          x: point.x,
+          y: point.y,
+        }))
+      : [
+          { x: 0, y: 0 },
+          { x: imageWidth, y: 0 },
+          { x: imageWidth, y: imageHeight },
+          { x: 0, y: imageHeight },
+        ];
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="corner-editor-title"
+    >
+      <div class="material-heading">
+        <p class="eyebrow">
+          Adjust the Page
+        </p>
+
+        <h2 id="corner-editor-title">
+          Put each marker on a page corner.
+        </h2>
+
+        <p class="hero-text">
+          Drag a marker with the mouse, or select it and use the arrow keys.
+          Shift + arrow moves it a little faster.
+        </p>
+      </div>
+
+      <div
+        id="corner-editor"
+        class="corner-editor"
+      >
+        <img
+          id="corner-editor-image"
+          src="${result.originalImage}"
+          alt="Page for corner adjustment"
+        />
+
+        ${cornerHandle(
+          "top-left",
+          "Top left corner",
+          corners[0]
+        )}
+
+        ${cornerHandle(
+          "top-right",
+          "Top right corner",
+          corners[1]
+        )}
+
+        ${cornerHandle(
+          "bottom-right",
+          "Bottom right corner",
+          corners[2]
+        )}
+
+        ${cornerHandle(
+          "bottom-left",
+          "Bottom left corner",
+          corners[3]
+        )}
+      </div>
+
+      <p class="hero-text">
+        The markers only define the page shape.
+        Your original image is not changed.
+      </p>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="primary-button"
+          id="apply-corners-button"
+        >
+          Apply & Read Again
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="cancel-corners-button"
+        >
+          Cancel
+        </button>
+      </div>
+    </section>
+  `;
+
+  const editor =
+    document.getElementById("corner-editor");
+
+  const image =
+    document.getElementById("corner-editor-image");
+
+  image.addEventListener("load", () => {
+    positionCornerHandles(
+      editor,
+      image,
+      corners,
+      imageWidth,
+      imageHeight
+    );
+  });
+
+  setupCornerDragging(
+    editor,
+    image,
+    corners,
+    imageWidth,
+    imageHeight
+  );
+
+  document
+    .getElementById("apply-corners-button")
+    .addEventListener("click", async () => {
+      showPhotoProcessingScreen(
+        material.name
+      );
+
+      const newResult =
+        await readPhotoText(
+          material.file,
+          corners
+        );
+
+      material.photoResult =
+        newResult;
+
+      if (
+        newResult.status === "ready" ||
+        newResult.status === "empty"
+      ) {
+        showPhotoPreparationReview(
+          material,
+          newResult
+        );
+
+        return;
+      }
+
+      showExtractionResult(
+        material,
+        newResult
+      );
+    });
+
+  document
+    .getElementById("cancel-corners-button")
+    .addEventListener("click", () => {
+      showPhotoPreparationReview(
+        material,
+        result
+      );
+    });
+}
+
+function cornerHandle(
+  key,
+  label,
+  point
+) {
+  return `
+    <button
+      type="button"
+      class="corner-handle"
+      data-corner="${key}"
+      aria-label="${label}"
+      data-x="${point.x}"
+      data-y="${point.y}"
+    >
+      <span aria-hidden="true"></span>
+    </button>
+  `;
+}
+
+function positionCornerHandles(
+  editor,
+  image,
+  corners,
+  imageWidth,
+  imageHeight
+) {
+  const rect =
+    image.getBoundingClientRect();
+
+  const editorRect =
+    editor.getBoundingClientRect();
+
+  const offsetX =
+    rect.left - editorRect.left;
+
+  const offsetY =
+    rect.top - editorRect.top;
+
+  const scaleX =
+    rect.width / imageWidth;
+
+  const scaleY =
+    rect.height / imageHeight;
+
+  const handles =
+    editor.querySelectorAll(".corner-handle");
+
+  handles.forEach((handle, index) => {
+    const point = corners[index];
+
+    handle.style.left =
+      `${offsetX + point.x * scaleX}px`;
+
+    handle.style.top =
+      `${offsetY + point.y * scaleY}px`;
+  });
+}
+
+function setupCornerDragging(
+  editor,
+  image,
+  corners,
+  imageWidth,
+  imageHeight
+) {
+  const handles =
+    [...editor.querySelectorAll(".corner-handle")];
+
+  handles.forEach((handle, index) => {
+    let dragging = false;
+
+    handle.addEventListener("pointerdown", (event) => {
+      dragging = true;
+
+      handle.setPointerCapture(
+        event.pointerId
+      );
+    });
+
+    handle.addEventListener("pointermove", (event) => {
+      if (!dragging) {
+        return;
+      }
+
+      updateCornerFromPointer(
+        event,
+        index
+      );
+    });
+
+    handle.addEventListener("pointerup", () => {
+      dragging = false;
+    });
+
+    handle.addEventListener("pointercancel", () => {
+      dragging = false;
+    });
+
+    handle.addEventListener("keydown", (event) => {
+      const step =
+        event.shiftKey
+          ? 10
+          : 2;
+
+      let changed = false;
+
+      if (event.key === "ArrowLeft") {
+        corners[index].x -= step;
+        changed = true;
+      }
+
+      if (event.key === "ArrowRight") {
+        corners[index].x += step;
+        changed = true;
+      }
+
+      if (event.key === "ArrowUp") {
+        corners[index].y -= step;
+        changed = true;
+      }
+
+      if (event.key === "ArrowDown") {
+        corners[index].y += step;
+        changed = true;
+      }
+
+      if (!changed) {
+        return;
+      }
+
+      event.preventDefault();
+
+      corners[index].x =
+        clamp(
+          corners[index].x,
+          0,
+          imageWidth
+        );
+
+      corners[index].y =
+        clamp(
+          corners[index].y,
+          0,
+          imageHeight
+        );
+
+      positionCornerHandles(
+        editor,
+        image,
+        corners,
+        imageWidth,
+        imageHeight
+      );
+    });
+
+    function updateCornerFromPointer(event) {
+      const imageRect =
+        image.getBoundingClientRect();
+
+      const relativeX =
+        clamp(
+          event.clientX - imageRect.left,
+          0,
+          imageRect.width
+        );
+
+      const relativeY =
+        clamp(
+          event.clientY - imageRect.top,
+          0,
+          imageRect.height
+        );
+
+      corners[index].x =
+        (
+          relativeX /
+          imageRect.width
+        ) * imageWidth;
+
+      corners[index].y =
+        (
+          relativeY /
+          imageRect.height
+        ) * imageHeight;
+
+      positionCornerHandles(
+        editor,
+        image,
+        corners,
+        imageWidth,
+        imageHeight
+      );
+    }
+  });
+
+  window.addEventListener(
+    "resize",
+    () => {
+      positionCornerHandles(
+        editor,
+        image,
+        corners,
+        imageWidth,
+        imageHeight
+      );
+    },
+    { once: true }
+  );
+}
+
+function showPhotoProcessingScreen(
+  materialName
+) {
+  const main =
+    document.querySelector("main");
+
+  main.innerHTML = `
+    <section
+      class="hero"
+      aria-labelledby="processing-title"
+    >
+      <p class="eyebrow">
+        Preparing Your Page
+      </p>
+
+      <h2 id="processing-title">
+        Reading ${escapeHtml(materialName)}
+      </h2>
+
+      <p class="hero-text" role="status">
+        Straightening the page and looking for text…
+      </p>
+    </section>
+  `;
+}
+
+function showExtractionResult(
+  material,
+  result
+) {
+  const main =
+    document.querySelector("main");
+
+  if (result.status === "ready") {
+    main.innerHTML = `
+      <section
+        class="material-page"
+        aria-labelledby="extracted-title"
+      >
+        <div class="material-heading">
+          <p class="eyebrow">
+            Check What I Found
+          </p>
+
+          <h2 id="extracted-title">
+            ${escapeHtml(material.name)}
+          </h2>
+
+          <p class="hero-text">
+            Here’s what I found. Have a quick look.
+            You can change anything that doesn’t look right.
+          </p>
+        </div>
+
+        <div class="material-preview-panel">
+          ${
+            result.pageCount
+              ? `
+                <p>
+                  ${result.pageCount}
+                  ${
+                    result.pageCount === 1
+                      ? "page"
+                      : "pages"
+                  }
+                  read.
+                </p>
+              `
+              : ""
+          }
+
+          <label for="extracted-text">
+            <strong>Extracted text</strong>
+          </label>
+
+          <textarea
+            id="extracted-text"
+            rows="18"
+          >${escapeHtml(result.text)}</textarea>
+        </div>
+
+        <div class="hero-actions">
+          <button
+            type="button"
+            class="primary-button"
+            id="confirm-extracted-text"
+          >
+            Looks Right
+          </button>
+
+          ${
+            material.type === "photo" &&
+            material.photoResult
+              ? `
+                <button
+                  type="button"
+                  class="secondary-button"
+                  id="adjust-photo-again-button"
+                >
+                  Adjust Page Again
+                </button>
+              `
+              : ""
+          }
+
+          <button
+            type="button"
+            class="secondary-button"
+            id="extracted-back-button"
+          >
+            Back to My Basket
+          </button>
+        </div>
+      </section>
     `;
 
     document
       .getElementById("confirm-extracted-text")
       .addEventListener("click", () => {
-        const editedText = document
-          .getElementById("extracted-text")
-          .value
-          .trim();
+        const editedText =
+          document
+            .getElementById("extracted-text")
+            .value
+            .trim();
 
-        material.extractedText = editedText;
-        material.extractionStatus = "confirmed";
+        material.extractedText =
+          editedText;
 
+        material.extractionStatus =
+          "confirmed";
+
+        showMaterialBasket();
+      });
+
+    const adjustAgainButton =
+      document.getElementById("adjust-photo-again-button");
+
+    if (adjustAgainButton) {
+      adjustAgainButton.addEventListener("click", () => {
+        showCornerEditor(
+          material,
+          material.photoResult
+        );
+      });
+    }
+
+    document
+      .getElementById("extracted-back-button")
+      .addEventListener("click", () => {
         showMaterialBasket();
       });
 
@@ -981,119 +1632,138 @@ function showExtractionResult(material, result) {
   }
 
   if (result.status === "empty") {
-    status.textContent =
-      "I opened this document, but I couldn't find readable text inside it.";
+    main.innerHTML = `
+      <section class="material-page">
+        <div class="material-heading">
+          <p class="eyebrow">
+            Check What I Found
+          </p>
 
-    resultArea.innerHTML = `
-      <div class="file-preview-placeholder">
-        <span aria-hidden="true">🗂️</span>
+          <h2>
+            No readable text found yet.
+          </h2>
 
-        <h3>
-          No readable text found
-        </h3>
+          <p class="hero-text">
+            The page may still need a different crop,
+            clearer lighting or another reading method.
+          </p>
+        </div>
 
-        <p>
-          The document may contain images, drawings,
-          scanned pages, or content that needs a
-          different reading method.
-        </p>
-      </div>
+        <div class="hero-actions">
+          ${
+            material.type === "photo" &&
+            material.photoResult
+              ? `
+                <button
+                  type="button"
+                  class="primary-button"
+                  id="empty-adjust-button"
+                >
+                  Adjust Corners
+                </button>
+              `
+              : ""
+          }
+
+          <button
+            type="button"
+            class="secondary-button"
+            id="empty-back-button"
+          >
+            Back to My Basket
+          </button>
+        </div>
+      </section>
     `;
 
-    return;
-  }
+    const adjustButton =
+      document.getElementById("empty-adjust-button");
 
-  if (result.status === "error") {
-    status.textContent =
-      "I couldn't read this document yet. Your original file has not been changed.";
+    if (adjustButton) {
+      adjustButton.addEventListener("click", () => {
+        showCornerEditor(
+          material,
+          material.photoResult
+        );
+      });
+    }
 
-    resultArea.innerHTML = `
-      <div class="file-preview-placeholder">
-        <span aria-hidden="true">🗂️</span>
-
-        <h3>
-          This document needs another look
-        </h3>
-
-        <p>
-          You can return to your basket and keep
-          the original file there.
-        </p>
-      </div>
-    `;
-
-    return;
-  }
-
-  if (result.status === "needs-pdf-reader") {
-    status.textContent =
-      "This PDF is ready for the PDF reading layer we're adding next.";
-
-    resultArea.innerHTML = `
-      <div class="file-preview-placeholder">
-        <span aria-hidden="true">📄</span>
-
-        <h3>
-          PDF text reader is next
-        </h3>
-
-        <p>
-          We will first look for real selectable text.
-          Scanned PDFs will later use OCR instead.
-        </p>
-      </div>
-    `;
-
-    return;
-  }
-
-  if (result.status === "needs-docx-reader") {
-    status.textContent =
-      "This DOCX is ready for the document reading layer we're adding next.";
-
-    resultArea.innerHTML = `
-      <div class="file-preview-placeholder">
-        <span aria-hidden="true">🗂️</span>
-
-        <h3>
-          DOCX reader is next
-        </h3>
-
-        <p>
-          The document will be read as text
-          without executing macros or document code.
-        </p>
-      </div>
-    `;
+    document
+      .getElementById("empty-back-button")
+      .addEventListener("click", () => {
+        showMaterialBasket();
+      });
 
     return;
   }
 
   if (result.status === "needs-ocr") {
-    status.textContent =
-      "Photos will go through the image preparation and OCR layer.";
-
-    resultArea.innerHTML = `
-      <div class="file-preview-placeholder">
-        <span aria-hidden="true">📷</span>
-
-        <h3>
-          Photo reading comes after
-          document extraction
-        </h3>
-
-        <p>
-          We will handle perspective
-          correction before OCR.
+    main.innerHTML = `
+      <section class="hero">
+        <p class="eyebrow">
+          Visual Reading Needed
         </p>
-      </div>
+
+        <h2>
+          This file looks more like a scan than selectable text.
+        </h2>
+
+        <p class="hero-text">
+          It will need the visual OCR path.
+        </p>
+
+        <div class="hero-actions">
+          <button
+            type="button"
+            class="secondary-button"
+            id="ocr-back-button"
+          >
+            Back to My Basket
+          </button>
+        </div>
+      </section>
     `;
+
+    document
+      .getElementById("ocr-back-button")
+      .addEventListener("click", () => {
+        showMaterialBasket();
+      });
 
     return;
   }
 
-  status.textContent =
-    "Compass Trail doesn't know how to read this material type yet.";
+  main.innerHTML = `
+    <section class="hero">
+      <p class="eyebrow">
+        Another Look Needed
+      </p>
+
+      <h2>
+        I couldn't read this material yet.
+      </h2>
+
+      <p class="hero-text">
+        Your original file has not been changed.
+      </p>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="secondary-button"
+          id="error-back-button"
+        >
+          Back to My Basket
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById("error-back-button")
+    .addEventListener("click", () => {
+      showMaterialBasket();
+    });
 }
 
 function getMaterialIcon(type) {
@@ -1164,9 +1834,8 @@ function showPathPreview() {
             ? "material"
             : "materials"
         }.
-        Next, Compass Trail will help
-        turn what you brought into an
-        editable Journey.
+        Next, Compass Trail will help turn what you brought
+        into an editable Journey.
       </p>
 
       <div class="hero-actions">
@@ -1231,9 +1900,7 @@ function showJourneyDetails() {
           </strong>
 
           <span>
-            For example:
-            science presentation
-            or maths homework.
+            For example: science presentation or maths homework.
           </span>
         </label>
 
@@ -1251,8 +1918,7 @@ function showJourneyDetails() {
           </strong>
 
           <span>
-            You can leave this blank
-            if you're not sure yet.
+            You can leave this blank if you're not sure yet.
           </span>
         </label>
 
@@ -1292,15 +1958,17 @@ function showJourneyDetails() {
     .addEventListener("submit", (event) => {
       event.preventDefault();
 
-      const journeyTitle = document
-        .getElementById("journey-title")
-        .value
-        .trim();
+      const journeyTitle =
+        document
+          .getElementById("journey-title")
+          .value
+          .trim();
 
-      const journeyGoal = document
-        .getElementById("journey-goal")
-        .value
-        .trim();
+      const journeyGoal =
+        document
+          .getElementById("journey-goal")
+          .value
+          .trim();
 
       showFirstJourneyPath(
         journeyTitle,
@@ -1338,15 +2006,13 @@ function showFirstJourneyPath(
             `
             : `
               <p class="hero-text">
-                You can decide what
-                “done” looks like as you go.
+                You can decide what “done” looks like as you go.
               </p>
             `
         }
 
         <p class="path-note">
-          This path is a suggestion.
-          Make it yours.
+          This path is a suggestion. Make it yours.
         </p>
       </div>
 
@@ -1402,10 +2068,16 @@ function showFirstJourneyPath(
     });
 }
 
-function pathStep(number, title, description) {
+function pathStep(
+  number,
+  title,
+  description
+) {
   return `
     <article class="path-step">
-      <span>${number}</span>
+      <span>
+        ${number}
+      </span>
 
       <div>
         <h3>${title}</h3>
@@ -1413,6 +2085,13 @@ function pathStep(number, title, description) {
       </div>
     </article>
   `;
+}
+
+function clamp(value, min, max) {
+  return Math.min(
+    Math.max(value, min),
+    max
+  );
 }
 
 function escapeHtml(value) {
