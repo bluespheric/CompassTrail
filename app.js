@@ -2526,6 +2526,9 @@ let compassFocusState =
 
 let compassFocusTimerInterval = null;
 
+// Temporary navigation context for Recharge Cove.
+let compassRechargeReturnContext = "";
+
 function saveCompassFocusState() {
   try {
     localStorage.setItem(
@@ -2822,6 +2825,125 @@ function showCompassCheckIn(
     );
 }
 
+
+function openRechargeCoveFromMyPace() {
+  compassRechargeReturnContext = "my-pace";
+
+  if (
+    typeof showHomeRechargeCove ===
+    "function"
+  ) {
+    showHomeRechargeCove();
+    addRechargeReturnToMyPace();
+  }
+}
+
+function addRechargeReturnToMyPace() {
+  if (
+    compassRechargeReturnContext !==
+    "my-pace"
+  ) {
+    return;
+  }
+
+  if (
+    document.getElementById(
+      "return-to-my-pace"
+    )
+  ) {
+    return;
+  }
+
+  const main =
+    document.querySelector("main");
+
+  if (
+    !main ||
+    !/Recharge Cove/i.test(
+      main.textContent || ""
+    )
+  ) {
+    return;
+  }
+
+  const buttons =
+    Array.from(
+      main.querySelectorAll("button")
+    );
+
+  const homeButton =
+    buttons.find((button) =>
+      /Back Home/i.test(
+        button.textContent || ""
+      )
+    );
+
+  const toolkitButton =
+    buttons.find((button) =>
+      /My Toolkit/i.test(
+        button.textContent || ""
+      )
+    );
+
+  const referenceButton =
+    homeButton || toolkitButton;
+
+  const returnButton =
+    document.createElement("button");
+
+  returnButton.type = "button";
+  returnButton.id =
+    "return-to-my-pace";
+  returnButton.className =
+    referenceButton?.className ||
+    "secondary-button";
+  returnButton.textContent =
+    "Return to My Pace";
+
+  returnButton.addEventListener(
+    "click",
+    () => {
+      compassRechargeReturnContext = "";
+
+      if (
+        compassFocusState
+          .timerPausedRemaining > 0
+      ) {
+        showCompassTimer(
+          "Break finished. Your timer is still paused."
+        );
+      } else {
+        showCompassFocusSpace(
+          "Break finished. Your progress is unchanged."
+        );
+      }
+    }
+  );
+
+  if (referenceButton) {
+    referenceButton
+      .insertAdjacentElement(
+        "beforebegin",
+        returnButton
+      );
+  } else {
+    const actions =
+      main.querySelector(
+        ".hero-actions"
+      );
+
+    if (actions) {
+      actions.prepend(
+        returnButton
+      );
+    } else {
+      main.appendChild(
+        returnButton
+      );
+    }
+  }
+}
+
 function showCompassFocusSpace(
   notice = ""
 ) {
@@ -3025,7 +3147,7 @@ function showCompassFocusSpace(
           typeof showHomeRechargeCove ===
           "function"
         ) {
-          showHomeRechargeCove();
+          openRechargeCoveFromMyPace();
         }
       }
     );
@@ -3276,7 +3398,7 @@ function showCompassTimer(
             typeof showHomeRechargeCove ===
             "function"
           ) {
-            showHomeRechargeCove();
+            openRechargeCoveFromMyPace();
           }
         }
       );
