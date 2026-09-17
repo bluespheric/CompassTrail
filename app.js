@@ -104,31 +104,52 @@ function showJourneyStartScreen() {
     .querySelectorAll(".journey-option")
     .forEach((option) => {
       option.addEventListener("click", () => {
-        showMaterialBasket(option.dataset.journeyInput);
+        showMaterialBasket(
+          option.dataset.journeyInput
+        );
       });
     });
 }
 
-function journeyOption(icon, title, description, type) {
+function journeyOption(
+  icon,
+  title,
+  description,
+  type
+) {
   return `
     <button
       class="home-card journey-option"
       data-journey-input="${type}"
     >
-      <span class="card-icon" aria-hidden="true">${icon}</span>
+      <span
+        class="card-icon"
+        aria-hidden="true"
+      >
+        ${icon}
+      </span>
+
       <h3>${title}</h3>
+
       <p>${description}</p>
     </button>
   `;
 }
 
-function showMaterialBasket(selectedType = "mixed") {
+function showMaterialBasket(
+  selectedType = "mixed"
+) {
   const main = document.querySelector("main");
 
   main.innerHTML = `
-    <section class="material-page" aria-labelledby="material-title">
+    <section
+      class="material-page"
+      aria-labelledby="material-title"
+    >
       <div class="material-heading">
-        <p class="eyebrow">My Material Basket</p>
+        <p class="eyebrow">
+          My Material Basket
+        </p>
 
         <h2 id="material-title">
           Bring everything you need.
@@ -140,7 +161,10 @@ function showMaterialBasket(selectedType = "mixed") {
         </p>
       </div>
 
-      <section class="material-actions" aria-label="Add learning material">
+      <section
+        class="material-actions"
+        aria-label="Add learning material"
+      >
         ${materialAction(
           "📷",
           "Add Photos",
@@ -194,34 +218,58 @@ function showMaterialBasket(selectedType = "mixed") {
         hidden
       />
 
-      <section class="basket-section" aria-labelledby="basket-title">
+      <section
+        class="basket-section"
+        aria-labelledby="basket-title"
+      >
         <div class="basket-header">
           <div>
-            <p class="eyebrow">Your Basket</p>
-            <h3 id="basket-title">Materials</h3>
+            <p class="eyebrow">
+              Your Basket
+            </p>
+
+            <h3 id="basket-title">
+              Materials
+            </h3>
           </div>
 
-          <span id="material-count" class="material-count">
+          <span
+            id="material-count"
+            class="material-count"
+          >
             0 items
           </span>
         </div>
 
         <div id="undo-area"></div>
 
-        <div id="material-list" class="material-list"></div>
+        <div
+          id="material-list"
+          class="material-list"
+        ></div>
 
-        <div id="empty-basket" class="empty-basket">
-          <span aria-hidden="true">🧺</span>
+        <div
+          id="empty-basket"
+          class="empty-basket"
+        >
+          <span aria-hidden="true">
+            🧺
+          </span>
 
-          <h4>Your basket is empty.</h4>
+          <h4>
+            Your basket is empty.
+          </h4>
 
           <p>
-            Add a photo, PDF, document or some text when you're ready.
+            Add a photo, PDF, document or some text
+            when you're ready.
           </p>
         </div>
       </section>
 
-      <div class="hero-actions basket-navigation">
+      <div
+        class="hero-actions basket-navigation"
+      >
         <button
           type="button"
           class="secondary-button"
@@ -245,15 +293,21 @@ function showMaterialBasket(selectedType = "mixed") {
   renderMaterialBasket();
 
   if (selectedType === "photo") {
-    document.getElementById("photo-input").click();
+    document
+      .getElementById("photo-input")
+      .click();
   }
 
   if (selectedType === "pdf") {
-    document.getElementById("pdf-input").click();
+    document
+      .getElementById("pdf-input")
+      .click();
   }
 
   if (selectedType === "document") {
-    document.getElementById("document-input").click();
+    document
+      .getElementById("document-input")
+      .click();
   }
 
   if (
@@ -264,66 +318,126 @@ function showMaterialBasket(selectedType = "mixed") {
   }
 }
 
-function materialAction(icon, title, subtitle, id) {
+function materialAction(
+  icon,
+  title,
+  subtitle,
+  id
+) {
   return `
     <button
       type="button"
       class="material-action"
       id="${id}"
     >
-      <span aria-hidden="true">${icon}</span>
-      <strong>${title}</strong>
-      <span>${subtitle}</span>
+      <span aria-hidden="true">
+        ${icon}
+      </span>
+
+      <strong>
+        ${title}
+      </strong>
+
+      <span>
+        ${subtitle}
+      </span>
     </button>
   `;
 }
 
 function connectMaterialBasketEvents() {
-  const photoInput = document.getElementById("photo-input");
-  const pdfInput = document.getElementById("pdf-input");
-  const documentInput = document.getElementById("document-input");
+  const photoInput =
+    document.getElementById("photo-input");
+
+  const pdfInput =
+    document.getElementById("pdf-input");
+
+  const documentInput =
+    document.getElementById("document-input");
 
   document
     .getElementById("add-photo-button")
-    .addEventListener("click", () => photoInput.click());
+    .addEventListener(
+      "click",
+      () => photoInput.click()
+    );
 
   document
     .getElementById("add-pdf-button")
-    .addEventListener("click", () => pdfInput.click());
+    .addEventListener(
+      "click",
+      () => pdfInput.click()
+    );
 
   document
     .getElementById("add-document-button")
-    .addEventListener("click", () => documentInput.click());
+    .addEventListener(
+      "click",
+      () => documentInput.click()
+    );
 
   document
     .getElementById("paste-text-button")
-    .addEventListener("click", showPasteTextPanel);
+    .addEventListener(
+      "click",
+      showPasteTextPanel
+    );
 
-  photoInput.addEventListener("change", (event) => {
-    addFilesToBasket(event.target.files, "photo");
-    event.target.value = "";
-  });
+  photoInput.addEventListener(
+    "change",
+    (event) => {
+      addFilesToBasket(
+        event.target.files,
+        "photo"
+      );
 
-  pdfInput.addEventListener("change", (event) => {
-    addFilesToBasket(event.target.files, "pdf");
-    event.target.value = "";
-  });
+      event.target.value = "";
+    }
+  );
 
-  documentInput.addEventListener("change", (event) => {
-    addFilesToBasket(event.target.files, "document");
-    event.target.value = "";
-  });
+  pdfInput.addEventListener(
+    "change",
+    (event) => {
+      addFilesToBasket(
+        event.target.files,
+        "pdf"
+      );
+
+      event.target.value = "";
+    }
+  );
+
+  documentInput.addEventListener(
+    "change",
+    (event) => {
+      addFilesToBasket(
+        event.target.files,
+        "document"
+      );
+
+      event.target.value = "";
+    }
+  );
 
   document
     .getElementById("back-choice-button")
-    .addEventListener("click", showJourneyStartScreen);
+    .addEventListener(
+      "click",
+      showJourneyStartScreen
+    );
 
   document
     .getElementById("build-path-button")
-    .addEventListener("click", showPathPreview);
+    .addEventListener(
+      "click",
+      showPathPreview
+    );
 }
 
-function addFilesToBasket(fileList, type) {
+function addFilesToBasket(
+  fileList,
+  type
+) {
   [...fileList].forEach((file) => {
     materialBasket.push({
       id: crypto.randomUUID(),
@@ -331,10 +445,12 @@ function addFilesToBasket(fileList, type) {
       name: file.name,
       size: file.size,
       file,
+
       previewUrl:
         type === "photo"
           ? URL.createObjectURL(file)
           : null,
+
       extractedText: "",
       extractionStatus: "not-reviewed",
       photoResult: null,
@@ -346,15 +462,22 @@ function addFilesToBasket(fileList, type) {
 
 function showPasteTextPanel() {
   const existingPanel =
-    document.getElementById("paste-text-panel");
+    document.getElementById(
+      "paste-text-panel"
+    );
 
   if (existingPanel) {
-    existingPanel.querySelector("textarea").focus();
+    existingPanel
+      .querySelector("textarea")
+      .focus();
+
     return;
   }
 
   const basketSection =
-    document.querySelector(".basket-section");
+    document.querySelector(
+      ".basket-section"
+    );
 
   const panel =
     document.createElement("section");
@@ -364,7 +487,9 @@ function showPasteTextPanel() {
 
   panel.innerHTML = `
     <label for="pasted-material">
-      <strong>Paste your text</strong>
+      <strong>
+        Paste your text
+      </strong>
 
       <span>
         Add instructions, notes or any text
@@ -401,33 +526,42 @@ function showPasteTextPanel() {
 
   document
     .getElementById("cancel-paste-button")
-    .addEventListener("click", () => panel.remove());
+    .addEventListener(
+      "click",
+      () => panel.remove()
+    );
 
   document
     .getElementById("save-paste-button")
-    .addEventListener("click", () => {
-      const textarea =
-        document.getElementById("pasted-material");
+    .addEventListener(
+      "click",
+      () => {
+        const textarea =
+          document.getElementById(
+            "pasted-material"
+          );
 
-      const text = textarea.value.trim();
+        const text =
+          textarea.value.trim();
 
-      if (!text) {
-        textarea.focus();
-        return;
+        if (!text) {
+          textarea.focus();
+          return;
+        }
+
+        materialBasket.push({
+          id: crypto.randomUUID(),
+          type: "text",
+          name: createTextMaterialName(text),
+          text,
+          extractedText: text,
+          extractionStatus: "not-reviewed",
+        });
+
+        panel.remove();
+        renderMaterialBasket();
       }
-
-      materialBasket.push({
-        id: crypto.randomUUID(),
-        type: "text",
-        name: createTextMaterialName(text),
-        text,
-        extractedText: text,
-        extractionStatus: "not-reviewed",
-      });
-
-      panel.remove();
-      renderMaterialBasket();
-    });
+    );
 
   document
     .getElementById("pasted-material")
@@ -436,7 +570,9 @@ function showPasteTextPanel() {
 
 function createTextMaterialName(text) {
   const firstLine =
-    text.split("\n")[0].trim();
+    text
+      .split("\n")[0]
+      .trim();
 
   const shortened =
     firstLine.slice(0, 45);
@@ -445,25 +581,39 @@ function createTextMaterialName(text) {
     return "Pasted text";
   }
 
-  return shortened.length < firstLine.length
+  return shortened.length <
+    firstLine.length
     ? `${shortened}…`
     : shortened;
 }
 
 function renderMaterialBasket() {
   const list =
-    document.getElementById("material-list");
+    document.getElementById(
+      "material-list"
+    );
 
   const emptyBasket =
-    document.getElementById("empty-basket");
+    document.getElementById(
+      "empty-basket"
+    );
 
   const count =
-    document.getElementById("material-count");
+    document.getElementById(
+      "material-count"
+    );
 
   const buildButton =
-    document.getElementById("build-path-button");
+    document.getElementById(
+      "build-path-button"
+    );
 
-  if (!list || !emptyBasket || !count || !buildButton) {
+  if (
+    !list ||
+    !emptyBasket ||
+    !count ||
+    !buildButton
+  ) {
     return;
   }
 
@@ -477,9 +627,12 @@ function renderMaterialBasket() {
   buildButton.disabled =
     materialBasket.length === 0;
 
-  if (materialBasket.length === 0) {
+  if (
+    materialBasket.length === 0
+  ) {
     list.innerHTML = "";
     emptyBasket.hidden = false;
+
     renderUndoArea();
     return;
   }
@@ -488,95 +641,113 @@ function renderMaterialBasket() {
 
   list.innerHTML =
     materialBasket
-      .map((material, index) => {
-        const reviewStatus =
-          material.extractionStatus === "confirmed"
-            ? `
-              <span class="material-reviewed">
-                ✓ Text checked
-              </span>
-            `
-            : "";
+      .map(
+        (material, index) => {
+          const reviewStatus =
+            material.extractionStatus ===
+            "confirmed"
+              ? `
+                <span class="material-reviewed">
+                  ✓ Text checked
+                </span>
+              `
+              : "";
 
-        return `
-          <article class="material-card">
-            <div
-              class="material-card-icon"
-              aria-hidden="true"
-            >
-              ${getMaterialIcon(material.type)}
-            </div>
-
-            <div class="material-card-content">
-              <p class="material-position">
-                Material ${index + 1}
-              </p>
-
-              <h4>
-                ${escapeHtml(material.name)}
-              </h4>
-
-              <p>
-                ${getMaterialDescription(material)}
-              </p>
-
-              ${reviewStatus}
-
-              <div class="material-card-actions">
-                <button
-                  type="button"
-                  class="small-action-button review-material-button"
-                  data-material-id="${material.id}"
-                >
-                  Review Text
-                </button>
-
-                <button
-                  type="button"
-                  class="small-action-button preview-material-button"
-                  data-material-id="${material.id}"
-                >
-                  Preview
-                </button>
-
-                <button
-                  type="button"
-                  class="small-action-button rename-material-button"
-                  data-material-id="${material.id}"
-                >
-                  Rename
-                </button>
-
-                <button
-                  type="button"
-                  class="small-action-button move-up-button"
-                  data-material-id="${material.id}"
-                  ${index === 0 ? "disabled" : ""}
-                >
-                  Move Up
-                </button>
-
-                <button
-                  type="button"
-                  class="small-action-button move-down-button"
-                  data-material-id="${material.id}"
-                  ${index === materialBasket.length - 1 ? "disabled" : ""}
-                >
-                  Move Down
-                </button>
-
-                <button
-                  type="button"
-                  class="small-action-button remove-material-button"
-                  data-material-id="${material.id}"
-                >
-                  Remove
-                </button>
+          return `
+            <article class="material-card">
+              <div
+                class="material-card-icon"
+                aria-hidden="true"
+              >
+                ${getMaterialIcon(
+                  material.type
+                )}
               </div>
-            </div>
-          </article>
-        `;
-      })
+
+              <div class="material-card-content">
+                <p class="material-position">
+                  Material ${index + 1}
+                </p>
+
+                <h4>
+                  ${escapeHtml(
+                    material.name
+                  )}
+                </h4>
+
+                <p>
+                  ${getMaterialDescription(
+                    material
+                  )}
+                </p>
+
+                ${reviewStatus}
+
+                <div class="material-card-actions">
+                  <button
+                    type="button"
+                    class="small-action-button review-material-button"
+                    data-material-id="${material.id}"
+                  >
+                    Review Text
+                  </button>
+
+                  <button
+                    type="button"
+                    class="small-action-button preview-material-button"
+                    data-material-id="${material.id}"
+                  >
+                    Preview
+                  </button>
+
+                  <button
+                    type="button"
+                    class="small-action-button rename-material-button"
+                    data-material-id="${material.id}"
+                  >
+                    Rename
+                  </button>
+
+                  <button
+                    type="button"
+                    class="small-action-button move-up-button"
+                    data-material-id="${material.id}"
+                    ${
+                      index === 0
+                        ? "disabled"
+                        : ""
+                    }
+                  >
+                    Move Up
+                  </button>
+
+                  <button
+                    type="button"
+                    class="small-action-button move-down-button"
+                    data-material-id="${material.id}"
+                    ${
+                      index ===
+                      materialBasket.length - 1
+                        ? "disabled"
+                        : ""
+                    }
+                  >
+                    Move Down
+                  </button>
+
+                  <button
+                    type="button"
+                    class="small-action-button remove-material-button"
+                    data-material-id="${material.id}"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </article>
+          `;
+        }
+      )
       .join("");
 
   connectMaterialCardEvents();
@@ -585,72 +756,103 @@ function renderMaterialBasket() {
 
 function connectMaterialCardEvents() {
   document
-    .querySelectorAll(".review-material-button")
+    .querySelectorAll(
+      ".review-material-button"
+    )
     .forEach((button) => {
-      button.addEventListener("click", () => {
-        reviewMaterialText(
-          button.dataset.materialId
-        );
-      });
+      button.addEventListener(
+        "click",
+        () => {
+          reviewMaterialText(
+            button.dataset.materialId
+          );
+        }
+      );
     });
 
   document
-    .querySelectorAll(".preview-material-button")
+    .querySelectorAll(
+      ".preview-material-button"
+    )
     .forEach((button) => {
-      button.addEventListener("click", () => {
-        previewMaterial(
-          button.dataset.materialId
-        );
-      });
+      button.addEventListener(
+        "click",
+        () => {
+          previewMaterial(
+            button.dataset.materialId
+          );
+        }
+      );
     });
 
   document
-    .querySelectorAll(".rename-material-button")
+    .querySelectorAll(
+      ".rename-material-button"
+    )
     .forEach((button) => {
-      button.addEventListener("click", () => {
-        renameMaterial(
-          button.dataset.materialId
-        );
-      });
+      button.addEventListener(
+        "click",
+        () => {
+          renameMaterial(
+            button.dataset.materialId
+          );
+        }
+      );
     });
 
   document
-    .querySelectorAll(".move-up-button")
+    .querySelectorAll(
+      ".move-up-button"
+    )
     .forEach((button) => {
-      button.addEventListener("click", () => {
-        moveMaterial(
-          button.dataset.materialId,
-          -1
-        );
-      });
+      button.addEventListener(
+        "click",
+        () => {
+          moveMaterial(
+            button.dataset.materialId,
+            -1
+          );
+        }
+      );
     });
 
   document
-    .querySelectorAll(".move-down-button")
+    .querySelectorAll(
+      ".move-down-button"
+    )
     .forEach((button) => {
-      button.addEventListener("click", () => {
-        moveMaterial(
-          button.dataset.materialId,
-          1
-        );
-      });
+      button.addEventListener(
+        "click",
+        () => {
+          moveMaterial(
+            button.dataset.materialId,
+            1
+          );
+        }
+      );
     });
 
   document
-    .querySelectorAll(".remove-material-button")
+    .querySelectorAll(
+      ".remove-material-button"
+    )
     .forEach((button) => {
-      button.addEventListener("click", () => {
-        removeMaterial(
-          button.dataset.materialId
-        );
-      });
+      button.addEventListener(
+        "click",
+        () => {
+          removeMaterial(
+            button.dataset.materialId
+          );
+        }
+      );
     });
 }
 
 function renameMaterial(materialId) {
   const material =
     materialBasket.find(
-      (item) => item.id === materialId
+      (item) =>
+        item.id === materialId
     );
 
   if (!material) {
@@ -680,10 +882,14 @@ function renameMaterial(materialId) {
   renderMaterialBasket();
 }
 
-function moveMaterial(materialId, direction) {
+function moveMaterial(
+  materialId,
+  direction
+) {
   const currentIndex =
     materialBasket.findIndex(
-      (item) => item.id === materialId
+      (item) =>
+        item.id === materialId
     );
 
   if (currentIndex === -1) {
@@ -718,7 +924,8 @@ function moveMaterial(materialId, direction) {
 function removeMaterial(materialId) {
   const index =
     materialBasket.findIndex(
-      (material) => material.id === materialId
+      (material) =>
+        material.id === materialId
     );
 
   if (index === -1) {
@@ -730,14 +937,19 @@ function removeMaterial(materialId) {
 
   lastRemovedIndex = index;
 
-  materialBasket.splice(index, 1);
+  materialBasket.splice(
+    index,
+    1
+  );
 
   renderMaterialBasket();
 }
 
 function renderUndoArea() {
   const undoArea =
-    document.getElementById("undo-area");
+    document.getElementById(
+      "undo-area"
+    );
 
   if (!undoArea) {
     return;
@@ -755,7 +967,9 @@ function renderUndoArea() {
     >
       <span>
         <strong>
-          ${escapeHtml(lastRemovedMaterial.name)}
+          ${escapeHtml(
+            lastRemovedMaterial.name
+          )}
         </strong>
         was removed.
       </span>
@@ -770,7 +984,9 @@ function renderUndoArea() {
   `;
 
   document
-    .getElementById("undo-remove-button")
+    .getElementById(
+      "undo-remove-button"
+    )
     .addEventListener(
       "click",
       undoRemoveMaterial
@@ -805,7 +1021,8 @@ function undoRemoveMaterial() {
 function previewMaterial(materialId) {
   const material =
     materialBasket.find(
-      (item) => item.id === materialId
+      (item) =>
+        item.id === materialId
     );
 
   if (!material) {
@@ -824,7 +1041,9 @@ function previewMaterial(materialId) {
     previewContent = `
       <img
         src="${material.previewUrl}"
-        alt="Preview of ${escapeHtml(material.name)}"
+        alt="Preview of ${escapeHtml(
+          material.name
+        )}"
         class="material-preview-image"
       />
     `;
@@ -833,34 +1052,51 @@ function previewMaterial(materialId) {
   ) {
     previewContent = `
       <div class="text-preview">
-        ${escapeHtml(material.text).replaceAll("\n", "<br>")}
+        ${escapeHtml(
+          material.text
+        ).replaceAll(
+          "\n",
+          "<br>"
+        )}
       </div>
     `;
   } else {
     previewContent = `
       <div class="file-preview-placeholder">
         <span aria-hidden="true">
-          ${getMaterialIcon(material.type)}
+          ${getMaterialIcon(
+            material.type
+          )}
         </span>
 
         <h3>
-          ${escapeHtml(material.name)}
+          ${escapeHtml(
+            material.name
+          )}
         </h3>
 
         <p>
-          Use Review Text to read the usable text from this file.
+          Use Review Text to read the usable
+          text from this file.
         </p>
       </div>
     `;
   }
 
   main.innerHTML = `
-    <section class="material-page" aria-labelledby="preview-title">
+    <section
+      class="material-page"
+      aria-labelledby="preview-title"
+    >
       <div class="material-heading">
-        <p class="eyebrow">Material Preview</p>
+        <p class="eyebrow">
+          Material Preview
+        </p>
 
         <h2 id="preview-title">
-          ${escapeHtml(material.name)}
+          ${escapeHtml(
+            material.name
+          )}
         </h2>
       </div>
 
@@ -881,16 +1117,24 @@ function previewMaterial(materialId) {
   `;
 
   document
-    .getElementById("return-to-basket-button")
-    .addEventListener("click", () => {
-      showMaterialBasket();
-    });
+    .getElementById(
+      "return-to-basket-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showMaterialBasket();
+      }
+    );
 }
 
-async function reviewMaterialText(materialId) {
+async function reviewMaterialText(
+  materialId
+) {
   const material =
     materialBasket.find(
-      (item) => item.id === materialId
+      (item) =>
+        item.id === materialId
     );
 
   if (!material) {
@@ -901,12 +1145,19 @@ async function reviewMaterialText(materialId) {
     document.querySelector("main");
 
   main.innerHTML = `
-    <section class="material-page" aria-labelledby="review-title">
+    <section
+      class="material-page"
+      aria-labelledby="review-title"
+    >
       <div class="material-heading">
-        <p class="eyebrow">Check What I Found</p>
+        <p class="eyebrow">
+          Check What I Found
+        </p>
 
         <h2 id="review-title">
-          ${escapeHtml(material.name)}
+          ${escapeHtml(
+            material.name
+          )}
         </h2>
 
         <p class="hero-text">
@@ -940,14 +1191,21 @@ async function reviewMaterialText(materialId) {
   `;
 
   document
-    .getElementById("review-back-button")
-    .addEventListener("click", () => {
-      showMaterialBasket();
-    });
+    .getElementById(
+      "review-back-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showMaterialBasket();
+      }
+    );
 
   try {
     const result =
-      await extractTextFromMaterial(material);
+      await extractTextFromMaterial(
+        material
+      );
 
     if (
       material.type === "photo" &&
@@ -956,7 +1214,8 @@ async function reviewMaterialText(materialId) {
         result.status === "empty"
       )
     ) {
-      material.photoResult = result;
+      material.photoResult =
+        result;
 
       showPhotoPreparationReview(
         material,
@@ -976,11 +1235,12 @@ async function reviewMaterialText(materialId) {
       error
     );
 
-    const status =
-      document.getElementById("extraction-status");
-
-    status.textContent =
-      "I couldn't read this material yet. Your original file is still safe here.";
+    showExtractionResult(
+      material,
+      {
+        status: "error",
+      }
+    );
   }
 }
 
@@ -991,10 +1251,20 @@ function showPhotoPreparationReview(
   const main =
     document.querySelector("main");
 
-  const perspectiveText =
+  let preparationMessage = "";
+
+  if (result.usedOriginal) {
+    preparationMessage =
+      "You chose to keep the original photo. No perspective correction was applied.";
+  } else if (
     result.perspectiveCorrected
-      ? "Compass Trail found a page shape and straightened it."
-      : "Compass Trail could not confidently find all four page edges, so it prepared the full image instead.";
+  ) {
+    preparationMessage =
+      "Compass Trail found the page shape and straightened it.";
+  } else {
+    preparationMessage =
+      "Compass Trail could not confidently find all four page edges, so it prepared the full image instead.";
+  }
 
   main.innerHTML = `
     <section
@@ -1011,14 +1281,20 @@ function showPhotoPreparationReview(
         </h2>
 
         <p class="hero-text">
-          ${perspectiveText}
-          You can keep this version or adjust the corners yourself.
+          ${preparationMessage}
+        </p>
+
+        <p class="hero-text">
+          You are in control of which version
+          Compass Trail reads.
         </p>
       </div>
 
       <div class="photo-compare-grid">
         <section class="photo-compare-card">
-          <p class="eyebrow">Original</p>
+          <p class="eyebrow">
+            Original
+          </p>
 
           <img
             src="${result.originalImage}"
@@ -1028,11 +1304,21 @@ function showPhotoPreparationReview(
         </section>
 
         <section class="photo-compare-card">
-          <p class="eyebrow">Prepared for reading</p>
+          <p class="eyebrow">
+            ${
+              result.usedOriginal
+                ? "Currently using original"
+                : "Prepared for reading"
+            }
+          </p>
 
           <img
             src="${result.processedImage}"
-            alt="Prepared page used for text recognition"
+            alt="${
+              result.usedOriginal
+                ? "Original page selected for text recognition"
+                : "Prepared page used for text recognition"
+            }"
             class="material-preview-image"
           />
         </section>
@@ -1055,6 +1341,20 @@ function showPhotoPreparationReview(
           Adjust Corners
         </button>
 
+        ${
+          result.usedOriginal
+            ? ""
+            : `
+              <button
+                type="button"
+                class="secondary-button"
+                id="use-original-photo-button"
+              >
+                Use Original Photo Instead
+              </button>
+            `
+        }
+
         <button
           type="button"
           class="secondary-button"
@@ -1067,28 +1367,103 @@ function showPhotoPreparationReview(
   `;
 
   document
-    .getElementById("photo-looks-good-button")
-    .addEventListener("click", () => {
-      showExtractionResult(
-        material,
-        result
-      );
-    });
+    .getElementById(
+      "photo-looks-good-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showExtractionResult(
+          material,
+          result
+        );
+      }
+    );
 
   document
-    .getElementById("adjust-corners-button")
-    .addEventListener("click", () => {
-      showCornerEditor(
-        material,
-        result
-      );
-    });
+    .getElementById(
+      "adjust-corners-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showCornerEditor(
+          material,
+          result
+        );
+      }
+    );
+
+  const originalButton =
+    document.getElementById(
+      "use-original-photo-button"
+    );
+
+  if (originalButton) {
+    originalButton.addEventListener(
+      "click",
+      async () => {
+        showPhotoProcessingScreen(
+          material.name
+        );
+
+        try {
+          const originalResult =
+            await readPhotoText(
+              material.file,
+              {
+                useOriginal: true,
+              }
+            );
+
+          material.photoResult =
+            originalResult;
+
+          if (
+            originalResult.status ===
+              "ready" ||
+            originalResult.status ===
+              "empty"
+          ) {
+            showPhotoPreparationReview(
+              material,
+              originalResult
+            );
+
+            return;
+          }
+
+          showExtractionResult(
+            material,
+            originalResult
+          );
+        } catch (error) {
+          console.error(
+            "Original photo OCR failed:",
+            error
+          );
+
+          showExtractionResult(
+            material,
+            {
+              status: "error",
+            }
+          );
+        }
+      }
+    );
+  }
 
   document
-    .getElementById("photo-review-back-button")
-    .addEventListener("click", () => {
-      showMaterialBasket();
-    });
+    .getElementById(
+      "photo-review-back-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showMaterialBasket();
+      }
+    );
 }
 
 function showCornerEditor(
@@ -1107,15 +1482,29 @@ function showCornerEditor(
   const corners =
     result.detectedCorners &&
     result.detectedCorners.length === 4
-      ? result.detectedCorners.map((point) => ({
-          x: point.x,
-          y: point.y,
-        }))
+      ? result.detectedCorners.map(
+          (point) => ({
+            x: point.x,
+            y: point.y,
+          })
+        )
       : [
-          { x: 0, y: 0 },
-          { x: imageWidth, y: 0 },
-          { x: imageWidth, y: imageHeight },
-          { x: 0, y: imageHeight },
+          {
+            x: 0,
+            y: 0,
+          },
+          {
+            x: imageWidth,
+            y: 0,
+          },
+          {
+            x: imageWidth,
+            y: imageHeight,
+          },
+          {
+            x: 0,
+            y: imageHeight,
+          },
         ];
 
   main.innerHTML = `
@@ -1133,7 +1522,8 @@ function showCornerEditor(
         </h2>
 
         <p class="hero-text">
-          Drag a marker with the mouse, or select it and use the arrow keys.
+          Drag a marker with the mouse or touch,
+          or select it and use the arrow keys.
           Shift + arrow moves it a little faster.
         </p>
       </div>
@@ -1199,12 +1589,29 @@ function showCornerEditor(
   `;
 
   const editor =
-    document.getElementById("corner-editor");
+    document.getElementById(
+      "corner-editor"
+    );
 
   const image =
-    document.getElementById("corner-editor-image");
+    document.getElementById(
+      "corner-editor-image"
+    );
 
-  image.addEventListener("load", () => {
+  image.addEventListener(
+    "load",
+    () => {
+      positionCornerHandles(
+        editor,
+        image,
+        corners,
+        imageWidth,
+        imageHeight
+      );
+    }
+  );
+
+  if (image.complete) {
     positionCornerHandles(
       editor,
       image,
@@ -1212,7 +1619,7 @@ function showCornerEditor(
       imageWidth,
       imageHeight
     );
-  });
+  }
 
   setupCornerDragging(
     editor,
@@ -1223,47 +1630,76 @@ function showCornerEditor(
   );
 
   document
-    .getElementById("apply-corners-button")
-    .addEventListener("click", async () => {
-      showPhotoProcessingScreen(
-        material.name
-      );
-
-      const newResult =
-        await readPhotoText(
-          material.file,
-          corners
+    .getElementById(
+      "apply-corners-button"
+    )
+    .addEventListener(
+      "click",
+      async () => {
+        showPhotoProcessingScreen(
+          material.name
         );
 
-      material.photoResult =
-        newResult;
+        try {
+          const newResult =
+            await readPhotoText(
+              material.file,
+              {
+                manualCorners:
+                  corners,
+              }
+            );
 
-      if (
-        newResult.status === "ready" ||
-        newResult.status === "empty"
-      ) {
-        showPhotoPreparationReview(
-          material,
-          newResult
-        );
+          material.photoResult =
+            newResult;
 
-        return;
+          if (
+            newResult.status ===
+              "ready" ||
+            newResult.status ===
+              "empty"
+          ) {
+            showPhotoPreparationReview(
+              material,
+              newResult
+            );
+
+            return;
+          }
+
+          showExtractionResult(
+            material,
+            newResult
+          );
+        } catch (error) {
+          console.error(
+            "Manual perspective OCR failed:",
+            error
+          );
+
+          showExtractionResult(
+            material,
+            {
+              status: "error",
+            }
+          );
+        }
       }
-
-      showExtractionResult(
-        material,
-        newResult
-      );
-    });
+    );
 
   document
-    .getElementById("cancel-corners-button")
-    .addEventListener("click", () => {
-      showPhotoPreparationReview(
-        material,
-        result
-      );
-    });
+    .getElementById(
+      "cancel-corners-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showPhotoPreparationReview(
+          material,
+          result
+        );
+      }
+    );
 }
 
 function cornerHandle(
@@ -1298,30 +1734,52 @@ function positionCornerHandles(
   const editorRect =
     editor.getBoundingClientRect();
 
+  if (
+    !rect.width ||
+    !rect.height
+  ) {
+    return;
+  }
+
   const offsetX =
-    rect.left - editorRect.left;
+    rect.left -
+    editorRect.left;
 
   const offsetY =
-    rect.top - editorRect.top;
+    rect.top -
+    editorRect.top;
 
   const scaleX =
-    rect.width / imageWidth;
+    rect.width /
+    imageWidth;
 
   const scaleY =
-    rect.height / imageHeight;
+    rect.height /
+    imageHeight;
 
   const handles =
-    editor.querySelectorAll(".corner-handle");
+    editor.querySelectorAll(
+      ".corner-handle"
+    );
 
-  handles.forEach((handle, index) => {
-    const point = corners[index];
+  handles.forEach(
+    (handle, index) => {
+      const point =
+        corners[index];
 
-    handle.style.left =
-      `${offsetX + point.x * scaleX}px`;
+      handle.style.left =
+        `${
+          offsetX +
+          point.x * scaleX
+        }px`;
 
-    handle.style.top =
-      `${offsetY + point.y * scaleY}px`;
-  });
+      handle.style.top =
+        `${
+          offsetY +
+          point.y * scaleY
+        }px`;
+    }
+  );
 }
 
 function setupCornerDragging(
@@ -1331,148 +1789,177 @@ function setupCornerDragging(
   imageWidth,
   imageHeight
 ) {
-  const handles =
-    [...editor.querySelectorAll(".corner-handle")];
+  const handles = [
+    ...editor.querySelectorAll(
+      ".corner-handle"
+    ),
+  ];
 
-  handles.forEach((handle, index) => {
-    let dragging = false;
+  handles.forEach(
+    (handle, index) => {
+      let dragging = false;
 
-    handle.addEventListener("pointerdown", (event) => {
-      dragging = true;
+      handle.addEventListener(
+        "pointerdown",
+        (event) => {
+          dragging = true;
 
-      handle.setPointerCapture(
-        event.pointerId
+          handle.setPointerCapture(
+            event.pointerId
+          );
+        }
       );
-    });
 
-    handle.addEventListener("pointermove", (event) => {
-      if (!dragging) {
-        return;
-      }
+      handle.addEventListener(
+        "pointermove",
+        (event) => {
+          if (!dragging) {
+            return;
+          }
 
-      updateCornerFromPointer(
-        event,
-        index
+          updateCornerFromPointer(
+            event
+          );
+        }
       );
-    });
 
-    handle.addEventListener("pointerup", () => {
-      dragging = false;
-    });
+      handle.addEventListener(
+        "pointerup",
+        () => {
+          dragging = false;
+        }
+      );
 
-    handle.addEventListener("pointercancel", () => {
-      dragging = false;
-    });
+      handle.addEventListener(
+        "pointercancel",
+        () => {
+          dragging = false;
+        }
+      );
 
-    handle.addEventListener("keydown", (event) => {
-      const step =
-        event.shiftKey
-          ? 10
-          : 2;
+      handle.addEventListener(
+        "keydown",
+        (event) => {
+          const step =
+            event.shiftKey
+              ? 10
+              : 2;
 
-      let changed = false;
+          let changed = false;
 
-      if (event.key === "ArrowLeft") {
-        corners[index].x -= step;
-        changed = true;
-      }
+          if (
+            event.key ===
+            "ArrowLeft"
+          ) {
+            corners[index].x -=
+              step;
 
-      if (event.key === "ArrowRight") {
-        corners[index].x += step;
-        changed = true;
-      }
+            changed = true;
+          }
 
-      if (event.key === "ArrowUp") {
-        corners[index].y -= step;
-        changed = true;
-      }
+          if (
+            event.key ===
+            "ArrowRight"
+          ) {
+            corners[index].x +=
+              step;
 
-      if (event.key === "ArrowDown") {
-        corners[index].y += step;
-        changed = true;
-      }
+            changed = true;
+          }
 
-      if (!changed) {
-        return;
-      }
+          if (
+            event.key ===
+            "ArrowUp"
+          ) {
+            corners[index].y -=
+              step;
 
-      event.preventDefault();
+            changed = true;
+          }
 
-      corners[index].x =
-        clamp(
-          corners[index].x,
-          0,
-          imageWidth
-        );
+          if (
+            event.key ===
+            "ArrowDown"
+          ) {
+            corners[index].y +=
+              step;
 
-      corners[index].y =
-        clamp(
-          corners[index].y,
-          0,
+            changed = true;
+          }
+
+          if (!changed) {
+            return;
+          }
+
+          event.preventDefault();
+
+          corners[index].x =
+            clamp(
+              corners[index].x,
+              0,
+              imageWidth
+            );
+
+          corners[index].y =
+            clamp(
+              corners[index].y,
+              0,
+              imageHeight
+            );
+
+          positionCornerHandles(
+            editor,
+            image,
+            corners,
+            imageWidth,
+            imageHeight
+          );
+        }
+      );
+
+      function updateCornerFromPointer(
+        event
+      ) {
+        const imageRect =
+          image.getBoundingClientRect();
+
+        const relativeX =
+          clamp(
+            event.clientX -
+              imageRect.left,
+            0,
+            imageRect.width
+          );
+
+        const relativeY =
+          clamp(
+            event.clientY -
+              imageRect.top,
+            0,
+            imageRect.height
+          );
+
+        corners[index].x =
+          (
+            relativeX /
+            imageRect.width
+          ) * imageWidth;
+
+        corners[index].y =
+          (
+            relativeY /
+            imageRect.height
+          ) * imageHeight;
+
+        positionCornerHandles(
+          editor,
+          image,
+          corners,
+          imageWidth,
           imageHeight
         );
-
-      positionCornerHandles(
-        editor,
-        image,
-        corners,
-        imageWidth,
-        imageHeight
-      );
-    });
-
-    function updateCornerFromPointer(event) {
-      const imageRect =
-        image.getBoundingClientRect();
-
-      const relativeX =
-        clamp(
-          event.clientX - imageRect.left,
-          0,
-          imageRect.width
-        );
-
-      const relativeY =
-        clamp(
-          event.clientY - imageRect.top,
-          0,
-          imageRect.height
-        );
-
-      corners[index].x =
-        (
-          relativeX /
-          imageRect.width
-        ) * imageWidth;
-
-      corners[index].y =
-        (
-          relativeY /
-          imageRect.height
-        ) * imageHeight;
-
-      positionCornerHandles(
-        editor,
-        image,
-        corners,
-        imageWidth,
-        imageHeight
-      );
+      }
     }
-  });
-
-  window.addEventListener(
-    "resize",
-    () => {
-      positionCornerHandles(
-        editor,
-        image,
-        corners,
-        imageWidth,
-        imageHeight
-      );
-    },
-    { once: true }
   );
 }
 
@@ -1492,11 +1979,17 @@ function showPhotoProcessingScreen(
       </p>
 
       <h2 id="processing-title">
-        Reading ${escapeHtml(materialName)}
+        Reading
+        ${escapeHtml(
+          materialName
+        )}
       </h2>
 
-      <p class="hero-text" role="status">
-        Straightening the page and looking for text…
+      <p
+        class="hero-text"
+        role="status"
+      >
+        Preparing the page and looking for text…
       </p>
     </section>
   `;
@@ -1509,7 +2002,9 @@ function showExtractionResult(
   const main =
     document.querySelector("main");
 
-  if (result.status === "ready") {
+  if (
+    result.status === "ready"
+  ) {
     main.innerHTML = `
       <section
         class="material-page"
@@ -1521,12 +2016,16 @@ function showExtractionResult(
           </p>
 
           <h2 id="extracted-title">
-            ${escapeHtml(material.name)}
+            ${escapeHtml(
+              material.name
+            )}
           </h2>
 
           <p class="hero-text">
-            Here’s what I found. Have a quick look.
-            You can change anything that doesn’t look right.
+            Here’s what I found.
+            Have a quick look.
+            You can change anything
+            that doesn’t look right.
           </p>
         </div>
 
@@ -1548,13 +2047,17 @@ function showExtractionResult(
           }
 
           <label for="extracted-text">
-            <strong>Extracted text</strong>
+            <strong>
+              Extracted text
+            </strong>
           </label>
 
           <textarea
             id="extracted-text"
             rows="18"
-          >${escapeHtml(result.text)}</textarea>
+          >${escapeHtml(
+            result.text
+          )}</textarea>
         </div>
 
         <div class="hero-actions">
@@ -1567,7 +2070,8 @@ function showExtractionResult(
           </button>
 
           ${
-            material.type === "photo" &&
+            material.type ===
+              "photo" &&
             material.photoResult
               ? `
                 <button
@@ -1593,45 +2097,64 @@ function showExtractionResult(
     `;
 
     document
-      .getElementById("confirm-extracted-text")
-      .addEventListener("click", () => {
-        const editedText =
-          document
-            .getElementById("extracted-text")
-            .value
-            .trim();
+      .getElementById(
+        "confirm-extracted-text"
+      )
+      .addEventListener(
+        "click",
+        () => {
+          const editedText =
+            document
+              .getElementById(
+                "extracted-text"
+              )
+              .value
+              .trim();
 
-        material.extractedText =
-          editedText;
+          material.extractedText =
+            editedText;
 
-        material.extractionStatus =
-          "confirmed";
+          material.extractionStatus =
+            "confirmed";
 
-        showMaterialBasket();
-      });
+          showMaterialBasket();
+        }
+      );
 
     const adjustAgainButton =
-      document.getElementById("adjust-photo-again-button");
+      document.getElementById(
+        "adjust-photo-again-button"
+      );
 
     if (adjustAgainButton) {
-      adjustAgainButton.addEventListener("click", () => {
-        showCornerEditor(
-          material,
-          material.photoResult
-        );
-      });
+      adjustAgainButton.addEventListener(
+        "click",
+        () => {
+          showCornerEditor(
+            material,
+            material.photoResult
+          );
+        }
+      );
     }
 
     document
-      .getElementById("extracted-back-button")
-      .addEventListener("click", () => {
-        showMaterialBasket();
-      });
+      .getElementById(
+        "extracted-back-button"
+      )
+      .addEventListener(
+        "click",
+        () => {
+          showMaterialBasket();
+        }
+      );
 
     return;
   }
 
-  if (result.status === "empty") {
+  if (
+    result.status === "empty"
+  ) {
     main.innerHTML = `
       <section class="material-page">
         <div class="material-heading">
@@ -1644,14 +2167,15 @@ function showExtractionResult(
           </h2>
 
           <p class="hero-text">
-            The page may still need a different crop,
+            The page may need a different crop,
             clearer lighting or another reading method.
           </p>
         </div>
 
         <div class="hero-actions">
           ${
-            material.type === "photo" &&
+            material.type ===
+              "photo" &&
             material.photoResult
               ? `
                 <button
@@ -1677,27 +2201,39 @@ function showExtractionResult(
     `;
 
     const adjustButton =
-      document.getElementById("empty-adjust-button");
+      document.getElementById(
+        "empty-adjust-button"
+      );
 
     if (adjustButton) {
-      adjustButton.addEventListener("click", () => {
-        showCornerEditor(
-          material,
-          material.photoResult
-        );
-      });
+      adjustButton.addEventListener(
+        "click",
+        () => {
+          showCornerEditor(
+            material,
+            material.photoResult
+          );
+        }
+      );
     }
 
     document
-      .getElementById("empty-back-button")
-      .addEventListener("click", () => {
-        showMaterialBasket();
-      });
+      .getElementById(
+        "empty-back-button"
+      )
+      .addEventListener(
+        "click",
+        () => {
+          showMaterialBasket();
+        }
+      );
 
     return;
   }
 
-  if (result.status === "needs-ocr") {
+  if (
+    result.status === "needs-ocr"
+  ) {
     main.innerHTML = `
       <section class="hero">
         <p class="eyebrow">
@@ -1705,7 +2241,8 @@ function showExtractionResult(
         </p>
 
         <h2>
-          This file looks more like a scan than selectable text.
+          This file looks more like
+          a scan than selectable text.
         </h2>
 
         <p class="hero-text">
@@ -1725,10 +2262,15 @@ function showExtractionResult(
     `;
 
     document
-      .getElementById("ocr-back-button")
-      .addEventListener("click", () => {
-        showMaterialBasket();
-      });
+      .getElementById(
+        "ocr-back-button"
+      )
+      .addEventListener(
+        "click",
+        () => {
+          showMaterialBasket();
+        }
+      );
 
     return;
   }
@@ -1760,10 +2302,15 @@ function showExtractionResult(
   `;
 
   document
-    .getElementById("error-back-button")
-    .addEventListener("click", () => {
-      showMaterialBasket();
-    });
+    .getElementById(
+      "error-back-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showMaterialBasket();
+      }
+    );
 }
 
 function getMaterialIcon(type) {
@@ -1777,12 +2324,20 @@ function getMaterialIcon(type) {
   return icons[type] || "📎";
 }
 
-function getMaterialDescription(material) {
-  if (material.type === "text") {
+function getMaterialDescription(
+  material
+) {
+  if (
+    material.type === "text"
+  ) {
     return "Pasted text";
   }
 
-  return `${formatFileSize(material.size)} · ${getReadableType(material.type)}`;
+  return `${formatFileSize(
+    material.size
+  )} · ${getReadableType(
+    material.type
+  )}`;
 }
 
 function getReadableType(type) {
@@ -1792,7 +2347,8 @@ function getReadableType(type) {
     document: "Document",
   };
 
-  return labels[type] || "Material";
+  return labels[type] ||
+    "Material";
 }
 
 function formatFileSize(bytes) {
@@ -1800,8 +2356,13 @@ function formatFileSize(bytes) {
     return `${bytes} B`;
   }
 
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
+  if (
+    bytes <
+    1024 * 1024
+  ) {
+    return `${(
+      bytes / 1024
+    ).toFixed(1)} KB`;
   }
 
   return `${(
@@ -1811,7 +2372,8 @@ function formatFileSize(bytes) {
 }
 
 function showPathPreview() {
-  const main = document.querySelector("main");
+  const main =
+    document.querySelector("main");
 
   main.innerHTML = `
     <section
@@ -1834,8 +2396,10 @@ function showPathPreview() {
             ? "material"
             : "materials"
         }.
-        Next, Compass Trail will help turn what you brought
-        into an editable Journey.
+
+        Next, Compass Trail will help
+        turn what you brought into
+        an editable Journey.
       </p>
 
       <div class="hero-actions">
@@ -1859,18 +2423,29 @@ function showPathPreview() {
   `;
 
   document
-    .getElementById("return-basket-button")
-    .addEventListener("click", () => {
-      showMaterialBasket();
-    });
+    .getElementById(
+      "return-basket-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showMaterialBasket();
+      }
+    );
 
   document
-    .getElementById("continue-path-button")
-    .addEventListener("click", showJourneyDetails);
+    .getElementById(
+      "continue-path-button"
+    )
+    .addEventListener(
+      "click",
+      showJourneyDetails
+    );
 }
 
 function showJourneyDetails() {
-  const main = document.querySelector("main");
+  const main =
+    document.querySelector("main");
 
   main.innerHTML = `
     <section
@@ -1900,7 +2475,9 @@ function showJourneyDetails() {
           </strong>
 
           <span>
-            For example: science presentation or maths homework.
+            For example:
+            science presentation
+            or maths homework.
           </span>
         </label>
 
@@ -1914,11 +2491,13 @@ function showJourneyDetails() {
 
         <label for="journey-goal">
           <strong>
-            What would feel good to accomplish?
+            What would feel good
+            to accomplish?
           </strong>
 
           <span>
-            You can leave this blank if you're not sure yet.
+            You can leave this blank
+            if you're not sure yet.
           </span>
         </label>
 
@@ -1950,38 +2529,53 @@ function showJourneyDetails() {
   `;
 
   document
-    .getElementById("details-back-button")
-    .addEventListener("click", showPathPreview);
+    .getElementById(
+      "details-back-button"
+    )
+    .addEventListener(
+      "click",
+      showPathPreview
+    );
 
   document
-    .getElementById("journey-details-form")
-    .addEventListener("submit", (event) => {
-      event.preventDefault();
+    .getElementById(
+      "journey-details-form"
+    )
+    .addEventListener(
+      "submit",
+      (event) => {
+        event.preventDefault();
 
-      const journeyTitle =
-        document
-          .getElementById("journey-title")
-          .value
-          .trim();
+        const journeyTitle =
+          document
+            .getElementById(
+              "journey-title"
+            )
+            .value
+            .trim();
 
-      const journeyGoal =
-        document
-          .getElementById("journey-goal")
-          .value
-          .trim();
+        const journeyGoal =
+          document
+            .getElementById(
+              "journey-goal"
+            )
+            .value
+            .trim();
 
-      showFirstJourneyPath(
-        journeyTitle,
-        journeyGoal
-      );
-    });
+        showFirstJourneyPath(
+          journeyTitle,
+          journeyGoal
+        );
+      }
+    );
 }
 
 function showFirstJourneyPath(
   journeyTitle,
   journeyGoal
 ) {
-  const main = document.querySelector("main");
+  const main =
+    document.querySelector("main");
 
   main.innerHTML = `
     <section
@@ -1994,25 +2588,31 @@ function showFirstJourneyPath(
         </p>
 
         <h2 id="first-path-title">
-          ${escapeHtml(journeyTitle)}
+          ${escapeHtml(
+            journeyTitle
+          )}
         </h2>
 
         ${
           journeyGoal
             ? `
               <p class="hero-text">
-                ${escapeHtml(journeyGoal)}
+                ${escapeHtml(
+                  journeyGoal
+                )}
               </p>
             `
             : `
               <p class="hero-text">
-                You can decide what “done” looks like as you go.
+                You can decide what “done”
+                looks like as you go.
               </p>
             `
         }
 
         <p class="path-note">
-          This path is a suggestion. Make it yours.
+          This path is a suggestion.
+          Make it yours.
         </p>
       </div>
 
@@ -2062,10 +2662,15 @@ function showFirstJourneyPath(
   `;
 
   document
-    .getElementById("edit-materials-button")
-    .addEventListener("click", () => {
-      showMaterialBasket();
-    });
+    .getElementById(
+      "edit-materials-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showMaterialBasket();
+      }
+    );
 }
 
 function pathStep(
@@ -2080,25 +2685,52 @@ function pathStep(
       </span>
 
       <div>
-        <h3>${title}</h3>
-        <p>${description}</p>
+        <h3>
+          ${title}
+        </h3>
+
+        <p>
+          ${description}
+        </p>
       </div>
     </article>
   `;
 }
 
-function clamp(value, min, max) {
+function clamp(
+  value,
+  min,
+  max
+) {
   return Math.min(
-    Math.max(value, min),
+    Math.max(
+      value,
+      min
+    ),
     max
   );
 }
 
 function escapeHtml(value) {
   return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
 }
