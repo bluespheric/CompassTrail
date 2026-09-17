@@ -52,7 +52,19 @@ async function getOcrWorker() {
   return ocrWorker;
 }
 
-async function readPhotoText(file, manualCorners = null) {
+/*
+  options:
+  {
+    manualCorners: null | [{x,y}, ...],
+    useOriginal: false
+  }
+*/
+async function readPhotoText(file, options = {}) {
+  const {
+    manualCorners = null,
+    useOriginal = false,
+  } = options;
+
   const originalUrl = URL.createObjectURL(file);
 
   try {
@@ -60,7 +72,8 @@ async function readPhotoText(file, manualCorners = null) {
 
     const prepared = await prepareDocumentImage(
       image,
-      manualCorners
+      manualCorners,
+      useOriginal
     );
 
     const worker = await getOcrWorker();
@@ -69,12 +82,15 @@ async function readPhotoText(file, manualCorners = null) {
       prepared.processedImage
     );
 
-    const text = (result.data.text || "").trim();
+    const text =
+      (result.data.text || "").trim();
 
     return {
       status: text ? "ready" : "empty",
       text,
-      method: "photo-ocr",
+      method: useOriginal
+        ? "photo-ocr-original"
+        : "photo-ocr",
 
       processedImage:
         prepared.processedImage,
@@ -84,6 +100,9 @@ async function readPhotoText(file, manualCorners = null) {
 
       perspectiveCorrected:
         prepared.perspectiveCorrected,
+
+      usedOriginal:
+        prepared.usedOriginal,
 
       detectedCorners:
         prepared.detectedCorners,
@@ -103,7 +122,9 @@ async function readPhotoText(file, manualCorners = null) {
     return {
       status: "error",
       text: "",
-      method: "photo-ocr",
+      method: useOriginal
+        ? "photo-ocr-original"
+        : "photo-ocr",
     };
   } finally {
     URL.revokeObjectURL(originalUrl);
@@ -111,30 +132,29 @@ async function readPhotoText(file, manualCorners = null) {
 }
 
 function loadImage(url) {
-  return new Promise(
-    (resolve, reject) => {
-      const image = new Image();
+  return new Promise((resolve, reject) => {
+    const image = new Image();
 
-      image.onload = () => {
-        resolve(image);
-      };
+    image.onload = () => {
+      resolve(image);
+    };
 
-      image.onerror = () => {
-        reject(
-          new Error(
-            "Image could not be loaded."
-          )
-        );
-      };
+    image.onerror = () => {
+      reject(
+        new Error(
+          "Image could not be loaded."
+        )
+      );
+    };
 
-      image.src = url;
-    }
-  );
+    image.src = url;
+  });
 }
 
 async function prepareDocumentImage(
   image,
-  manualCorners = null
+  manualCorners = null,
+  useOriginal = false
 ) {
   const cv = await getOpenCv();
 
@@ -162,6 +182,36 @@ async function prepareDocumentImage(
       0.92
     );
 
+  /*
+    IMPORTANT:
+    If the learner chooses the original photo,
+    do not crop, warp, threshold or straighten it.
+    OCR receives the original image.
+  */
+  if (useOriginal) {
+    return {
+      originalImage,
+      processedImage: originalImage,
+      perspectiveCorrected: false,
+      usedOriginal: true,
+      detectedCorners: [
+        { x: 0, y: 0 },
+        {
+          x: image.naturalWidth,
+          y: 0,
+        },
+        {
+          x: image.naturalWidth,
+          y: image.naturalHeight,
+        },
+        {
+          x: 0,
+          y: image.naturalHeight,
+        },
+      ],
+    };
+  }
+
   const maxDimension = 1800;
 
   let scale = 1;
@@ -172,10 +222,7 @@ async function prepareDocumentImage(
       image.naturalHeight
     );
 
-  if (
-    largestDimension >
-    maxDimension
-  ) {
+  if (largestDimension > maxDimension) {
     scale =
       maxDimension /
       largestDimension;
@@ -188,8 +235,7 @@ async function prepareDocumentImage(
     Math.max(
       1,
       Math.round(
-        image.naturalWidth *
-        scale
+        image.naturalWidth * scale
       )
     );
 
@@ -197,8 +243,7 @@ async function prepareDocumentImage(
     Math.max(
       1,
       Math.round(
-        image.naturalHeight *
-        scale
+        image.naturalHeight * scale
       )
     );
 
@@ -223,13 +268,8 @@ async function prepareDocumentImage(
       corners =
         manualCorners.map(
           (point) => ({
-            x:
-              point.x *
-              scale,
-
-            y:
-              point.y *
-              scale,
+            x: point.x * scale,
+            y: point.y * scale,
           })
         );
     } else {
@@ -261,19 +301,14 @@ async function prepareDocumentImage(
         return {
           originalImage,
           processedImage,
-          perspectiveCorrected:
-            true,
+          perspectiveCorrected: true,
+          usedOriginal: false,
 
           detectedCorners:
             corners.map(
               (point) => ({
-                x:
-                  point.x /
-                  scale,
-
-                y:
-                  point.y /
-                  scale,
+                x: point.x / scale,
+                y: point.y / scale,
               })
             ),
         };
@@ -291,32 +326,22 @@ async function prepareDocumentImage(
           src
         ),
 
-      perspectiveCorrected:
-        false,
+      perspectiveCorrected: false,
+      usedOriginal: false,
 
       detectedCorners: [
+        { x: 0, y: 0 },
         {
-          x: 0,
+          x: image.naturalWidth,
           y: 0,
         },
-
         {
-          x:
-            image.naturalWidth,
-          y: 0,
+          x: image.naturalWidth,
+          y: image.naturalHeight,
         },
-
-        {
-          x:
-            image.naturalWidth,
-          y:
-            image.naturalHeight,
-        },
-
         {
           x: 0,
-          y:
-            image.naturalHeight,
+          y: image.naturalHeight,
         },
       ],
     };
@@ -329,20 +354,11 @@ function detectDocumentCorners(
   cv,
   source
 ) {
-  const gray =
-    new cv.Mat();
-
-  const blurred =
-    new cv.Mat();
-
-  const edges =
-    new cv.Mat();
-
-  const contours =
-    new cv.MatVector();
-
-  const hierarchy =
-    new cv.Mat();
+  const gray = new cv.Mat();
+  const blurred = new cv.Mat();
+  const edges = new cv.Mat();
+  const contours = new cv.MatVector();
+  const hierarchy = new cv.Mat();
 
   try {
     cv.cvtColor(
@@ -383,8 +399,7 @@ function detectDocumentCorners(
 
     for (
       let index = 0;
-      index <
-      contours.size();
+      index < contours.size();
       index += 1
     ) {
       const contour =
@@ -402,8 +417,7 @@ function detectDocumentCorners(
       cv.approxPolyDP(
         contour,
         approx,
-        0.02 *
-        perimeter,
+        0.02 * perimeter,
         true
       );
 
@@ -416,10 +430,8 @@ function detectDocumentCorners(
 
       if (
         approx.rows === 4 &&
-        area >
-          minimumArea &&
-        area >
-          bestArea
+        area > minimumArea &&
+        area > bestArea
       ) {
         bestArea = area;
 
@@ -455,24 +467,21 @@ function detectDocumentCorners(
 function orderPoints(points) {
   const sorted =
     [...points].sort(
-      (a, b) =>
-        a.y - b.y
+      (a, b) => a.y - b.y
     );
 
   const top =
     sorted
       .slice(0, 2)
       .sort(
-        (a, b) =>
-          a.x - b.x
+        (a, b) => a.x - b.x
       );
 
   const bottom =
     sorted
       .slice(2, 4)
       .sort(
-        (a, b) =>
-          a.x - b.x
+        (a, b) => a.x - b.x
       );
 
   return [
@@ -619,11 +628,8 @@ function enhanceImageForOcr(
   cv,
   source
 ) {
-  const gray =
-    new cv.Mat();
-
-  const output =
-    new cv.Mat();
+  const gray = new cv.Mat();
+  const output = new cv.Mat();
 
   const canvas =
     document.createElement(
