@@ -9564,3 +9564,70 @@ window.addEventListener(
   bootCompassCloudV1
 );
 
+
+
+// Compass Trail — Check-in & My Pace Home entry fix.
+function installCompassFocusHomeCard() {
+  if (document.getElementById("compass-focus-home-card")) return true;
+
+  const cards = Array.from(document.querySelectorAll("main .home-card"));
+  if (!cards.length) return false;
+
+  const referenceCard =
+    cards.find((card) => /My Days/i.test(card.textContent || "")) ||
+    cards.find((card) => /Little Things/i.test(card.textContent || "")) ||
+    cards[0];
+
+  const parent = referenceCard.parentElement;
+  if (!parent) return false;
+
+  const card = document.createElement("button");
+  card.type = "button";
+  card.id = "compass-focus-home-card";
+  card.className = referenceCard.className || "home-card";
+  card.innerHTML = `
+    <span aria-hidden="true">⏱️</span>
+    <h3>Check-in &amp; My Pace</h3>
+    <p>Choose how much information to see at once and use an optional timer.</p>
+  `;
+  card.addEventListener("click", () => showCompassCheckIn());
+
+  referenceCard.insertAdjacentElement("afterend", card);
+  return true;
+}
+
+function keepCompassFocusHomeCardAvailable() {
+  if (installCompassFocusHomeCard()) return;
+
+  let attempts = 0;
+  const retry = setInterval(() => {
+    attempts += 1;
+    if (installCompassFocusHomeCard() || attempts >= 30) {
+      clearInterval(retry);
+    }
+  }, 100);
+}
+
+keepCompassFocusHomeCardAvailable();
+
+const compassFocusHomeCardObserver = new MutationObserver(() => {
+  const main = document.querySelector("main");
+  if (!main) return;
+
+  const homeText = main.textContent || "";
+  if (
+    /Start Something/i.test(homeText) &&
+    /Little Things/i.test(homeText) &&
+    /My Days/i.test(homeText)
+  ) {
+    installCompassFocusHomeCard();
+  }
+});
+
+const compassFocusObservedMain = document.querySelector("main");
+if (compassFocusObservedMain) {
+  compassFocusHomeCardObserver.observe(compassFocusObservedMain, {
+    childList: true,
+    subtree: true
+  });
+}
