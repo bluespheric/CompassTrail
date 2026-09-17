@@ -19,6 +19,1109 @@ beginJourneyButtons.forEach((button) => {
 
 
 // ------------------------------------------------------------
+// Accessibility + Make It Mine V1
+// ------------------------------------------------------------
+
+const compassPreferences = {
+  fontFamily: "system",
+  textSize: 100,
+  lineSpacing: 1.6,
+  letterSpacing: 0,
+  textWidth: 72,
+  background: "default",
+  contrast: "default",
+  reduceMotion: false,
+  readSpeed: 1,
+};
+
+const preferenceStorageKey =
+  "compassTrailPreferencesV1";
+
+function loadCompassPreferences() {
+  try {
+    const saved =
+      JSON.parse(
+        localStorage.getItem(
+          preferenceStorageKey
+        )
+      );
+
+    if (
+      saved &&
+      typeof saved === "object"
+    ) {
+      Object.assign(
+        compassPreferences,
+        saved
+      );
+    }
+  } catch (error) {
+    console.warn(
+      "Could not load preferences.",
+      error
+    );
+  }
+}
+
+function saveCompassPreferences() {
+  try {
+    localStorage.setItem(
+      preferenceStorageKey,
+      JSON.stringify(
+        compassPreferences
+      )
+    );
+  } catch (error) {
+    console.warn(
+      "Could not save preferences.",
+      error
+    );
+  }
+}
+
+function applyCompassPreferences() {
+  const root =
+    document.documentElement;
+
+  const fontMap = {
+    system:
+      'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    readable:
+      '"Trebuchet MS", "Segoe UI", sans-serif',
+    classic:
+      'Georgia, "Times New Roman", serif',
+    open:
+      'Verdana, "Segoe UI", sans-serif',
+    mono:
+      '"Courier New", monospace',
+  };
+
+  const backgroundMap = {
+    default: "",
+    warm: "#fff9ef",
+    soft: "#f4f8f4",
+    blue: "#f3f8fc",
+    grey: "#f5f5f3",
+  };
+
+  root.style.setProperty(
+    "--comfort-font",
+    fontMap[
+      compassPreferences.fontFamily
+    ] || fontMap.system
+  );
+
+  root.style.setProperty(
+    "--comfort-text-scale",
+    String(
+      compassPreferences.textSize /
+        100
+    )
+  );
+
+  root.style.setProperty(
+    "--comfort-line-height",
+    String(
+      compassPreferences.lineSpacing
+    )
+  );
+
+  root.style.setProperty(
+    "--comfort-letter-spacing",
+    `${compassPreferences.letterSpacing}px`
+  );
+
+  root.style.setProperty(
+    "--comfort-text-width",
+    `${compassPreferences.textWidth}ch`
+  );
+
+  document.body.style.fontFamily =
+    fontMap[
+      compassPreferences.fontFamily
+    ] || fontMap.system;
+
+  document.body.style.fontSize =
+    `${compassPreferences.textSize}%`;
+
+  document.body.style.lineHeight =
+    String(
+      compassPreferences.lineSpacing
+    );
+
+  document.body.style.letterSpacing =
+    `${compassPreferences.letterSpacing}px`;
+
+  document.body.style.backgroundColor =
+    backgroundMap[
+      compassPreferences.background
+    ] || "";
+
+  document.body.classList.toggle(
+    "comfort-high-contrast",
+    compassPreferences.contrast ===
+      "high"
+  );
+
+  document.body.classList.toggle(
+    "comfort-reduced-motion",
+    Boolean(
+      compassPreferences.reduceMotion
+    )
+  );
+
+  document
+    .querySelectorAll(
+      "p, li, textarea, input, .hero-text"
+    )
+    .forEach((element) => {
+      element.style.maxWidth =
+        `${compassPreferences.textWidth}ch`;
+    });
+}
+
+function installAccessibilityStyles() {
+  if (
+    document.getElementById(
+      "compass-accessibility-styles"
+    )
+  ) {
+    return;
+  }
+
+  const style =
+    document.createElement("style");
+
+  style.id =
+    "compass-accessibility-styles";
+
+  style.textContent = `
+    body.comfort-reduced-motion *,
+    body.comfort-reduced-motion *::before,
+    body.comfort-reduced-motion *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    body.comfort-high-contrast {
+      background: #ffffff !important;
+      color: #111111 !important;
+    }
+
+    body.comfort-high-contrast
+      .hero,
+    body.comfort-high-contrast
+      .home-card,
+    body.comfort-high-contrast
+      .material-card,
+    body.comfort-high-contrast
+      .path-step {
+      background: #ffffff !important;
+      color: #111111 !important;
+      border: 2px solid #111111 !important;
+      box-shadow: none !important;
+    }
+
+    body.comfort-high-contrast
+      button {
+      border: 2px solid currentColor !important;
+    }
+
+    .comfort-panel {
+      display: grid;
+      gap: 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .comfort-control {
+      display: grid;
+      gap: 0.5rem;
+      padding: 1rem;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .comfort-control label {
+      font-weight: 700;
+    }
+
+    .comfort-control select,
+    .comfort-control input[type="range"] {
+      width: 100%;
+      max-width: 34rem;
+    }
+
+    .comfort-preview {
+      padding: 1.25rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      margin: 1rem 0 1.5rem;
+    }
+
+    .global-comfort-button {
+      position: fixed;
+      right: 1rem;
+      bottom: 1rem;
+      z-index: 9999;
+      border-radius: 999px;
+      padding: 0.75rem 1rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.14);
+    }
+
+    .read-aloud-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+      margin-top: 1rem;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  `;
+
+  document.head.appendChild(
+    style
+  );
+}
+
+function installTooMuchButton() {
+  if (
+    document.getElementById(
+      "too-much-global-button"
+    )
+  ) {
+    return;
+  }
+
+  const button =
+    document.createElement(
+      "button"
+    );
+
+  button.type = "button";
+  button.id =
+    "too-much-global-button";
+  button.className =
+    "secondary-button global-comfort-button";
+  button.textContent =
+    "Too much?";
+
+  button.addEventListener(
+    "click",
+    showTooMuchPanel
+  );
+
+  document.body.appendChild(
+    button
+  );
+}
+
+function wireMakeItMineButtons() {
+  const labels = [
+    "Make It Mine",
+    "Personalise My Space",
+  ];
+
+  [
+    ...document.querySelectorAll(
+      "button"
+    ),
+  ].forEach((button) => {
+    if (
+      labels.includes(
+        button.textContent.trim()
+      )
+    ) {
+      button.addEventListener(
+        "click",
+        showMakeItMine
+      );
+    }
+  });
+}
+
+function refreshAccessibilityWiring() {
+  applyCompassPreferences();
+  installTooMuchButton();
+  wireMakeItMineButtons();
+}
+
+loadCompassPreferences();
+installAccessibilityStyles();
+
+window.addEventListener(
+  "load",
+  refreshAccessibilityWiring
+);
+
+const accessibilityObserver =
+  new MutationObserver(() => {
+    applyCompassPreferences();
+    installTooMuchButton();
+  });
+
+accessibilityObserver.observe(
+  document.body,
+  {
+    childList: true,
+    subtree: true,
+  }
+);
+
+function showMakeItMine(
+  notice = ""
+) {
+  const main =
+    document.querySelector("main");
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="make-it-mine-title"
+    >
+      <div class="material-heading">
+        <p class="eyebrow">
+          Make It Mine
+        </p>
+
+        <h2 id="make-it-mine-title">
+          Make this space easier to use.
+        </h2>
+
+        <p class="hero-text">
+          You do not need to explain why
+          a setting helps. Change anything,
+          anytime.
+        </p>
+      </div>
+
+      ${
+        notice
+          ? `
+            <div
+              class="undo-message"
+              role="status"
+            >
+              ${escapeHtml(notice)}
+            </div>
+          `
+          : ""
+      }
+
+      <div
+        class="comfort-preview"
+        id="comfort-preview"
+      >
+        <strong>
+          Live preview
+        </strong>
+
+        <p>
+          This is a small piece of text
+          so you can see how your choices
+          feel before you continue.
+        </p>
+      </div>
+
+      <div class="comfort-panel">
+        <div class="comfort-control">
+          <label for="comfort-font">
+            Font
+          </label>
+
+          <select id="comfort-font">
+            <option value="system">
+              System
+            </option>
+            <option value="readable">
+              Rounded & readable
+            </option>
+            <option value="classic">
+              Classic serif
+            </option>
+            <option value="open">
+              Open & wide
+            </option>
+            <option value="mono">
+              Monospace
+            </option>
+          </select>
+        </div>
+
+        <div class="comfort-control">
+          <label for="comfort-text-size">
+            Text size:
+            <span id="text-size-value">
+              ${compassPreferences.textSize}%
+            </span>
+          </label>
+
+          <input
+            id="comfort-text-size"
+            type="range"
+            min="85"
+            max="150"
+            step="5"
+            value="${compassPreferences.textSize}"
+          />
+        </div>
+
+        <div class="comfort-control">
+          <label for="comfort-line-spacing">
+            Line spacing:
+            <span id="line-spacing-value">
+              ${compassPreferences.lineSpacing}
+            </span>
+          </label>
+
+          <input
+            id="comfort-line-spacing"
+            type="range"
+            min="1.2"
+            max="2.2"
+            step="0.1"
+            value="${compassPreferences.lineSpacing}"
+          />
+        </div>
+
+        <div class="comfort-control">
+          <label for="comfort-letter-spacing">
+            Letter spacing:
+            <span id="letter-spacing-value">
+              ${compassPreferences.letterSpacing}px
+            </span>
+          </label>
+
+          <input
+            id="comfort-letter-spacing"
+            type="range"
+            min="0"
+            max="4"
+            step="0.5"
+            value="${compassPreferences.letterSpacing}"
+          />
+        </div>
+
+        <div class="comfort-control">
+          <label for="comfort-text-width">
+            Text width:
+            <span id="text-width-value">
+              ${compassPreferences.textWidth}
+            </span>
+          </label>
+
+          <input
+            id="comfort-text-width"
+            type="range"
+            min="38"
+            max="90"
+            step="2"
+            value="${compassPreferences.textWidth}"
+          />
+        </div>
+
+        <div class="comfort-control">
+          <label for="comfort-background">
+            Background comfort
+          </label>
+
+          <select id="comfort-background">
+            <option value="default">
+              Default
+            </option>
+            <option value="warm">
+              Warm
+            </option>
+            <option value="soft">
+              Soft green
+            </option>
+            <option value="blue">
+              Soft blue
+            </option>
+            <option value="grey">
+              Soft grey
+            </option>
+          </select>
+        </div>
+
+        <div class="comfort-control">
+          <label for="comfort-contrast">
+            Contrast
+          </label>
+
+          <select id="comfort-contrast">
+            <option value="default">
+              Default
+            </option>
+            <option value="high">
+              High contrast
+            </option>
+          </select>
+        </div>
+
+        <div class="comfort-control">
+          <label>
+            <input
+              id="comfort-motion"
+              type="checkbox"
+              ${
+                compassPreferences.reduceMotion
+                  ? "checked"
+                  : ""
+              }
+            />
+            Reduce motion
+          </label>
+
+          <p>
+            Keeps the interface calmer by
+            reducing animations and transitions.
+          </p>
+        </div>
+
+        <div class="comfort-control">
+          <label for="read-speed">
+            Read-aloud speed
+          </label>
+
+          <select id="read-speed">
+            <option value="0.5">
+              0.5×
+            </option>
+            <option value="0.75">
+              0.75×
+            </option>
+            <option value="1">
+              1×
+            </option>
+            <option value="1.25">
+              1.25×
+            </option>
+            <option value="1.5">
+              1.5×
+            </option>
+            <option value="2">
+              2×
+            </option>
+          </select>
+
+          <div class="read-aloud-bar">
+            <button
+              type="button"
+              class="small-action-button"
+              id="read-preview-button"
+            >
+              Read Preview
+            </button>
+
+            <button
+              type="button"
+              class="small-action-button"
+              id="pause-reading-button"
+            >
+              Pause
+            </button>
+
+            <button
+              type="button"
+              class="small-action-button"
+              id="resume-reading-button"
+            >
+              Resume
+            </button>
+
+            <button
+              type="button"
+              class="small-action-button"
+              id="stop-reading-button"
+            >
+              Stop
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="primary-button"
+          id="save-comfort-button"
+        >
+          Keep These Settings
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="reset-comfort-button"
+        >
+          Reset Comfort Settings
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="comfort-home-button"
+        >
+          Back Home
+        </button>
+      </div>
+    </section>
+  `;
+
+  const font =
+    document.getElementById(
+      "comfort-font"
+    );
+
+  const textSize =
+    document.getElementById(
+      "comfort-text-size"
+    );
+
+  const lineSpacing =
+    document.getElementById(
+      "comfort-line-spacing"
+    );
+
+  const letterSpacing =
+    document.getElementById(
+      "comfort-letter-spacing"
+    );
+
+  const textWidth =
+    document.getElementById(
+      "comfort-text-width"
+    );
+
+  const background =
+    document.getElementById(
+      "comfort-background"
+    );
+
+  const contrast =
+    document.getElementById(
+      "comfort-contrast"
+    );
+
+  const motion =
+    document.getElementById(
+      "comfort-motion"
+    );
+
+  const readSpeed =
+    document.getElementById(
+      "read-speed"
+    );
+
+  font.value =
+    compassPreferences.fontFamily;
+
+  background.value =
+    compassPreferences.background;
+
+  contrast.value =
+    compassPreferences.contrast;
+
+  readSpeed.value =
+    String(
+      compassPreferences.readSpeed
+    );
+
+  const updateLivePreferences =
+    () => {
+      compassPreferences.fontFamily =
+        font.value;
+
+      compassPreferences.textSize =
+        Number(
+          textSize.value
+        );
+
+      compassPreferences.lineSpacing =
+        Number(
+          lineSpacing.value
+        );
+
+      compassPreferences.letterSpacing =
+        Number(
+          letterSpacing.value
+        );
+
+      compassPreferences.textWidth =
+        Number(
+          textWidth.value
+        );
+
+      compassPreferences.background =
+        background.value;
+
+      compassPreferences.contrast =
+        contrast.value;
+
+      compassPreferences.reduceMotion =
+        motion.checked;
+
+      compassPreferences.readSpeed =
+        Number(
+          readSpeed.value
+        );
+
+      document.getElementById(
+        "text-size-value"
+      ).textContent =
+        `${compassPreferences.textSize}%`;
+
+      document.getElementById(
+        "line-spacing-value"
+      ).textContent =
+        compassPreferences.lineSpacing;
+
+      document.getElementById(
+        "letter-spacing-value"
+      ).textContent =
+        `${compassPreferences.letterSpacing}px`;
+
+      document.getElementById(
+        "text-width-value"
+      ).textContent =
+        compassPreferences.textWidth;
+
+      applyCompassPreferences();
+    };
+
+  [
+    font,
+    textSize,
+    lineSpacing,
+    letterSpacing,
+    textWidth,
+    background,
+    contrast,
+    motion,
+    readSpeed,
+  ].forEach((control) => {
+    control.addEventListener(
+      "input",
+      updateLivePreferences
+    );
+
+    control.addEventListener(
+      "change",
+      updateLivePreferences
+    );
+  });
+
+  document
+    .getElementById(
+      "save-comfort-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        updateLivePreferences();
+        saveCompassPreferences();
+
+        showMakeItMine(
+          "Your comfort settings are saved on this device."
+        );
+      }
+    );
+
+  document
+    .getElementById(
+      "reset-comfort-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        Object.assign(
+          compassPreferences,
+          {
+            fontFamily: "system",
+            textSize: 100,
+            lineSpacing: 1.6,
+            letterSpacing: 0,
+            textWidth: 72,
+            background: "default",
+            contrast: "default",
+            reduceMotion: false,
+            readSpeed: 1,
+          }
+        );
+
+        saveCompassPreferences();
+        applyCompassPreferences();
+
+        showMakeItMine(
+          "Comfort settings returned to the starting point."
+        );
+      }
+    );
+
+  document
+    .getElementById(
+      "comfort-home-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        saveCompassPreferences();
+        window.location.reload();
+      }
+    );
+
+  document
+    .getElementById(
+      "read-preview-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        speakCompassText(
+          "This is a small piece of text so you can see how your choices feel before you continue."
+        );
+      }
+    );
+
+  document
+    .getElementById(
+      "pause-reading-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        if (
+          "speechSynthesis" in
+          window
+        ) {
+          window.speechSynthesis.pause();
+        }
+      }
+    );
+
+  document
+    .getElementById(
+      "resume-reading-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        if (
+          "speechSynthesis" in
+          window
+        ) {
+          window.speechSynthesis.resume();
+        }
+      }
+    );
+
+  document
+    .getElementById(
+      "stop-reading-button"
+    )
+    .addEventListener(
+      "click",
+      stopCompassReading
+    );
+
+  refreshAccessibilityWiring();
+}
+
+function speakCompassText(text) {
+  if (
+    !(
+      "speechSynthesis" in
+      window
+    )
+  ) {
+    return;
+  }
+
+  stopCompassReading();
+
+  const utterance =
+    new SpeechSynthesisUtterance(
+      text
+    );
+
+  utterance.rate =
+    compassPreferences.readSpeed;
+
+  utterance.lang =
+    document.documentElement.lang ||
+    "en";
+
+  window.speechSynthesis.speak(
+    utterance
+  );
+}
+
+function stopCompassReading() {
+  if (
+    "speechSynthesis" in window
+  ) {
+    window.speechSynthesis.cancel();
+  }
+}
+
+function showTooMuchPanel() {
+  const main =
+    document.querySelector("main");
+
+  main.innerHTML = `
+    <section
+      class="hero"
+      aria-labelledby="too-much-title"
+    >
+      <p class="eyebrow">
+        Too much?
+      </p>
+
+      <h2 id="too-much-title">
+        Make the space calmer now.
+      </h2>
+
+      <p class="hero-text">
+        This can reduce motion, soften
+        the screen and make the text
+        a little easier to follow.
+      </p>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="primary-button"
+          id="calm-just-now-button"
+        >
+          Just for Now
+        </button>
+
+        <button
+          type="button"
+          class="primary-button"
+          id="calm-keep-button"
+        >
+          Keep It This Way
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="too-much-settings-button"
+        >
+          Choose My Settings
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="too-much-home-button"
+        >
+          Back Home
+        </button>
+      </div>
+    </section>
+  `;
+
+  const applyCalmPreset =
+    (save) => {
+      compassPreferences.reduceMotion =
+        true;
+
+      compassPreferences.background =
+        "soft";
+
+      compassPreferences.textSize =
+        Math.max(
+          105,
+          compassPreferences.textSize
+        );
+
+      compassPreferences.lineSpacing =
+        Math.max(
+          1.7,
+          compassPreferences.lineSpacing
+        );
+
+      compassPreferences.textWidth =
+        Math.min(
+          64,
+          compassPreferences.textWidth
+        );
+
+      applyCompassPreferences();
+
+      if (save) {
+        saveCompassPreferences();
+      }
+
+      showMakeItMine(
+        save
+          ? "Calmer settings are saved."
+          : "Calmer settings are active for now."
+      );
+    };
+
+  document
+    .getElementById(
+      "calm-just-now-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        applyCalmPreset(false);
+      }
+    );
+
+  document
+    .getElementById(
+      "calm-keep-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        applyCalmPreset(true);
+      }
+    );
+
+  document
+    .getElementById(
+      "too-much-settings-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showMakeItMine();
+      }
+    );
+
+  document
+    .getElementById(
+      "too-much-home-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        window.location.reload();
+      }
+    );
+
+  refreshAccessibilityWiring();
+}
+
+
+// ------------------------------------------------------------
 // Core Student Experience V1
 // Little Things + My Days + Idea Garden + Toolkit + Home Recharge
 // ------------------------------------------------------------
