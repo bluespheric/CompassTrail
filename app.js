@@ -8372,6 +8372,12 @@ function refreshAccountButton() {
 function showCompassAccount(
   notice = ""
 ) {
+  // This function is also used directly as a click handler.
+  // In that case the browser passes a PointerEvent; it is not a user-facing notice.
+  if (typeof notice !== "string") {
+    notice = "";
+  }
+
   const main =
     document.querySelector("main");
 
