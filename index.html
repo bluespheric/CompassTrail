@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <meta
     name="description"
     content="Compass Trail — an accessibility-first learning companion."
@@ -10,7 +11,7 @@
 
   <title>Compass Trail</title>
 
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=3" />
 </head>
 
 <body>
@@ -75,16 +76,9 @@
       aria-label="Compass Trail tools"
     >
       <article class="home-card">
-        <span
-          class="card-icon"
-          aria-hidden="true"
-        >
-          🧭
-        </span>
+        <span class="card-icon" aria-hidden="true">🧭</span>
 
-        <h3>
-          Start Something
-        </h3>
+        <h3>Start Something</h3>
 
         <p>
           Turn homework, reading, projects or study
@@ -97,16 +91,9 @@
       </article>
 
       <article class="home-card">
-        <span
-          class="card-icon"
-          aria-hidden="true"
-        >
-          🍃
-        </span>
+        <span class="card-icon" aria-hidden="true">🍃</span>
 
-        <h3>
-          Little Things
-        </h3>
+        <h3>Little Things</h3>
 
         <p>
           Keep track of small tasks that do not need
@@ -119,16 +106,9 @@
       </article>
 
       <article class="home-card">
-        <span
-          class="card-icon"
-          aria-hidden="true"
-        >
-          📅
-        </span>
+        <span class="card-icon" aria-hidden="true">📅</span>
 
-        <h3>
-          My Days
-        </h3>
+        <h3>My Days</h3>
 
         <p>
           Plan things when it helps.
@@ -141,16 +121,9 @@
       </article>
 
       <article class="home-card">
-        <span
-          class="card-icon"
-          aria-hidden="true"
-        >
-          🌱
-        </span>
+        <span class="card-icon" aria-hidden="true">🌱</span>
 
-        <h3>
-          My Idea Garden
-        </h3>
+        <h3>My Idea Garden</h3>
 
         <p>
           Keep useful notes, ideas, questions
@@ -163,16 +136,9 @@
       </article>
 
       <article class="home-card">
-        <span
-          class="card-icon"
-          aria-hidden="true"
-        >
-          🌿
-        </span>
+        <span class="card-icon" aria-hidden="true">🌿</span>
 
-        <h3>
-          Recharge Cove
-        </h3>
+        <h3>Recharge Cove</h3>
 
         <p>
           Take a break without losing your place.
@@ -184,16 +150,9 @@
       </article>
 
       <article class="home-card">
-        <span
-          class="card-icon"
-          aria-hidden="true"
-        >
-          🪄
-        </span>
+        <span class="card-icon" aria-hidden="true">🪄</span>
 
-        <h3>
-          Make It Mine
-        </h3>
+        <h3>Make It Mine</h3>
 
         <p>
           Change text, motion, contrast, sound
@@ -213,7 +172,9 @@
     </p>
   </footer>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.12.3/mammoth.browser.min.js"></script>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.12.3/mammoth.browser.min.js"
+  ></script>
 
   <script type="module">
     import * as pdfjsLib
@@ -223,9 +184,11 @@
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.3.289/pdf.worker.min.mjs";
 
     window.pdfjsLib = pdfjsLib;
+
+    console.log("PDF.js ready:", pdfjsLib.version);
   </script>
 
-  <script src="extractors.js"></script>
-  <script src="app.js"></script>
+  <script src="extractors.js?v=3"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
