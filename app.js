@@ -2465,7 +2465,1107 @@ function wireHomeExperience() {
 }
 
 wireHomeExperience();
-installCompassFocusButton();
+
+
+// ------------------------------------------------------------
+// Check-in + My Pace V1
+// Direct, optional, diagnosis-free support.
+// ------------------------------------------------------------
+
+const COMPASS_FOCUS_STATE_KEY =
+  "compassTrailFocusStateV1";
+
+function loadCompassFocusState() {
+  try {
+    const saved = JSON.parse(
+      localStorage.getItem(
+        COMPASS_FOCUS_STATE_KEY
+      ) || "{}"
+    );
+
+    return {
+      energy:
+        typeof saved.energy === "string"
+          ? saved.energy
+          : "",
+      timerMinutes:
+        Number(saved.timerMinutes) || 10,
+      timerEndsAt:
+        Number(saved.timerEndsAt) || 0,
+      timerPausedRemaining:
+        Number(saved.timerPausedRemaining) || 0,
+      reflection:
+        typeof saved.reflection === "string"
+          ? saved.reflection
+          : "",
+      lastCheckInAt:
+        saved.lastCheckInAt || "",
+      lastCheckOutAt:
+        saved.lastCheckOutAt || "",
+    };
+  } catch (error) {
+    console.warn(
+      "Could not load Check-in and My Pace settings.",
+      error
+    );
+
+    return {
+      energy: "",
+      timerMinutes: 10,
+      timerEndsAt: 0,
+      timerPausedRemaining: 0,
+      reflection: "",
+      lastCheckInAt: "",
+      lastCheckOutAt: "",
+    };
+  }
+}
+
+let compassFocusState =
+  loadCompassFocusState();
+
+let compassFocusTimerInterval = null;
+
+function saveCompassFocusState() {
+  try {
+    localStorage.setItem(
+      COMPASS_FOCUS_STATE_KEY,
+      JSON.stringify(compassFocusState)
+    );
+  } catch (error) {
+    console.warn(
+      "Could not save Check-in and My Pace settings.",
+      error
+    );
+  }
+}
+
+function clearCompassFocusTimerInterval() {
+  if (compassFocusTimerInterval) {
+    clearInterval(
+      compassFocusTimerInterval
+    );
+    compassFocusTimerInterval = null;
+  }
+}
+
+function compassEnergyPresentation() {
+  if (compassFocusState.energy === "low") {
+    return {
+      label: "Low energy",
+      message:
+        "Fewer choices will be shown at once. Your learning goal stays the same.",
+    };
+  }
+
+  if (
+    compassFocusState.energy === "medium"
+  ) {
+    return {
+      label: "Medium energy",
+      message:
+        "A few choices will be shown at once. Your learning goal stays the same.",
+    };
+  }
+
+  if (
+    compassFocusState.energy === "high"
+  ) {
+    return {
+      label: "High energy",
+      message:
+        "The full set of choices can stay visible. Your learning goal stays the same.",
+    };
+  }
+
+  return {
+    label: "Check-in skipped",
+    message:
+      "No energy setting is active. You can still use every support.",
+  };
+}
+
+function compassTimerRemainingMs() {
+  if (
+    compassFocusState.timerPausedRemaining >
+    0
+  ) {
+    return compassFocusState
+      .timerPausedRemaining;
+  }
+
+  if (!compassFocusState.timerEndsAt) {
+    return (
+      compassFocusState.timerMinutes *
+      60 *
+      1000
+    );
+  }
+
+  return Math.max(
+    0,
+    compassFocusState.timerEndsAt -
+      Date.now()
+  );
+}
+
+function formatCompassTimer(ms) {
+  const totalSeconds = Math.max(
+    0,
+    Math.ceil(ms / 1000)
+  );
+  const minutes =
+    Math.floor(totalSeconds / 60);
+  const seconds =
+    totalSeconds % 60;
+
+  return `${minutes}:${String(
+    seconds
+  ).padStart(2, "0")}`;
+}
+
+function showCompassCheckIn(
+  notice = ""
+) {
+  if (typeof notice !== "string") {
+    notice = "";
+  }
+
+  clearCompassFocusTimerInterval();
+
+  const main =
+    document.querySelector("main");
+
+  if (!main) return;
+
+  const selected =
+    compassFocusState.energy;
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="check-in-title"
+    >
+      <p class="eyebrow">
+        Check-in
+      </p>
+
+      <h2 id="check-in-title">
+        How much energy do you have for this right now?
+      </h2>
+
+      <p class="hero-text">
+        Choose one option, or skip this.
+        This is not a grade. Your answer only
+        changes how much information is shown
+        at once.
+      </p>
+
+      ${
+        notice
+          ? `
+            <div
+              class="undo-message"
+              role="status"
+            >
+              ${escapeHtml(notice)}
+            </div>
+          `
+          : ""
+      }
+
+      <div
+        class="home-grid"
+        role="group"
+        aria-label="Energy level"
+      >
+        <article class="home-card">
+          <h3>Low energy</h3>
+          <p>
+            Show fewer choices at once.
+          </p>
+          <button
+            type="button"
+            class="compass-energy-choice"
+            data-energy="low"
+            aria-pressed="${
+              selected === "low"
+            }"
+          >
+            Choose Low Energy
+          </button>
+        </article>
+
+        <article class="home-card">
+          <h3>Medium energy</h3>
+          <p>
+            Show a few choices at once.
+          </p>
+          <button
+            type="button"
+            class="compass-energy-choice"
+            data-energy="medium"
+            aria-pressed="${
+              selected === "medium"
+            }"
+          >
+            Choose Medium Energy
+          </button>
+        </article>
+
+        <article class="home-card">
+          <h3>High energy</h3>
+          <p>
+            Keep the full set of choices visible.
+          </p>
+          <button
+            type="button"
+            class="compass-energy-choice"
+            data-energy="high"
+            aria-pressed="${
+              selected === "high"
+            }"
+          >
+            Choose High Energy
+          </button>
+        </article>
+      </div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="primary-button"
+          id="check-in-continue"
+        >
+          Continue
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="check-in-skip"
+        >
+          Skip Check-in
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="check-in-home"
+        >
+          Back Home
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .querySelectorAll(
+      ".compass-energy-choice"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          compassFocusState.energy =
+            button.dataset.energy || "";
+
+          compassFocusState
+            .lastCheckInAt =
+            new Date().toISOString();
+
+          saveCompassFocusState();
+
+          showCompassCheckIn(
+            "Energy setting saved."
+          );
+        }
+      );
+    });
+
+  document
+    .getElementById(
+      "check-in-continue"
+    )
+    ?.addEventListener(
+      "click",
+      () => showCompassFocusSpace()
+    );
+
+  document
+    .getElementById(
+      "check-in-skip"
+    )
+    ?.addEventListener(
+      "click",
+      () => {
+        compassFocusState.energy = "";
+        compassFocusState
+          .lastCheckInAt =
+          new Date().toISOString();
+
+        saveCompassFocusState();
+
+        showCompassFocusSpace(
+          "Check-in skipped. No energy setting was applied."
+        );
+      }
+    );
+
+  document
+    .getElementById(
+      "check-in-home"
+    )
+    ?.addEventListener(
+      "click",
+      backHome
+    );
+}
+
+function showCompassFocusSpace(
+  notice = ""
+) {
+  if (typeof notice !== "string") {
+    notice = "";
+  }
+
+  clearCompassFocusTimerInterval();
+
+  const main =
+    document.querySelector("main");
+
+  if (!main) return;
+
+  const presentation =
+    compassEnergyPresentation();
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="focus-space-title"
+    >
+      <p class="eyebrow">
+        My Pace
+      </p>
+
+      <h2 id="focus-space-title">
+        Choose how you want to work right now.
+      </h2>
+
+      <p class="hero-text">
+        ${escapeHtml(
+          presentation.message
+        )}
+      </p>
+
+      ${
+        notice
+          ? `
+            <div
+              class="undo-message"
+              role="status"
+            >
+              ${escapeHtml(notice)}
+            </div>
+          `
+          : ""
+      }
+
+      <div class="comfort-panel">
+        <div class="comfort-control">
+          <strong>
+            Current check-in
+          </strong>
+          <p>
+            ${escapeHtml(
+              presentation.label
+            )}
+          </p>
+          <button
+            type="button"
+            class="small-action-button"
+            id="change-check-in"
+          >
+            Change Check-in
+          </button>
+        </div>
+
+        <div class="comfort-control">
+          <strong>
+            Optional timer
+          </strong>
+          <p>
+            The timer is a tool. When it ends,
+            your work is not marked wrong,
+            late, or incomplete.
+          </p>
+
+          <label for="focus-timer-minutes">
+            Minutes
+          </label>
+
+          <select id="focus-timer-minutes">
+            ${[
+              2, 5, 10, 15, 20,
+              25, 30, 45, 60
+            ]
+              .map(
+                (minutes) => `
+                  <option
+                    value="${minutes}"
+                    ${
+                      compassFocusState
+                        .timerMinutes ===
+                      minutes
+                        ? "selected"
+                        : ""
+                    }
+                  >
+                    ${minutes}
+                  </option>
+                `
+              )
+              .join("")}
+          </select>
+
+          <button
+            type="button"
+            class="primary-button"
+            id="start-focus-timer"
+          >
+            Start Timer
+          </button>
+        </div>
+
+        <div class="comfort-control">
+          <strong>
+            Need a break?
+          </strong>
+          <p>
+            Your progress stays saved when
+            you take a break.
+          </p>
+          <button
+            type="button"
+            class="small-action-button"
+            id="focus-break-button"
+          >
+            Open Recharge Cove
+          </button>
+        </div>
+      </div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="secondary-button"
+          id="focus-check-out"
+        >
+          Finish for Now
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="focus-home"
+        >
+          Back Home
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "change-check-in"
+    )
+    ?.addEventListener(
+      "click",
+      () => showCompassCheckIn()
+    );
+
+  document
+    .getElementById(
+      "start-focus-timer"
+    )
+    ?.addEventListener(
+      "click",
+      () => {
+        const select =
+          document.getElementById(
+            "focus-timer-minutes"
+          );
+
+        compassFocusState.timerMinutes =
+          Number(select?.value) || 10;
+
+        compassFocusState
+          .timerPausedRemaining = 0;
+
+        compassFocusState.timerEndsAt =
+          Date.now() +
+          compassFocusState
+            .timerMinutes *
+            60 *
+            1000;
+
+        saveCompassFocusState();
+        showCompassTimer();
+      }
+    );
+
+  document
+    .getElementById(
+      "focus-break-button"
+    )
+    ?.addEventListener(
+      "click",
+      () => {
+        if (
+          typeof showHomeRechargeCove ===
+          "function"
+        ) {
+          showHomeRechargeCove();
+        }
+      }
+    );
+
+  document
+    .getElementById(
+      "focus-check-out"
+    )
+    ?.addEventListener(
+      "click",
+      () => showCompassCheckOut()
+    );
+
+  document
+    .getElementById(
+      "focus-home"
+    )
+    ?.addEventListener(
+      "click",
+      backHome
+    );
+}
+
+function showCompassTimer(
+  notice = ""
+) {
+  if (typeof notice !== "string") {
+    notice = "";
+  }
+
+  clearCompassFocusTimerInterval();
+
+  const main =
+    document.querySelector("main");
+
+  if (!main) return;
+
+  const renderTimer = () => {
+    const remaining =
+      compassTimerRemainingMs();
+
+    const finished =
+      remaining <= 0 &&
+      (
+        compassFocusState.timerEndsAt >
+          0 ||
+        compassFocusState
+          .timerPausedRemaining === 0
+      );
+
+    main.innerHTML = `
+      <section
+        class="material-page"
+        aria-labelledby="timer-title"
+      >
+        <p class="eyebrow">
+          My Pace Timer
+        </p>
+
+        <h2 id="timer-title">
+          ${
+            remaining <= 0
+              ? "Timer finished."
+              : "Time remaining"
+          }
+        </h2>
+
+        <p class="hero-text">
+          ${
+            remaining <= 0
+              ? "The timer ended. Your progress is unchanged. Choose what you want to do next."
+              : "This timer does not grade your work. You can pause, stop, or take a break at any time."
+          }
+        </p>
+
+        ${
+          notice
+            ? `
+              <div
+                class="undo-message"
+                role="status"
+              >
+                ${escapeHtml(notice)}
+              </div>
+            `
+            : ""
+        }
+
+        <div class="comfort-panel">
+          <div class="comfort-control">
+            <strong
+              id="focus-timer-display"
+              aria-live="polite"
+            >
+              ${formatCompassTimer(
+                remaining
+              )}
+            </strong>
+          </div>
+        </div>
+
+        <div class="hero-actions">
+          ${
+            compassFocusState.timerEndsAt
+              ? `
+                <button
+                  type="button"
+                  class="primary-button"
+                  id="pause-focus-timer"
+                >
+                  Pause
+                </button>
+              `
+              : ""
+          }
+
+          ${
+            compassFocusState
+              .timerPausedRemaining > 0
+              ? `
+                <button
+                  type="button"
+                  class="primary-button"
+                  id="resume-focus-timer"
+                >
+                  Resume
+                </button>
+              `
+              : ""
+          }
+
+          <button
+            type="button"
+            class="secondary-button"
+            id="stop-focus-timer"
+          >
+            Stop Timer
+          </button>
+
+          <button
+            type="button"
+            class="secondary-button"
+            id="timer-break-button"
+          >
+            Take a Break
+          </button>
+
+          <button
+            type="button"
+            class="secondary-button"
+            id="timer-back-button"
+          >
+            Back to My Pace
+          </button>
+        </div>
+      </section>
+    `;
+
+    document
+      .getElementById(
+        "pause-focus-timer"
+      )
+      ?.addEventListener(
+        "click",
+        () => {
+          compassFocusState
+            .timerPausedRemaining =
+            compassTimerRemainingMs();
+
+          compassFocusState
+            .timerEndsAt = 0;
+
+          saveCompassFocusState();
+
+          showCompassTimer(
+            "Timer paused."
+          );
+        }
+      );
+
+    document
+      .getElementById(
+        "resume-focus-timer"
+      )
+      ?.addEventListener(
+        "click",
+        () => {
+          compassFocusState
+            .timerEndsAt =
+            Date.now() +
+            compassFocusState
+              .timerPausedRemaining;
+
+          compassFocusState
+            .timerPausedRemaining = 0;
+
+          saveCompassFocusState();
+
+          showCompassTimer(
+            "Timer resumed."
+          );
+        }
+      );
+
+    document
+      .getElementById(
+        "stop-focus-timer"
+      )
+      ?.addEventListener(
+        "click",
+        () => {
+          compassFocusState
+            .timerEndsAt = 0;
+
+          compassFocusState
+            .timerPausedRemaining = 0;
+
+          saveCompassFocusState();
+
+          showCompassFocusSpace(
+            "Timer stopped. Your progress was not changed."
+          );
+        }
+      );
+
+    document
+      .getElementById(
+        "timer-break-button"
+      )
+      ?.addEventListener(
+        "click",
+        () => {
+          if (
+            compassFocusState
+              .timerEndsAt
+          ) {
+            compassFocusState
+              .timerPausedRemaining =
+              compassTimerRemainingMs();
+
+            compassFocusState
+              .timerEndsAt = 0;
+
+            saveCompassFocusState();
+          }
+
+          if (
+            typeof showHomeRechargeCove ===
+            "function"
+          ) {
+            showHomeRechargeCove();
+          }
+        }
+      );
+
+    document
+      .getElementById(
+        "timer-back-button"
+      )
+      ?.addEventListener(
+        "click",
+        () =>
+          showCompassFocusSpace()
+      );
+  };
+
+  renderTimer();
+
+  if (compassFocusState.timerEndsAt) {
+    compassFocusTimerInterval =
+      setInterval(
+        () => {
+          const display =
+            document.getElementById(
+              "focus-timer-display"
+            );
+
+          if (!display) {
+            clearCompassFocusTimerInterval();
+            return;
+          }
+
+          const remaining =
+            compassTimerRemainingMs();
+
+          display.textContent =
+            formatCompassTimer(
+              remaining
+            );
+
+          if (remaining <= 0) {
+            clearCompassFocusTimerInterval();
+
+            compassFocusState
+              .timerEndsAt = 0;
+
+            compassFocusState
+              .timerPausedRemaining = 0;
+
+            saveCompassFocusState();
+
+            showCompassTimer();
+          }
+        },
+        1000
+      );
+  }
+}
+
+function showCompassCheckOut(
+  notice = ""
+) {
+  if (typeof notice !== "string") {
+    notice = "";
+  }
+
+  clearCompassFocusTimerInterval();
+
+  const main =
+    document.querySelector("main");
+
+  if (!main) return;
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="check-out-title"
+    >
+      <p class="eyebrow">
+        Check-out
+      </p>
+
+      <h2 id="check-out-title">
+        Do you want to save a short note before you finish?
+      </h2>
+
+      <p class="hero-text">
+        This is optional and is not a grade.
+        Write what helped, what was difficult,
+        or what you want to remember next time.
+        You can also skip it.
+      </p>
+
+      ${
+        notice
+          ? `
+            <div
+              class="undo-message"
+              role="status"
+            >
+              ${escapeHtml(notice)}
+            </div>
+          `
+          : ""
+      }
+
+      <label for="check-out-reflection">
+        <strong>
+          Optional note
+        </strong>
+      </label>
+
+      <textarea
+        id="check-out-reflection"
+        rows="5"
+        maxlength="800"
+        placeholder="Example: Breaking the first step into smaller parts helped."
+      >${escapeHtml(
+        compassFocusState.reflection
+      )}</textarea>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="primary-button"
+          id="save-check-out"
+        >
+          Save Note & Finish
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="skip-check-out"
+        >
+          Skip & Finish
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="check-out-back"
+        >
+          Back
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "save-check-out"
+    )
+    ?.addEventListener(
+      "click",
+      () => {
+        const value =
+          document
+            .getElementById(
+              "check-out-reflection"
+            )
+            ?.value.trim() || "";
+
+        compassFocusState.reflection =
+          value;
+
+        compassFocusState
+          .lastCheckOutAt =
+          new Date().toISOString();
+
+        saveCompassFocusState();
+        backHome();
+      }
+    );
+
+  document
+    .getElementById(
+      "skip-check-out"
+    )
+    ?.addEventListener(
+      "click",
+      () => {
+        compassFocusState
+          .lastCheckOutAt =
+          new Date().toISOString();
+
+        saveCompassFocusState();
+        backHome();
+      }
+    );
+
+  document
+    .getElementById(
+      "check-out-back"
+    )
+    ?.addEventListener(
+      "click",
+      () => showCompassFocusSpace()
+    );
+}
+
+function addCompassFocusHomeCard() {
+  if (
+    document.getElementById(
+      "compass-focus-home-card"
+    )
+  ) {
+    return;
+  }
+
+  const grid =
+    document.querySelector(
+      ".home-grid"
+    );
+
+  if (!grid) return;
+
+  const card =
+    document.createElement(
+      "article"
+    );
+
+  card.id =
+    "compass-focus-home-card";
+
+  card.className =
+    "home-card";
+
+  card.innerHTML = `
+    <span
+      class="card-icon"
+      aria-hidden="true"
+    >
+      ⏱️
+    </span>
+
+    <h3>
+      Check-in &amp; My Pace
+    </h3>
+
+    <p>
+      Choose how much information to see
+      at once and use an optional timer.
+    </p>
+
+    <button
+      type="button"
+      id="open-compass-focus-button"
+    >
+      Open Check-in
+    </button>
+  `;
+
+  const myDaysButton =
+    findButtonByLabel(
+      "Open My Days"
+    );
+
+  const myDaysCard =
+    myDaysButton?.closest(
+      ".home-card"
+    );
+
+  if (
+    myDaysCard &&
+    myDaysCard.parentElement === grid
+  ) {
+    myDaysCard.insertAdjacentElement(
+      "afterend",
+      card
+    );
+  } else {
+    grid.appendChild(card);
+  }
+
+  document
+    .getElementById(
+      "open-compass-focus-button"
+    )
+    ?.addEventListener(
+      "click",
+      () => showCompassCheckIn()
+    );
+}
+
+window.addEventListener(
+  "load",
+  addCompassFocusHomeCard
+);
+
 
 function backHome() {
   window.location.reload();
@@ -9563,71 +10663,3 @@ window.addEventListener(
   "load",
   bootCompassCloudV1
 );
-
-
-
-// Compass Trail — Check-in & My Pace Home entry fix.
-function installCompassFocusHomeCard() {
-  if (document.getElementById("compass-focus-home-card")) return true;
-
-  const cards = Array.from(document.querySelectorAll("main .home-card"));
-  if (!cards.length) return false;
-
-  const referenceCard =
-    cards.find((card) => /My Days/i.test(card.textContent || "")) ||
-    cards.find((card) => /Little Things/i.test(card.textContent || "")) ||
-    cards[0];
-
-  const parent = referenceCard.parentElement;
-  if (!parent) return false;
-
-  const card = document.createElement("button");
-  card.type = "button";
-  card.id = "compass-focus-home-card";
-  card.className = referenceCard.className || "home-card";
-  card.innerHTML = `
-    <span aria-hidden="true">⏱️</span>
-    <h3>Check-in &amp; My Pace</h3>
-    <p>Choose how much information to see at once and use an optional timer.</p>
-  `;
-  card.addEventListener("click", () => showCompassCheckIn());
-
-  referenceCard.insertAdjacentElement("afterend", card);
-  return true;
-}
-
-function keepCompassFocusHomeCardAvailable() {
-  if (installCompassFocusHomeCard()) return;
-
-  let attempts = 0;
-  const retry = setInterval(() => {
-    attempts += 1;
-    if (installCompassFocusHomeCard() || attempts >= 30) {
-      clearInterval(retry);
-    }
-  }, 100);
-}
-
-keepCompassFocusHomeCardAvailable();
-
-const compassFocusHomeCardObserver = new MutationObserver(() => {
-  const main = document.querySelector("main");
-  if (!main) return;
-
-  const homeText = main.textContent || "";
-  if (
-    /Start Something/i.test(homeText) &&
-    /Little Things/i.test(homeText) &&
-    /My Days/i.test(homeText)
-  ) {
-    installCompassFocusHomeCard();
-  }
-});
-
-const compassFocusObservedMain = document.querySelector("main");
-if (compassFocusObservedMain) {
-  compassFocusHomeCardObserver.observe(compassFocusObservedMain, {
-    childList: true,
-    subtree: true
-  });
-}
