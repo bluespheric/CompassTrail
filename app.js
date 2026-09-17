@@ -878,6 +878,7 @@ const compassStateKey =
 const compassStudentState = {
   learnerName: "",
   activeJourney: null,
+  cloudJourneyId: null,
   lastSavedAt: null,
 };
 
@@ -893,6 +894,8 @@ function saveStudentState() {
           compassStudentState.learnerName,
         activeJourney:
           compassStudentState.activeJourney,
+        cloudJourneyId:
+          compassStudentState.cloudJourneyId,
         littleThings,
         ideaGardenNotes,
         myDaysItems,
@@ -934,6 +937,11 @@ function loadStudentState() {
 
       compassStudentState.activeJourney =
         saved.activeJourney || null;
+
+      compassStudentState.cloudJourneyId =
+        typeof saved.cloudJourneyId === "string"
+          ? saved.cloudJourneyId
+          : null;
 
       compassStudentState.lastSavedAt =
         saved.lastSavedAt || null;
@@ -8206,3 +8214,1319 @@ function escapeHtml(value) {
       "&#039;"
     );
 }
+
+// ------------------------------------------------------------
+// Compass Trail — Supabase Auth + Cloud Save V1
+// ------------------------------------------------------------
+// Publishable key is intentionally safe for browser use.
+// Never place a Supabase secret/service-role key in this file.
+
+const COMPASS_SUPABASE_URL =
+  "https://akhaxxxqyzmrknowdalu.supabase.co";
+
+const COMPASS_SUPABASE_PUBLISHABLE_KEY =
+  "sb_publishable_Lasm5e6nIFYLbmlj0bb2hg_zt9w0I_N";
+
+const compassCloud =
+  window.supabase?.createClient(
+    COMPASS_SUPABASE_URL,
+    COMPASS_SUPABASE_PUBLISHABLE_KEY,
+    {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false,
+      },
+    }
+  );
+
+let compassCloudSession = null;
+let compassCloudSyncTimer = null;
+let compassCloudSyncBusy = false;
+let compassCloudSyncQueued = false;
+
+function cloudStatus(message) {
+  const node =
+    document.getElementById(
+      "compass-account-status"
+    );
+
+  if (node) {
+    node.textContent = message;
+  }
+}
+
+async function callCompassFunction(
+  functionName,
+  body,
+  accessToken = ""
+) {
+  const headers = {
+    "Content-Type": "application/json",
+    apikey:
+      COMPASS_SUPABASE_PUBLISHABLE_KEY,
+  };
+
+  if (accessToken) {
+    headers.Authorization =
+      `Bearer ${accessToken}`;
+  }
+
+  const response = await fetch(
+    `${COMPASS_SUPABASE_URL}/functions/v1/${functionName}`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    }
+  );
+
+  const result =
+    await response.json().catch(
+      () => ({})
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      result.error ||
+        "That could not be completed right now."
+    );
+  }
+
+  return result;
+}
+
+function normalizeLearnerCode(value) {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "");
+}
+
+function installAccountButton() {
+  const nav =
+    document.querySelector("nav");
+
+  if (
+    !nav ||
+    document.getElementById(
+      "compass-account-button"
+    )
+  ) {
+    return;
+  }
+
+  // The old local-only profile button is replaced by
+  // the real cross-device account entry point.
+  const oldButton =
+    document.getElementById(
+      "device-profile-button"
+    );
+
+  if (oldButton) {
+    oldButton.remove();
+  }
+
+  const button =
+    document.createElement("button");
+
+  button.type = "button";
+  button.id = "compass-account-button";
+  button.className = "nav-button";
+  button.textContent =
+    compassCloudSession
+      ? (
+          compassStudentState.learnerName ||
+          "My Account"
+        )
+      : "My Account";
+
+  button.addEventListener(
+    "click",
+    showCompassAccount
+  );
+
+  nav.appendChild(button);
+}
+
+function refreshAccountButton() {
+  const button =
+    document.getElementById(
+      "compass-account-button"
+    );
+
+  if (!button) {
+    installAccountButton();
+    return;
+  }
+
+  button.textContent =
+    compassCloudSession
+      ? (
+          compassStudentState.learnerName ||
+          "My Account"
+        )
+      : "My Account";
+}
+
+function showCompassAccount(
+  notice = ""
+) {
+  const main =
+    document.querySelector("main");
+
+  if (!compassCloud) {
+    main.innerHTML = `
+      <section class="hero">
+        <p class="eyebrow">My Account</p>
+        <h2>Cloud connection is not ready.</h2>
+        <p class="hero-text">
+          Your on-device work is still here.
+        </p>
+      </section>
+    `;
+    return;
+  }
+
+  if (compassCloudSession) {
+    showSignedInAccount(notice);
+    return;
+  }
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="account-title"
+    >
+      <p class="eyebrow">
+        My Account
+      </p>
+
+      <h2 id="account-title">
+        Pick up your trail on another device.
+      </h2>
+
+      <p class="hero-text">
+        Use a Learner Code and Secret Code.
+        No email, phone number or real name is required.
+      </p>
+
+      ${
+        notice
+          ? `
+            <div
+              class="undo-message"
+              role="status"
+            >
+              ${escapeHtml(notice)}
+            </div>
+          `
+          : ""
+      }
+
+      <div class="account-grid">
+        <article class="home-card">
+          <h3>Sign In</h3>
+
+          <label for="account-login-code">
+            <strong>Learner Code</strong>
+          </label>
+          <input
+            id="account-login-code"
+            type="text"
+            autocomplete="username"
+            placeholder="CT-XXXX-XXXX"
+          />
+
+          <label for="account-login-secret">
+            <strong>Secret Code</strong>
+          </label>
+          <input
+            id="account-login-secret"
+            type="password"
+            autocomplete="current-password"
+          />
+
+          <button
+            type="button"
+            id="account-login-button"
+          >
+            Sign In
+          </button>
+        </article>
+
+        <article class="home-card">
+          <h3>Create Learner Account</h3>
+
+          <label for="account-register-nickname">
+            <strong>Nickname</strong>
+          </label>
+          <input
+            id="account-register-nickname"
+            type="text"
+            maxlength="40"
+            autocomplete="off"
+            placeholder="Choose any nickname"
+          />
+
+          <label for="account-register-secret">
+            <strong>Create a Secret Code</strong>
+          </label>
+          <input
+            id="account-register-secret"
+            type="password"
+            minlength="8"
+            maxlength="72"
+            autocomplete="new-password"
+          />
+
+          <p>
+            Keep your Learner Code somewhere you can
+            find again. Recovery options will be
+            available if access is lost.
+          </p>
+
+          <button
+            type="button"
+            id="account-register-button"
+          >
+            Create Account
+          </button>
+        </article>
+      </div>
+
+      <p
+        id="compass-account-status"
+        class="path-note"
+        role="status"
+        aria-live="polite"
+      ></p>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="secondary-button"
+          id="account-home-button"
+        >
+          Back Home
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "account-login-button"
+    )
+    .addEventListener(
+      "click",
+      handleCompassLogin
+    );
+
+  document
+    .getElementById(
+      "account-register-button"
+    )
+    .addEventListener(
+      "click",
+      handleCompassRegister
+    );
+
+  document
+    .getElementById(
+      "account-home-button"
+    )
+    .addEventListener(
+      "click",
+      () => window.location.reload()
+    );
+}
+
+async function handleCompassRegister() {
+  const nickname =
+    document
+      .getElementById(
+        "account-register-nickname"
+      )
+      .value
+      .trim();
+
+  const secretCode =
+    document
+      .getElementById(
+        "account-register-secret"
+      )
+      .value;
+
+  if (!nickname) {
+    cloudStatus(
+      "Choose a nickname first."
+    );
+    return;
+  }
+
+  if (
+    secretCode.length < 8 ||
+    secretCode.length > 72
+  ) {
+    cloudStatus(
+      "Secret Code needs 8–72 characters."
+    );
+    return;
+  }
+
+  cloudStatus(
+    "Creating your account…"
+  );
+
+  try {
+    const result =
+      await callCompassFunction(
+        "learner-auth",
+        {
+          action: "register",
+          nickname,
+          secretCode,
+        }
+      );
+
+    if (
+      !result.session?.access_token ||
+      !result.session?.refresh_token
+    ) {
+      throw new Error(
+        "The account was created, but sign-in could not be restored."
+      );
+    }
+
+    const { error } =
+      await compassCloud.auth.setSession({
+        access_token:
+          result.session.access_token,
+        refresh_token:
+          result.session.refresh_token,
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    compassStudentState.learnerName =
+      result.nickname || nickname;
+
+    saveStudentState();
+
+    showSignedInAccount(
+      `Account ready. Your Learner Code is ${result.learnerCode}.`
+    );
+
+    scheduleCompassCloudSync(150);
+  } catch (error) {
+    cloudStatus(
+      error.message ||
+        "Account could not be created right now."
+    );
+  }
+}
+
+async function handleCompassLogin() {
+  const learnerCode =
+    normalizeLearnerCode(
+      document
+        .getElementById(
+          "account-login-code"
+        )
+        .value
+    );
+
+  const secretCode =
+    document
+      .getElementById(
+        "account-login-secret"
+      )
+      .value;
+
+  if (
+    !learnerCode ||
+    !secretCode
+  ) {
+    cloudStatus(
+      "Enter both codes to continue."
+    );
+    return;
+  }
+
+  cloudStatus("Signing in…");
+
+  try {
+    const result =
+      await callCompassFunction(
+        "learner-auth",
+        {
+          action: "login",
+          learnerCode,
+          secretCode,
+        }
+      );
+
+    if (
+      !result.session?.access_token ||
+      !result.session?.refresh_token
+    ) {
+      throw new Error(
+        "Sign-in could not be restored."
+      );
+    }
+
+    const { error } =
+      await compassCloud.auth.setSession({
+        access_token:
+          result.session.access_token,
+        refresh_token:
+          result.session.refresh_token,
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    compassStudentState.learnerName =
+      result.nickname ||
+      compassStudentState.learnerName;
+
+    await loadCompassCloudState();
+
+    saveStudentState();
+
+    showSignedInAccount(
+      "Signed in. Your saved trail is ready."
+    );
+  } catch (error) {
+    cloudStatus(
+      error.message ||
+        "Those codes did not open an account."
+    );
+  }
+}
+
+function showSignedInAccount(
+  notice = ""
+) {
+  const main =
+    document.querySelector("main");
+
+  const user =
+    compassCloudSession?.user;
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="signed-account-title"
+    >
+      <p class="eyebrow">
+        My Account
+      </p>
+
+      <h2 id="signed-account-title">
+        ${
+          compassStudentState.learnerName
+            ? `Hi, ${escapeHtml(
+                compassStudentState.learnerName
+              )}.`
+            : "Your trail is connected."
+        }
+      </h2>
+
+      <p class="hero-text">
+        This account can carry supported Compass Trail
+        progress between devices.
+      </p>
+
+      ${
+        notice
+          ? `
+            <div
+              class="undo-message"
+              role="status"
+            >
+              ${escapeHtml(notice)}
+            </div>
+          `
+          : ""
+      }
+
+      <div class="comfort-panel">
+        <div class="comfort-control">
+          <strong>Cloud status</strong>
+          <p>
+            Signed in.
+          </p>
+        </div>
+
+        <div class="comfort-control">
+          <label for="account-new-secret">
+            New Secret Code
+          </label>
+          <input
+            id="account-new-secret"
+            type="password"
+            minlength="8"
+            maxlength="72"
+            autocomplete="new-password"
+          />
+          <button
+            type="button"
+            class="secondary-button"
+            id="account-change-secret-button"
+          >
+            Change Secret Code
+          </button>
+        </div>
+
+        <div class="comfort-control">
+          <strong>Recovery</strong>
+          <p>
+            Losing a code does not mean losing the
+            learner’s progress. Teacher-assisted
+            recovery is being connected separately.
+          </p>
+        </div>
+      </div>
+
+      <p
+        id="compass-account-status"
+        class="path-note"
+        role="status"
+        aria-live="polite"
+      ></p>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="primary-button"
+          id="account-sync-now-button"
+        >
+          Save My Trail Now
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="account-sign-out-button"
+        >
+          Sign Out
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="signed-account-home-button"
+        >
+          Back Home
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "account-change-secret-button"
+    )
+    .addEventListener(
+      "click",
+      handleChangeSecret
+    );
+
+  document
+    .getElementById(
+      "account-sync-now-button"
+    )
+    .addEventListener(
+      "click",
+      async () => {
+        cloudStatus(
+          "Saving your trail…"
+        );
+        const ok =
+          await syncCompassCloudState();
+
+        cloudStatus(
+          ok
+            ? "Your trail is saved."
+            : "Your trail is still safe on this device. Cloud save can be tried again."
+        );
+      }
+    );
+
+  document
+    .getElementById(
+      "account-sign-out-button"
+    )
+    .addEventListener(
+      "click",
+      handleCompassSignOut
+    );
+
+  document
+    .getElementById(
+      "signed-account-home-button"
+    )
+    .addEventListener(
+      "click",
+      () => window.location.reload()
+    );
+}
+
+async function handleChangeSecret() {
+  const input =
+    document.getElementById(
+      "account-new-secret"
+    );
+
+  const newSecretCode =
+    input.value;
+
+  if (
+    newSecretCode.length < 8 ||
+    newSecretCode.length > 72
+  ) {
+    cloudStatus(
+      "New Secret Code needs 8–72 characters."
+    );
+    return;
+  }
+
+  const token =
+    compassCloudSession?.access_token;
+
+  if (!token) {
+    cloudStatus(
+      "Please sign in again."
+    );
+    return;
+  }
+
+  cloudStatus(
+    "Changing Secret Code…"
+  );
+
+  try {
+    await callCompassFunction(
+      "account-recovery",
+      {
+        action: "change_secret",
+        newSecretCode,
+      },
+      token
+    );
+
+    input.value = "";
+
+    cloudStatus(
+      "Secret Code changed. Sign out and use the new code to test it."
+    );
+  } catch (error) {
+    cloudStatus(
+      error.message ||
+        "Secret Code could not be changed right now."
+    );
+  }
+}
+
+async function handleCompassSignOut() {
+  await syncCompassCloudState();
+
+  await compassCloud.auth.signOut({
+    scope: "local",
+  });
+
+  compassCloudSession = null;
+  refreshAccountButton();
+
+  showCompassAccount(
+    "Signed out. Your cloud progress stays with your account."
+  );
+}
+
+function scheduleCompassCloudSync(
+  delay = 900
+) {
+  if (!compassCloudSession) {
+    return;
+  }
+
+  window.clearTimeout(
+    compassCloudSyncTimer
+  );
+
+  compassCloudSyncTimer =
+    window.setTimeout(
+      syncCompassCloudState,
+      delay
+    );
+}
+
+async function syncCompassCloudState() {
+  if (
+    !compassCloud ||
+    !compassCloudSession?.user?.id
+  ) {
+    return false;
+  }
+
+  if (compassCloudSyncBusy) {
+    compassCloudSyncQueued = true;
+    return false;
+  }
+
+  compassCloudSyncBusy = true;
+
+  try {
+    const ownerId =
+      compassCloudSession.user.id;
+
+    // Profile nickname.
+    if (compassStudentState.learnerName) {
+      const { error: profileError } =
+        await compassCloud
+          .from("profiles")
+          .update({
+            nickname:
+              compassStudentState.learnerName,
+          })
+          .eq("id", ownerId);
+
+      if (profileError) {
+        throw profileError;
+      }
+    }
+
+    // One active Journey is synced in V1.
+    const journey =
+      compassStudentState.activeJourney;
+
+    if (journey) {
+      const journeyPayload = {
+        owner_id: ownerId,
+        title:
+          String(
+            journey.title ||
+            "My Journey"
+          ).slice(0, 200),
+        goal:
+          String(
+            journey.goal || ""
+          ),
+        task_type:
+          journey.taskType ||
+          journey.type ||
+          null,
+        current_step_index:
+          Math.max(
+            0,
+            Number(
+              journey.currentStepIndex
+            ) || 0
+          ),
+        status:
+          journey.status === "completed"
+            ? "completed"
+            : "active",
+      };
+
+      let journeyId =
+        compassStudentState.cloudJourneyId;
+
+      if (journeyId) {
+        const { error } =
+          await compassCloud
+            .from("journeys")
+            .update(journeyPayload)
+            .eq("id", journeyId)
+            .eq("owner_id", ownerId);
+
+        if (error) {
+          throw error;
+        }
+      } else {
+        const {
+          data,
+          error,
+        } =
+          await compassCloud
+            .from("journeys")
+            .insert(journeyPayload)
+            .select("id")
+            .single();
+
+        if (error) {
+          throw error;
+        }
+
+        journeyId = data.id;
+        compassStudentState.cloudJourneyId =
+          journeyId;
+        saveStudentState();
+      }
+
+      const { error: clearStepsError } =
+        await compassCloud
+          .from("journey_steps")
+          .delete()
+          .eq("journey_id", journeyId);
+
+      if (clearStepsError) {
+        throw clearStepsError;
+      }
+
+      const steps =
+        Array.isArray(journey.steps)
+          ? journey.steps
+          : [];
+
+      if (steps.length) {
+        const rows =
+          steps.map(
+            (step, position) => ({
+              journey_id: journeyId,
+              position,
+              title:
+                String(
+                  step.title ||
+                  `Step ${position + 1}`
+                ).slice(0, 200),
+              description:
+                String(
+                  step.description ||
+                  step.subtitle ||
+                  ""
+                ),
+              is_completed:
+                Boolean(
+                  step.isCompleted ||
+                  step.completed ||
+                  step.done
+                ),
+              completed_at:
+                (
+                  step.isCompleted ||
+                  step.completed ||
+                  step.done
+                )
+                  ? (
+                      step.completedAt ||
+                      new Date().toISOString()
+                    )
+                  : null,
+            })
+          );
+
+        const { error } =
+          await compassCloud
+            .from("journey_steps")
+            .insert(rows);
+
+        if (error) {
+          throw error;
+        }
+      }
+    }
+
+    // Small student tools are replaced as a snapshot.
+    const { error: littleClear } =
+      await compassCloud
+        .from("little_things")
+        .delete()
+        .eq("owner_id", ownerId);
+
+    if (littleClear) {
+      throw littleClear;
+    }
+
+    if (littleThings.length) {
+      const { error } =
+        await compassCloud
+          .from("little_things")
+          .insert(
+            littleThings.map(
+              (item) => ({
+                owner_id: ownerId,
+                text:
+                  String(
+                    item.text || ""
+                  ).slice(0, 500),
+                is_completed:
+                  Boolean(
+                    item.done ||
+                    item.is_completed
+                  ),
+              })
+            )
+          );
+
+      if (error) {
+        throw error;
+      }
+    }
+
+    const { error: ideaClear } =
+      await compassCloud
+        .from("idea_garden_notes")
+        .delete()
+        .eq("owner_id", ownerId);
+
+    if (ideaClear) {
+      throw ideaClear;
+    }
+
+    if (ideaGardenNotes.length) {
+      const { error } =
+        await compassCloud
+          .from("idea_garden_notes")
+          .insert(
+            ideaGardenNotes.map(
+              (note) => ({
+                owner_id: ownerId,
+                body:
+                  String(
+                    note.text ||
+                    note.body ||
+                    ""
+                  ).slice(0, 10000),
+                shared_with_teachers: false,
+              })
+            )
+          );
+
+      if (error) {
+        throw error;
+      }
+    }
+
+    const { error: daysClear } =
+      await compassCloud
+        .from("my_days_items")
+        .delete()
+        .eq("owner_id", ownerId);
+
+    if (daysClear) {
+      throw daysClear;
+    }
+
+    if (myDaysItems.length) {
+      const rows =
+        myDaysItems.map(
+          (item) => {
+            let dueAt = null;
+
+            if (
+              item.date &&
+              item.date !== "No date yet"
+            ) {
+              const parsed =
+                new Date(
+                  `${item.date}T12:00:00`
+                );
+
+              if (
+                !Number.isNaN(
+                  parsed.getTime()
+                )
+              ) {
+                dueAt =
+                  parsed.toISOString();
+              }
+            }
+
+            return {
+              owner_id: ownerId,
+              title:
+                String(
+                  item.text ||
+                  item.title ||
+                  ""
+                ).slice(0, 500),
+              due_at: dueAt,
+              reminder_rule:
+                item.reminder || null,
+              is_completed:
+                Boolean(
+                  item.done ||
+                  item.is_completed
+                ),
+            };
+          }
+        );
+
+      const { error } =
+        await compassCloud
+          .from("my_days_items")
+          .insert(rows);
+
+      if (error) {
+        throw error;
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.warn(
+      "Compass Trail cloud save could not finish.",
+      error
+    );
+    return false;
+  } finally {
+    compassCloudSyncBusy = false;
+
+    if (compassCloudSyncQueued) {
+      compassCloudSyncQueued = false;
+      scheduleCompassCloudSync(250);
+    }
+  }
+}
+
+async function loadCompassCloudState() {
+  if (
+    !compassCloudSession?.user?.id
+  ) {
+    return;
+  }
+
+  const ownerId =
+    compassCloudSession.user.id;
+
+  try {
+    const [
+      profileResult,
+      journeyResult,
+      littleResult,
+      ideaResult,
+      daysResult,
+    ] = await Promise.all([
+      compassCloud
+        .from("profiles")
+        .select("nickname")
+        .eq("id", ownerId)
+        .single(),
+
+      compassCloud
+        .from("journeys")
+        .select(
+          "id,title,goal,task_type,current_step_index,status,updated_at"
+        )
+        .eq("owner_id", ownerId)
+        .eq("status", "active")
+        .order(
+          "updated_at",
+          { ascending: false }
+        )
+        .limit(1)
+        .maybeSingle(),
+
+      compassCloud
+        .from("little_things")
+        .select(
+          "id,text,is_completed,created_at"
+        )
+        .eq("owner_id", ownerId)
+        .order(
+          "created_at",
+          { ascending: true }
+        ),
+
+      compassCloud
+        .from("idea_garden_notes")
+        .select(
+          "id,body,created_at"
+        )
+        .eq("owner_id", ownerId)
+        .order(
+          "created_at",
+          { ascending: false }
+        ),
+
+      compassCloud
+        .from("my_days_items")
+        .select(
+          "id,title,due_at,reminder_rule,is_completed,created_at"
+        )
+        .eq("owner_id", ownerId)
+        .order(
+          "created_at",
+          { ascending: true }
+        ),
+    ]);
+
+    if (
+      !profileResult.error &&
+      profileResult.data
+    ) {
+      compassStudentState.learnerName =
+        profileResult.data.nickname || "";
+    }
+
+    if (
+      !journeyResult.error &&
+      journeyResult.data
+    ) {
+      const cloudJourney =
+        journeyResult.data;
+
+      const { data: steps, error } =
+        await compassCloud
+          .from("journey_steps")
+          .select(
+            "position,title,description,is_completed,completed_at"
+          )
+          .eq(
+            "journey_id",
+            cloudJourney.id
+          )
+          .order(
+            "position",
+            { ascending: true }
+          );
+
+      if (!error) {
+        compassStudentState.cloudJourneyId =
+          cloudJourney.id;
+
+        compassStudentState.activeJourney = {
+          title: cloudJourney.title,
+          goal: cloudJourney.goal,
+          taskType:
+            cloudJourney.task_type,
+          currentStepIndex:
+            cloudJourney.current_step_index,
+          status:
+            cloudJourney.status,
+          steps:
+            (steps || []).map(
+              (step) => ({
+                title: step.title,
+                description:
+                  step.description,
+                completed:
+                  step.is_completed,
+                completedAt:
+                  step.completed_at,
+              })
+            ),
+        };
+      }
+    }
+
+    if (!littleResult.error) {
+      littleThings.splice(
+        0,
+        littleThings.length,
+        ...(littleResult.data || []).map(
+          (item) => ({
+            id: item.id,
+            text: item.text,
+            done: item.is_completed,
+          })
+        )
+      );
+    }
+
+    if (!ideaResult.error) {
+      ideaGardenNotes.splice(
+        0,
+        ideaGardenNotes.length,
+        ...(ideaResult.data || []).map(
+          (item) => ({
+            id: item.id,
+            text: item.body,
+          })
+        )
+      );
+    }
+
+    if (!daysResult.error) {
+      myDaysItems.splice(
+        0,
+        myDaysItems.length,
+        ...(daysResult.data || []).map(
+          (item) => ({
+            id: item.id,
+            text: item.title,
+            date:
+              item.due_at
+                ? item.due_at.slice(0, 10)
+                : "No date yet",
+            reminder:
+              item.reminder_rule ||
+              "none",
+            done:
+              item.is_completed,
+          })
+        )
+      );
+    }
+
+    saveStudentState();
+    refreshAccountButton();
+  } catch (error) {
+    console.warn(
+      "Compass Trail cloud restore could not finish.",
+      error
+    );
+  }
+}
+
+async function bootCompassCloudV1() {
+  if (!compassCloud) {
+    console.warn(
+      "Supabase browser client was not loaded."
+    );
+    installAccountButton();
+    return;
+  }
+
+  const {
+    data: { session },
+  } =
+    await compassCloud.auth.getSession();
+
+  compassCloudSession =
+    session || null;
+
+  if (compassCloudSession) {
+    await loadCompassCloudState();
+  }
+
+  installAccountButton();
+  refreshAccountButton();
+
+  compassCloud.auth.onAuthStateChange(
+    (_event, sessionNow) => {
+      compassCloudSession =
+        sessionNow || null;
+      refreshAccountButton();
+    }
+  );
+
+  // Existing local save behavior remains as an offline fallback.
+  // Cloud sync is debounced rather than firing on every click instantly.
+  document.addEventListener(
+    "click",
+    () => scheduleCompassCloudSync()
+  );
+
+  document.addEventListener(
+    "change",
+    () => scheduleCompassCloudSync()
+  );
+
+  window.addEventListener(
+    "beforeunload",
+    () => scheduleCompassCloudSync(0)
+  );
+}
+
+window.addEventListener(
+  "load",
+  bootCompassCloudV1
+);
+
