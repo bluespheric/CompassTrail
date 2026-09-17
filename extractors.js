@@ -25,11 +25,7 @@ async function extractTextFromMaterial(material) {
     }
 
     if (filename.endsWith(".docx")) {
-      return {
-        status: "needs-docx-reader",
-        text: "",
-        method: "docx",
-      };
+      return await extractDocxText(material.file);
     }
   }
 
@@ -54,4 +50,44 @@ async function extractTextFromMaterial(material) {
     text: "",
     method: "unknown",
   };
+}
+
+async function extractDocxText(file) {
+  if (!window.mammoth) {
+    throw new Error("DOCX reader is not available.");
+  }
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+
+    const result = await window.mammoth.extractRawText({
+      arrayBuffer,
+    });
+
+    const text = (result.value || "").trim();
+
+    if (!text) {
+      return {
+        status: "empty",
+        text: "",
+        method: "docx",
+        messages: result.messages || [],
+      };
+    }
+
+    return {
+      status: "ready",
+      text,
+      method: "docx",
+      messages: result.messages || [],
+    };
+  } catch (error) {
+    console.error("DOCX extraction failed:", error);
+
+    return {
+      status: "error",
+      text: "",
+      method: "docx",
+    };
+  }
 }
