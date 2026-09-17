@@ -2473,6 +2473,11 @@ function backHome() {
 function showLittleThings(
   notice = ""
 ) {
+  // This screen can also be opened directly by a click handler.
+  // Browsers pass a PointerEvent to that handler; it is not a user-facing message.
+  if (typeof notice !== "string") {
+    notice = "";
+  }
   const main =
     document.querySelector("main");
 
@@ -2611,8 +2616,8 @@ function showLittleThings(
 
           showLittleThings(
             item.done
-              ? "A little trail mark added. You can undo it anytime."
-              : "Put back on your list."
+              ? "Marked complete. You can undo this anytime."
+              : "Marked not complete. It is back on your list."
           );
         }
       );
@@ -2645,7 +2650,7 @@ function showLittleThings(
           );
 
           showLittleThings(
-            "Let go of that one."
+            "Removed from Little Things."
           );
         }
       );
@@ -2695,8 +2700,8 @@ function renderLittleThings() {
             <p>
               ${
                 item.done
-                  ? "Trail mark added."
-                  : "Waiting for you."
+                  ? "Complete."
+                  : "Not complete yet."
               }
             </p>
           </div>
@@ -2710,7 +2715,7 @@ function renderLittleThings() {
               ${
                 item.done
                   ? "Undo"
-                  : "Leave a Trail"
+                  : "Mark Complete"
               }
             </button>
 
@@ -2719,7 +2724,7 @@ function renderLittleThings() {
               class="small-action-button little-thing-remove"
               data-id="${item.id}"
             >
-              Let This Go
+              Remove
             </button>
           </div>
         </article>
@@ -2731,6 +2736,11 @@ function renderLittleThings() {
 function showIdeaGarden(
   notice = ""
 ) {
+  // This screen can also be opened directly by a click handler.
+  // Browsers pass a PointerEvent to that handler; it is not a user-facing message.
+  if (typeof notice !== "string") {
+    notice = "";
+  }
   const main =
     document.querySelector("main");
 
@@ -2745,7 +2755,7 @@ function showIdeaGarden(
         </p>
 
         <h2 id="idea-garden-title">
-          A place for things worth keeping.
+          Save notes and ideas here.
         </h2>
 
         <p class="hero-text">
@@ -2920,7 +2930,7 @@ function renderIdeaGarden() {
               class="small-action-button idea-remove-button"
               data-id="${note.id}"
             >
-              Let This Go
+              Remove
             </button>
           </div>
         </article>
@@ -2932,6 +2942,11 @@ function renderIdeaGarden() {
 function showMyDays(
   notice = ""
 ) {
+  // This screen can also be opened directly by a click handler.
+  // Browsers pass a PointerEvent to that handler; it is not a user-facing message.
+  if (typeof notice !== "string") {
+    notice = "";
+  }
   const main =
     document.querySelector("main");
 
@@ -8409,7 +8424,7 @@ function showCompassAccount(
       </p>
 
       <h2 id="account-title">
-        Pick up your trail on another device.
+        Sign in to continue your saved work on another device.
       </h2>
 
       <p class="hero-text">
