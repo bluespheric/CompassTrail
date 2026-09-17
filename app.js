@@ -12,6 +12,8 @@ beginJourneyButtons.forEach((button) => {
 });
 
 const materialBasket = [];
+let lastRemovedMaterial = null;
+let lastRemovedIndex = null;
 
 function showJourneyStartScreen() {
   const main = document.querySelector("main");
@@ -29,41 +31,12 @@ function showJourneyStartScreen() {
       </p>
 
       <div class="home-grid journey-start-grid">
-        <button class="home-card journey-option" data-journey-input="write">
-          <span class="card-icon" aria-hidden="true">✍️</span>
-          <h3>Write It Myself</h3>
-          <p>Tell Compass Trail what you need to work on.</p>
-        </button>
-
-        <button class="home-card journey-option" data-journey-input="photo">
-          <span class="card-icon" aria-hidden="true">📷</span>
-          <h3>Add Photos</h3>
-          <p>Bring one or more photos of worksheets, notes or pages.</p>
-        </button>
-
-        <button class="home-card journey-option" data-journey-input="pdf">
-          <span class="card-icon" aria-hidden="true">📄</span>
-          <h3>Add PDFs</h3>
-          <p>Bring one or more PDF files into your Material Basket.</p>
-        </button>
-
-        <button class="home-card journey-option" data-journey-input="document">
-          <span class="card-icon" aria-hidden="true">🗂️</span>
-          <h3>Add Documents</h3>
-          <p>Bring documents such as DOCX or TXT files.</p>
-        </button>
-
-        <button class="home-card journey-option" data-journey-input="paste">
-          <span class="card-icon" aria-hidden="true">📋</span>
-          <h3>Paste Text</h3>
-          <p>Paste instructions, notes or learning material.</p>
-        </button>
-
-        <button class="home-card journey-option" data-journey-input="mixed">
-          <span class="card-icon" aria-hidden="true">🧺</span>
-          <h3>Build My Material Basket</h3>
-          <p>Mix photos, PDFs, documents and text in one Journey.</p>
-        </button>
+        ${journeyOption("✍️", "Write It Myself", "Tell Compass Trail what you need to work on.", "write")}
+        ${journeyOption("📷", "Add Photos", "Bring one or more photos of worksheets, notes or pages.", "photo")}
+        ${journeyOption("📄", "Add PDFs", "Bring one or more PDF files into your Material Basket.", "pdf")}
+        ${journeyOption("🗂️", "Add Documents", "Bring documents such as DOCX or TXT files.", "document")}
+        ${journeyOption("📋", "Paste Text", "Paste instructions, notes or learning material.", "paste")}
+        ${journeyOption("🧺", "Build My Material Basket", "Mix photos, PDFs, documents and text in one Journey.", "mixed")}
       </div>
 
       <div class="hero-actions">
@@ -76,16 +49,23 @@ function showJourneyStartScreen() {
 
   document
     .getElementById("back-home-button")
-    .addEventListener("click", () => {
-      window.location.reload();
-    });
+    .addEventListener("click", () => window.location.reload());
 
   document.querySelectorAll(".journey-option").forEach((option) => {
     option.addEventListener("click", () => {
-      const selectedType = option.dataset.journeyInput;
-      showMaterialBasket(selectedType);
+      showMaterialBasket(option.dataset.journeyInput);
     });
   });
+}
+
+function journeyOption(icon, title, description, type) {
+  return `
+    <button class="home-card journey-option" data-journey-input="${type}">
+      <span class="card-icon" aria-hidden="true">${icon}</span>
+      <h3>${title}</h3>
+      <p>${description}</p>
+    </button>
+  `;
 }
 
 function showMaterialBasket(selectedType = "mixed") {
@@ -96,39 +76,19 @@ function showMaterialBasket(selectedType = "mixed") {
       <div class="material-heading">
         <p class="eyebrow">My Material Basket</p>
 
-        <h2 id="material-title">
-          Bring everything you need.
-        </h2>
+        <h2 id="material-title">Bring everything you need.</h2>
 
         <p class="hero-text">
-          Add one thing or mix different materials together. You can change your basket later.
+          Add one thing or mix different materials together.
+          You can change your basket later.
         </p>
       </div>
 
       <section class="material-actions" aria-label="Add learning material">
-        <button type="button" class="material-action" id="add-photo-button">
-          <span aria-hidden="true">📷</span>
-          <strong>Add Photos</strong>
-          <span>JPG, PNG or WebP</span>
-        </button>
-
-        <button type="button" class="material-action" id="add-pdf-button">
-          <span aria-hidden="true">📄</span>
-          <strong>Add PDFs</strong>
-          <span>PDF files</span>
-        </button>
-
-        <button type="button" class="material-action" id="add-document-button">
-          <span aria-hidden="true">🗂️</span>
-          <strong>Add Documents</strong>
-          <span>DOCX or TXT</span>
-        </button>
-
-        <button type="button" class="material-action" id="paste-text-button">
-          <span aria-hidden="true">📋</span>
-          <strong>Paste Text</strong>
-          <span>Instructions or notes</span>
-        </button>
+        ${materialAction("📷", "Add Photos", "JPG, PNG or WebP", "add-photo-button")}
+        ${materialAction("📄", "Add PDFs", "PDF files", "add-pdf-button")}
+        ${materialAction("🗂️", "Add Documents", "DOCX or TXT", "add-document-button")}
+        ${materialAction("📋", "Paste Text", "Instructions or notes", "paste-text-button")}
       </section>
 
       <input
@@ -162,10 +122,10 @@ function showMaterialBasket(selectedType = "mixed") {
             <h3 id="basket-title">Materials</h3>
           </div>
 
-          <span id="material-count" class="material-count">
-            0 items
-          </span>
+          <span id="material-count" class="material-count">0 items</span>
         </div>
+
+        <div id="undo-area"></div>
 
         <div id="material-list" class="material-list"></div>
 
@@ -191,6 +151,7 @@ function showMaterialBasket(selectedType = "mixed") {
   `;
 
   connectMaterialBasketEvents();
+  renderMaterialBasket();
 
   if (selectedType === "photo") {
     document.getElementById("photo-input").click();
@@ -207,8 +168,16 @@ function showMaterialBasket(selectedType = "mixed") {
   if (selectedType === "paste" || selectedType === "write") {
     showPasteTextPanel();
   }
+}
 
-  renderMaterialBasket();
+function materialAction(icon, title, subtitle, id) {
+  return `
+    <button type="button" class="material-action" id="${id}">
+      <span aria-hidden="true">${icon}</span>
+      <strong>${title}</strong>
+      <span>${subtitle}</span>
+    </button>
+  `;
 }
 
 function connectMaterialBasketEvents() {
@@ -264,6 +233,10 @@ function addFilesToBasket(fileList, type) {
       name: file.name,
       size: file.size,
       file,
+      previewUrl:
+        type === "photo"
+          ? URL.createObjectURL(file)
+          : null,
     });
   });
 
@@ -372,6 +345,7 @@ function renderMaterialBasket() {
   if (materialBasket.length === 0) {
     list.innerHTML = "";
     emptyBasket.hidden = false;
+    renderUndoArea();
     return;
   }
 
@@ -395,26 +369,137 @@ function renderMaterialBasket() {
             <p>
               ${getMaterialDescription(material)}
             </p>
-          </div>
 
-          <button
-            type="button"
-            class="remove-material-button"
-            data-material-id="${material.id}"
-            aria-label="Remove ${escapeHtml(material.name)}"
-          >
-            Remove
-          </button>
+            <div class="material-card-actions">
+              <button
+                type="button"
+                class="small-action-button preview-material-button"
+                data-material-id="${material.id}"
+              >
+                Preview
+              </button>
+
+              <button
+                type="button"
+                class="small-action-button rename-material-button"
+                data-material-id="${material.id}"
+              >
+                Rename
+              </button>
+
+              <button
+                type="button"
+                class="small-action-button move-up-button"
+                data-material-id="${material.id}"
+                ${index === 0 ? "disabled" : ""}
+              >
+                Move Up
+              </button>
+
+              <button
+                type="button"
+                class="small-action-button move-down-button"
+                data-material-id="${material.id}"
+                ${index === materialBasket.length - 1 ? "disabled" : ""}
+              >
+                Move Down
+              </button>
+
+              <button
+                type="button"
+                class="small-action-button remove-material-button"
+                data-material-id="${material.id}"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
         </article>
       `;
     })
     .join("");
+
+  connectMaterialCardEvents();
+  renderUndoArea();
+}
+
+function connectMaterialCardEvents() {
+  document.querySelectorAll(".preview-material-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      previewMaterial(button.dataset.materialId);
+    });
+  });
+
+  document.querySelectorAll(".rename-material-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      renameMaterial(button.dataset.materialId);
+    });
+  });
+
+  document.querySelectorAll(".move-up-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      moveMaterial(button.dataset.materialId, -1);
+    });
+  });
+
+  document.querySelectorAll(".move-down-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      moveMaterial(button.dataset.materialId, 1);
+    });
+  });
 
   document.querySelectorAll(".remove-material-button").forEach((button) => {
     button.addEventListener("click", () => {
       removeMaterial(button.dataset.materialId);
     });
   });
+}
+
+function renameMaterial(materialId) {
+  const material = materialBasket.find((item) => item.id === materialId);
+
+  if (!material) {
+    return;
+  }
+
+  const newName = window.prompt(
+    "Choose a new name for this material:",
+    material.name
+  );
+
+  if (newName === null) {
+    return;
+  }
+
+  const cleanedName = newName.trim();
+
+  if (!cleanedName) {
+    return;
+  }
+
+  material.name = cleanedName.slice(0, 120);
+  renderMaterialBasket();
+}
+
+function moveMaterial(materialId, direction) {
+  const currentIndex = materialBasket.findIndex(
+    (item) => item.id === materialId
+  );
+
+  if (currentIndex === -1) {
+    return;
+  }
+
+  const newIndex = currentIndex + direction;
+
+  if (newIndex < 0 || newIndex >= materialBasket.length) {
+    return;
+  }
+
+  const [material] = materialBasket.splice(currentIndex, 1);
+  materialBasket.splice(newIndex, 0, material);
+
+  renderMaterialBasket();
 }
 
 function removeMaterial(materialId) {
@@ -426,8 +511,135 @@ function removeMaterial(materialId) {
     return;
   }
 
+  lastRemovedMaterial = materialBasket[index];
+  lastRemovedIndex = index;
+
   materialBasket.splice(index, 1);
+
   renderMaterialBasket();
+}
+
+function renderUndoArea() {
+  const undoArea = document.getElementById("undo-area");
+
+  if (!undoArea) {
+    return;
+  }
+
+  if (!lastRemovedMaterial) {
+    undoArea.innerHTML = "";
+    return;
+  }
+
+  undoArea.innerHTML = `
+    <div class="undo-message" role="status">
+      <span>
+        <strong>${escapeHtml(lastRemovedMaterial.name)}</strong> was removed.
+      </span>
+
+      <button type="button" id="undo-remove-button">
+        Undo
+      </button>
+    </div>
+  `;
+
+  document
+    .getElementById("undo-remove-button")
+    .addEventListener("click", undoRemoveMaterial);
+}
+
+function undoRemoveMaterial() {
+  if (!lastRemovedMaterial) {
+    return;
+  }
+
+  const safeIndex =
+    lastRemovedIndex === null
+      ? materialBasket.length
+      : Math.min(lastRemovedIndex, materialBasket.length);
+
+  materialBasket.splice(
+    safeIndex,
+    0,
+    lastRemovedMaterial
+  );
+
+  lastRemovedMaterial = null;
+  lastRemovedIndex = null;
+
+  renderMaterialBasket();
+}
+
+function previewMaterial(materialId) {
+  const material = materialBasket.find(
+    (item) => item.id === materialId
+  );
+
+  if (!material) {
+    return;
+  }
+
+  const main = document.querySelector("main");
+
+  let previewContent = "";
+
+  if (material.type === "photo" && material.previewUrl) {
+    previewContent = `
+      <img
+        src="${material.previewUrl}"
+        alt="Preview of ${escapeHtml(material.name)}"
+        class="material-preview-image"
+      />
+    `;
+  } else if (material.type === "text") {
+    previewContent = `
+      <div class="text-preview">
+        ${escapeHtml(material.text).replaceAll("\n", "<br>")}
+      </div>
+    `;
+  } else {
+    previewContent = `
+      <div class="file-preview-placeholder">
+        <span aria-hidden="true">${getMaterialIcon(material.type)}</span>
+
+        <h3>${escapeHtml(material.name)}</h3>
+
+        <p>
+          A visual preview for this file type is not available yet.
+        </p>
+
+        <p>
+          ${escapeHtml(getMaterialDescription(material))}
+        </p>
+      </div>
+    `;
+  }
+
+  main.innerHTML = `
+    <section class="material-page" aria-labelledby="preview-title">
+      <div class="material-heading">
+        <p class="eyebrow">Material Preview</p>
+
+        <h2 id="preview-title">
+          ${escapeHtml(material.name)}
+        </h2>
+      </div>
+
+      <div class="material-preview-panel">
+        ${previewContent}
+      </div>
+
+      <div class="hero-actions">
+        <button type="button" class="secondary-button" id="return-to-basket-button">
+          Back to My Basket
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById("return-to-basket-button")
+    .addEventListener("click", () => showMaterialBasket());
 }
 
 function getMaterialIcon(type) {
@@ -555,11 +767,7 @@ function showJourneyDetails() {
             Build My Path
           </button>
 
-          <button
-            type="button"
-            class="secondary-button"
-            id="details-back-button"
-          >
+          <button type="button" class="secondary-button" id="details-back-button">
             Back
           </button>
         </div>
@@ -614,37 +822,10 @@ function showFirstJourneyPath(journeyTitle, journeyGoal) {
       </div>
 
       <div class="suggested-path">
-        <article class="path-step">
-          <span>1</span>
-          <div>
-            <h3>Take a Look Around</h3>
-            <p>See what you brought and get a feel for the task.</p>
-          </div>
-        </article>
-
-        <article class="path-step">
-          <span>2</span>
-          <div>
-            <h3>Find the Clues</h3>
-            <p>Notice what the task is asking you to do.</p>
-          </div>
-        </article>
-
-        <article class="path-step">
-          <span>3</span>
-          <div>
-            <h3>Make the Pieces Smaller</h3>
-            <p>Turn the task into a few manageable parts.</p>
-          </div>
-        </article>
-
-        <article class="path-step">
-          <span>4</span>
-          <div>
-            <h3>Choose Your First Move</h3>
-            <p>Start with one clear, small action.</p>
-          </div>
-        </article>
+        ${pathStep(1, "Take a Look Around", "See what you brought and get a feel for the task.")}
+        ${pathStep(2, "Find the Clues", "Notice what the task is asking you to do.")}
+        ${pathStep(3, "Make the Pieces Smaller", "Turn the task into a few manageable parts.")}
+        ${pathStep(4, "Choose Your First Move", "Start with one clear, small action.")}
       </div>
 
       <div class="hero-actions">
@@ -652,11 +833,7 @@ function showFirstJourneyPath(journeyTitle, journeyGoal) {
           Start My Journey
         </button>
 
-        <button
-          type="button"
-          class="secondary-button"
-          id="edit-materials-button"
-        >
+        <button type="button" class="secondary-button" id="edit-materials-button">
           Back to My Materials
         </button>
       </div>
@@ -666,6 +843,18 @@ function showFirstJourneyPath(journeyTitle, journeyGoal) {
   document
     .getElementById("edit-materials-button")
     .addEventListener("click", () => showMaterialBasket());
+}
+
+function pathStep(number, title, description) {
+  return `
+    <article class="path-step">
+      <span>${number}</span>
+      <div>
+        <h3>${title}</h3>
+        <p>${description}</p>
+      </div>
+    </article>
+  `;
 }
 
 function escapeHtml(value) {
