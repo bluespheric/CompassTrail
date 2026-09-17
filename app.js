@@ -5810,6 +5810,259 @@ function previewMaterial(materialId) {
     );
 }
 
+
+// ------------------------------------------------------------
+// Scanned PDF OCR V1
+// ------------------------------------------------------------
+
+async function readScannedPdfText(
+  file,
+  onProgress = () => {}
+) {
+  if (!file) {
+    return {
+      status: "error",
+      text: "",
+      pages: [],
+    };
+  }
+
+  if (
+    !window.pdfjsLib ||
+    typeof window.pdfjsLib.getDocument !==
+      "function"
+  ) {
+    throw new Error(
+      "PDF reading is not available right now."
+    );
+  }
+
+  if (
+    !window.Tesseract ||
+    typeof window.Tesseract.recognize !==
+      "function"
+  ) {
+    throw new Error(
+      "Visual text reading is not available right now."
+    );
+  }
+
+  const bytes =
+    new Uint8Array(
+      await file.arrayBuffer()
+    );
+
+  const pdf =
+    await window.pdfjsLib
+      .getDocument({
+        data: bytes,
+      })
+      .promise;
+
+  const pageResults = [];
+  const combinedText = [];
+
+  for (
+    let pageNumber = 1;
+    pageNumber <= pdf.numPages;
+    pageNumber += 1
+  ) {
+    onProgress(
+      `Reading scanned PDF page ${pageNumber} of ${pdf.numPages}…`
+    );
+
+    const page =
+      await pdf.getPage(
+        pageNumber
+      );
+
+    const viewport =
+      page.getViewport({
+        scale: 2,
+      });
+
+    const canvas =
+      document.createElement(
+        "canvas"
+      );
+
+    canvas.width =
+      Math.ceil(
+        viewport.width
+      );
+
+    canvas.height =
+      Math.ceil(
+        viewport.height
+      );
+
+    const context =
+      canvas.getContext(
+        "2d",
+        {
+          alpha: false,
+        }
+      );
+
+    if (!context) {
+      throw new Error(
+        "This PDF page could not be prepared for reading."
+      );
+    }
+
+    context.fillStyle =
+      "#ffffff";
+
+    context.fillRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    await page
+      .render({
+        canvasContext:
+          context,
+        viewport,
+      })
+      .promise;
+
+    const ocr =
+      await window.Tesseract.recognize(
+        canvas,
+        "eng",
+        {
+          logger(message) {
+            if (
+              message.status ===
+                "recognizing text" &&
+              typeof message.progress ===
+                "number"
+            ) {
+              const percent =
+                Math.round(
+                  message.progress *
+                    100
+                );
+
+              onProgress(
+                `Reading scanned PDF page ${pageNumber} of ${pdf.numPages}: ${percent}%`
+              );
+            }
+          },
+        }
+      );
+
+    const pageText =
+      String(
+        ocr?.data?.text || ""
+      ).trim();
+
+    pageResults.push({
+      pageNumber,
+      text: pageText,
+      confidence:
+        typeof ocr?.data
+          ?.confidence ===
+        "number"
+          ? ocr.data.confidence
+          : null,
+    });
+
+    if (pageText) {
+      combinedText.push(
+        pdf.numPages > 1
+          ? `Page ${pageNumber}\n${pageText}`
+          : pageText
+      );
+    }
+  }
+
+  const text =
+    combinedText
+      .join("\n\n")
+      .trim();
+
+  return {
+    status:
+      text.length > 0
+        ? "ready"
+        : "empty",
+    text,
+    pages:
+      pageResults,
+    source:
+      "scanned-pdf-ocr",
+  };
+}
+
+async function runScannedPdfOcr(
+  material
+) {
+  const status =
+    document.getElementById(
+      "extraction-status"
+    );
+
+  const resultBox =
+    document.getElementById(
+      "extraction-result"
+    );
+
+  if (status) {
+    status.textContent =
+      "Preparing scanned PDF for visual text reading…";
+  }
+
+  if (resultBox) {
+    resultBox.innerHTML = `
+      <p class="hero-text">
+        Compass Trail will read each PDF page as an image.
+        You can check and edit the text before it is used.
+      </p>
+    `;
+  }
+
+  try {
+    const result =
+      await readScannedPdfText(
+        material.file,
+        (message) => {
+          const liveStatus =
+            document.getElementById(
+              "extraction-status"
+            );
+
+          if (liveStatus) {
+            liveStatus.textContent =
+              message;
+          }
+        }
+      );
+
+    material.pdfOcrResult =
+      result;
+
+    showExtractionResult(
+      material,
+      result
+    );
+  } catch (error) {
+    console.error(
+      "Scanned PDF OCR failed:",
+      error
+    );
+
+    showExtractionResult(
+      material,
+      {
+        status: "error",
+      }
+    );
+  }
+}
+
 async function reviewMaterialText(
   materialId
 ) {
@@ -6919,19 +7172,38 @@ function showExtractionResult(
     main.innerHTML = `
       <section class="hero">
         <p class="eyebrow">
-          Visual Reading Needed
+          Scanned PDF
         </p>
 
         <h2>
-          This file looks more like
-          a scan than selectable text.
+          This PDF does not contain selectable text.
         </h2>
 
         <p class="hero-text">
-          It will need the visual OCR path.
+          Compass Trail can read each page visually.
+          You will be able to check and edit the text
+          before it is used.
         </p>
 
+        <p
+          id="extraction-status"
+          role="status"
+          class="hero-text"
+        >
+          Ready to read this scanned PDF.
+        </p>
+
+        <div id="extraction-result"></div>
+
         <div class="hero-actions">
+          <button
+            type="button"
+            class="primary-button"
+            id="read-scanned-pdf-button"
+          >
+            Read Scanned PDF
+          </button>
+
           <button
             type="button"
             class="secondary-button"
@@ -6942,6 +7214,28 @@ function showExtractionResult(
         </div>
       </section>
     `;
+
+    document
+      .getElementById(
+        "read-scanned-pdf-button"
+      )
+      .addEventListener(
+        "click",
+        async (event) => {
+          const button =
+            event.currentTarget;
+
+          button.disabled =
+            true;
+
+          button.textContent =
+            "Reading PDF…";
+
+          await runScannedPdfOcr(
+            material
+          );
+        }
+      );
 
     document
       .getElementById(
