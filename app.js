@@ -3544,7 +3544,8 @@ function moveJourneyStep(
 
 function showJourneyWorkspace(
   journey,
-  stepIndex
+  stepIndex,
+  notice = ""
 ) {
   const main =
     document.querySelector("main");
@@ -3564,6 +3565,9 @@ function showJourneyWorkspace(
       0,
       journey.steps.length - 1
     );
+
+  journey.currentStepIndex =
+    safeIndex;
 
   const step =
     journey.steps[safeIndex];
@@ -3591,6 +3595,21 @@ function showJourneyWorkspace(
         )}
       </p>
 
+      ${
+        notice
+          ? `
+            <div
+              class="undo-message"
+              role="status"
+            >
+              <span>
+                ${escapeHtml(notice)}
+              </span>
+            </div>
+          `
+          : ""
+      }
+
       <p class="path-note">
         Same Goal. Different Paths.
       </p>
@@ -3602,6 +3621,46 @@ function showJourneyWorkspace(
           id="smaller-step-button"
         >
           Make This Smaller
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="cant-start-button"
+        >
+          I Can’t Start
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="different-way-button"
+        >
+          This Way Isn’t Working
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="park-it-button"
+        >
+          Park It
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="take-break-button"
+        >
+          Take a Break
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="where-was-i-button"
+        >
+          Where Was I?
         </button>
 
         ${
@@ -3659,7 +3718,77 @@ function showJourneyWorkspace(
     .addEventListener(
       "click",
       () => {
-        showSmallerStep(
+        showMiniSteps(
+          journey,
+          safeIndex
+        );
+      }
+    );
+
+  document
+    .getElementById(
+      "cant-start-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showCantStartSupport(
+          journey,
+          safeIndex
+        );
+      }
+    );
+
+  document
+    .getElementById(
+      "different-way-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showDifferentWaySupport(
+          journey,
+          safeIndex
+        );
+      }
+    );
+
+  document
+    .getElementById(
+      "park-it-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showParkIt(
+          journey,
+          safeIndex
+        );
+      }
+    );
+
+  document
+    .getElementById(
+      "take-break-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showRechargeCove(
+          journey,
+          safeIndex
+        );
+      }
+    );
+
+  document
+    .getElementById(
+      "where-was-i-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showWhereWasI(
           journey,
           safeIndex
         );
@@ -3694,7 +3823,8 @@ function showJourneyWorkspace(
       () => {
         showJourneyWorkspace(
           journey,
-          safeIndex + 1
+          safeIndex + 1,
+          "That step is behind you. Here’s the next part of your trail."
         );
       }
     );
@@ -3730,7 +3860,731 @@ function showJourneyWorkspace(
     );
 }
 
-function showSmallerStep(
+function getMiniStepsForStep(
+  journey,
+  step
+) {
+  const title =
+    step.title.toLowerCase();
+
+  const special = {
+    "go on a clue hunt": [
+      "Find the exact topic or question.",
+      "Find the instructions or requirements.",
+      "Notice who the work is for.",
+      "Mark anything that must be included.",
+    ],
+    "fill your basket": [
+      "Choose one useful fact or idea.",
+      "Find one example, image or detail that supports it.",
+      "Save where it came from if you will need the source later.",
+    ],
+    "make the pieces fit": [
+      "Put similar ideas next to each other.",
+      "Choose which group should come first.",
+      "Move anything that does not fit yet into a temporary parking spot.",
+    ],
+    "build the bones": [
+      "Write the title or opening.",
+      "Give each main idea its own place.",
+      "Add a simple ending or final point.",
+    ],
+    "bring it to life": [
+      "Work on just one section or slide.",
+      "Keep one clear idea in that section.",
+      "Add only the words or visuals that help that idea.",
+    ],
+    "give it a test-drive": [
+      "Look through it once from beginning to end.",
+      "Notice one place that feels crowded or unclear.",
+      "Change that one place first.",
+    ],
+    "ready to send it off": [
+      "Check the task requirements once more.",
+      "Check names, titles or files that need to be included.",
+      "Choose whether it feels ready to share.",
+    ],
+    "meet the problem": [
+      "Read only the question.",
+      "Circle or note the information you were given.",
+      "Say what the question is asking for.",
+    ],
+    "find what you know": [
+      "Write down the numbers or facts you already have.",
+      "Notice any rule, formula or example that looks familiar.",
+      "Choose one useful piece to start from.",
+    ],
+    "find what you’re looking for": [
+      "Say the unknown in a few words.",
+      "Give it a symbol or short label if that helps.",
+      "Check that it matches what the question asks.",
+    ],
+    "pick something to try": [
+      "Choose one method that might fit.",
+      "Try only the first move.",
+      "Look at what that move tells you before continuing.",
+    ],
+    "one move at a time": [
+      "Do one calculation or transformation.",
+      "Write the result where you can see it.",
+      "Then choose the next single move.",
+    ],
+    "look back": [
+      "Put your answer back into the question.",
+      "Check whether the size or meaning makes sense.",
+      "Change one step if something does not fit.",
+    ],
+  };
+
+  if (special[title]) {
+    return special[title];
+  }
+
+  const byType = {
+    reading: [
+      "Look at only the next small section.",
+      "Read one paragraph or short chunk.",
+      "Write or mark one thing that stayed with you.",
+    ],
+    writing: [
+      "Write one rough idea.",
+      "Turn that idea into one sentence.",
+      "Add one detail only if you want to.",
+    ],
+    questions: [
+      "Choose one question.",
+      "Underline what it is asking for.",
+      "Write the smallest answer you can start with.",
+    ],
+    study: [
+      "Choose one tiny topic.",
+      "Look at it for a short moment.",
+      "Close the material and recall one thing.",
+    ],
+    maths: [
+      "Look at one problem only.",
+      "Write what you know.",
+      "Try one mathematical move.",
+    ],
+    presentation: [
+      "Choose one part of the presentation.",
+      "Decide the one idea that part needs to communicate.",
+      "Add one useful piece to it.",
+    ],
+    research: [
+      "Choose one question to investigate.",
+      "Open one useful source.",
+      "Save one fact or idea that helps.",
+    ],
+    project: [
+      "Choose one piece of the project.",
+      "Decide what that piece needs.",
+      "Make the smallest visible change to it.",
+    ],
+    general: [
+      "Look at only one part.",
+      "Choose one thing you can do with it.",
+      "Do just that one thing first.",
+    ],
+  };
+
+  return byType[journey.taskType] ||
+    byType.general;
+}
+
+function showMiniSteps(
+  journey,
+  stepIndex
+) {
+  const step =
+    journey.steps[stepIndex];
+
+  const miniSteps =
+    getMiniStepsForStep(
+      journey,
+      step
+    );
+
+  const main =
+    document.querySelector("main");
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="mini-step-title"
+    >
+      <div class="material-heading">
+        <p class="eyebrow">
+          Make It Smaller
+        </p>
+
+        <h2 id="mini-step-title">
+          ${escapeHtml(
+            step.title
+          )}
+        </h2>
+
+        <p class="hero-text">
+          You do not need to do all of this at once.
+          Pick the smallest piece that feels possible.
+        </p>
+      </div>
+
+      <div class="suggested-path">
+        ${miniSteps
+          .map(
+            (miniStep, index) =>
+              pathStep(
+                index + 1,
+                `Tiny step ${index + 1}`,
+                escapeHtml(miniStep)
+              )
+          )
+          .join("")}
+      </div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="primary-button"
+          id="mini-step-ready-button"
+        >
+          Start With the First One
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="mini-step-back-button"
+        >
+          Back to My Step
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "mini-step-ready-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showJourneyWorkspace(
+          journey,
+          stepIndex,
+          `Start here: ${miniSteps[0]}`
+        );
+      }
+    );
+
+  document
+    .getElementById(
+      "mini-step-back-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showJourneyWorkspace(
+          journey,
+          stepIndex
+        );
+      }
+    );
+}
+
+function showCantStartSupport(
+  journey,
+  stepIndex
+) {
+  const main =
+    document.querySelector("main");
+
+  const options = [
+    {
+      title: "Two-Minute Beginning",
+      description:
+        "Give this step just two minutes. You can stop after that.",
+    },
+    {
+      title: "Look Without Starting",
+      description:
+        "Open the material and look at the relevant part. Nothing else is required yet.",
+    },
+    {
+      title: "One Tiny Move",
+      description:
+        "Use Make This Smaller and begin with only its first tiny step.",
+    },
+    {
+      title: "Choose Your Own Start",
+      description:
+        "Pick any small action that feels easier than the suggested starting point.",
+    },
+  ];
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="cant-start-title"
+    >
+      <div class="material-heading">
+        <p class="eyebrow">
+          I Can’t Start
+        </p>
+
+        <h2 id="cant-start-title">
+          You can choose a softer way in.
+        </h2>
+
+        <p class="hero-text">
+          Starting does not have to mean
+          committing to the whole task.
+        </p>
+      </div>
+
+      <div class="suggested-path">
+        ${options
+          .map(
+            (option, index) =>
+              `
+                <article class="path-step">
+                  <span>
+                    ${index + 1}
+                  </span>
+
+                  <div>
+                    <h3>
+                      ${option.title}
+                    </h3>
+
+                    <p>
+                      ${option.description}
+                    </p>
+
+                    <button
+                      type="button"
+                      class="small-action-button start-support-option"
+                      data-option="${index}"
+                    >
+                      Choose This
+                    </button>
+                  </div>
+                </article>
+              `
+          )
+          .join("")}
+      </div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="secondary-button"
+          id="cant-start-back-button"
+        >
+          Back to My Step
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .querySelectorAll(
+      ".start-support-option"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          const option =
+            options[
+              Number(
+                button.dataset.option
+              )
+            ];
+
+          showJourneyWorkspace(
+            journey,
+            stepIndex,
+            `${option.title}: ${option.description}`
+          );
+        }
+      );
+    });
+
+  document
+    .getElementById(
+      "cant-start-back-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showJourneyWorkspace(
+          journey,
+          stepIndex
+        );
+      }
+    );
+}
+
+function showDifferentWaySupport(
+  journey,
+  stepIndex
+) {
+  const main =
+    document.querySelector("main");
+
+  const alternatives = [
+    {
+      title: "Make It Smaller",
+      description:
+        "Break this step into a few tiny moves.",
+      action: "smaller",
+    },
+    {
+      title: "Say It Out Loud",
+      description:
+        "Explain what you are trying to do in your own words before continuing.",
+      action: "return",
+    },
+    {
+      title: "Use an Example",
+      description:
+        "Look for one example in your material and use it as a starting clue.",
+      action: "return",
+    },
+    {
+      title: "Skip and Circle Back",
+      description:
+        "Move to the next step for now. You can return here later.",
+      action: "skip",
+    },
+  ];
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="different-way-title"
+    >
+      <div class="material-heading">
+        <p class="eyebrow">
+          Try Another Way
+        </p>
+
+        <h2 id="different-way-title">
+          This path can change.
+        </h2>
+
+        <p class="hero-text">
+          Changing the plan is not failing the plan.
+          Choose another way to approach this step.
+        </p>
+      </div>
+
+      <div class="suggested-path">
+        ${alternatives
+          .map(
+            (option, index) =>
+              `
+                <article class="path-step">
+                  <span>
+                    ${index + 1}
+                  </span>
+
+                  <div>
+                    <h3>
+                      ${option.title}
+                    </h3>
+
+                    <p>
+                      ${option.description}
+                    </p>
+
+                    <button
+                      type="button"
+                      class="small-action-button different-way-option"
+                      data-option="${index}"
+                    >
+                      Try This
+                    </button>
+                  </div>
+                </article>
+              `
+          )
+          .join("")}
+      </div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="secondary-button"
+          id="different-way-back-button"
+        >
+          Back to My Step
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .querySelectorAll(
+      ".different-way-option"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          const option =
+            alternatives[
+              Number(
+                button.dataset.option
+              )
+            ];
+
+          if (
+            option.action ===
+            "smaller"
+          ) {
+            showMiniSteps(
+              journey,
+              stepIndex
+            );
+            return;
+          }
+
+          if (
+            option.action ===
+            "skip"
+          ) {
+            const nextIndex =
+              Math.min(
+                stepIndex + 1,
+                journey.steps.length - 1
+              );
+
+            showJourneyWorkspace(
+              journey,
+              nextIndex,
+              "This step is saved for later. You can circle back whenever you want."
+            );
+            return;
+          }
+
+          showJourneyWorkspace(
+            journey,
+            stepIndex,
+            `${option.title}: ${option.description}`
+          );
+        }
+      );
+    });
+
+  document
+    .getElementById(
+      "different-way-back-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showJourneyWorkspace(
+          journey,
+          stepIndex
+        );
+      }
+    );
+}
+
+function showParkIt(
+  journey,
+  stepIndex
+) {
+  const main =
+    document.querySelector("main");
+
+  if (!journey.parkedThoughts) {
+    journey.parkedThoughts = [];
+  }
+
+  main.innerHTML = `
+    <section
+      class="hero"
+      aria-labelledby="park-it-title"
+    >
+      <p class="eyebrow">
+        Park It
+      </p>
+
+      <h2 id="park-it-title">
+        Put the thought somewhere safe.
+      </h2>
+
+      <p class="hero-text">
+        You do not have to follow every thought
+        while you are working.
+        Save it here and return to your step.
+      </p>
+
+      <label for="parked-thought">
+        <strong>
+          What popped into your head?
+        </strong>
+      </label>
+
+      <textarea
+        id="parked-thought"
+        rows="5"
+        maxlength="500"
+        placeholder="Write it here so you don't have to hold onto it..."
+      ></textarea>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="primary-button"
+          id="save-parked-thought-button"
+        >
+          Save & Return
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="park-it-back-button"
+        >
+          Back Without Saving
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "save-parked-thought-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        const thought =
+          document
+            .getElementById(
+              "parked-thought"
+            )
+            .value
+            .trim();
+
+        if (thought) {
+          journey.parkedThoughts.push(
+            thought
+          );
+        }
+
+        showJourneyWorkspace(
+          journey,
+          stepIndex,
+          thought
+            ? "Saved in Park It. You can return to your current step."
+            : "Nothing was added. Your current step is still here."
+        );
+      }
+    );
+
+  document
+    .getElementById(
+      "park-it-back-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showJourneyWorkspace(
+          journey,
+          stepIndex
+        );
+      }
+    );
+}
+
+function showRechargeCove(
+  journey,
+  stepIndex
+) {
+  const main =
+    document.querySelector("main");
+
+  const ideas = [
+    "Look away from the screen and notice three things around you.",
+    "Stretch your hands, shoulders or back in a way that feels comfortable.",
+    "Get a drink of water.",
+    "Stand up or change position for a moment.",
+    "Take ten slow steps if you have space.",
+    "Close your eyes or soften your gaze for a short moment.",
+    "Listen to one song or a short piece of music.",
+    "Doodle or make a few marks on paper.",
+    "Take a quiet minute without doing the task.",
+    "Choose your own kind of break.",
+  ];
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="recharge-title"
+    >
+      <div class="material-heading">
+        <p class="eyebrow">
+          Recharge Cove
+        </p>
+
+        <h2 id="recharge-title">
+          Your place is saved.
+        </h2>
+
+        <p class="hero-text">
+          Take the kind of pause that helps.
+          Nothing about your Journey is lost.
+        </p>
+      </div>
+
+      <div class="suggested-path">
+        ${ideas
+          .map(
+            (idea, index) =>
+              pathStep(
+                index + 1,
+                `Break idea ${index + 1}`,
+                escapeHtml(idea)
+              )
+          )
+          .join("")}
+      </div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="primary-button"
+          id="return-from-break-button"
+        >
+          Return to My Step
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "return-from-break-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showJourneyWorkspace(
+          journey,
+          stepIndex,
+          "Welcome back. Your place was saved."
+        );
+      }
+    );
+}
+
+function showWhereWasI(
   journey,
   stepIndex
 ) {
@@ -3743,41 +4597,58 @@ function showSmallerStep(
   main.innerHTML = `
     <section
       class="hero"
-      aria-labelledby="smaller-step-title"
+      aria-labelledby="where-was-i-title"
     >
       <p class="eyebrow">
-        Make It Smaller
+        Where Was I?
       </p>
 
-      <h2 id="smaller-step-title">
-        Try just this first.
+      <h2 id="where-was-i-title">
+        You’re here:
+        ${escapeHtml(
+          step.title
+        )}
       </h2>
 
       <p class="hero-text">
-        Open or look at the part you need for
-        <strong>
-          ${escapeHtml(
-            step.title
-          )}
-        </strong>.
-        You do not have to finish the whole step yet.
+        This is step
+        ${stepIndex + 1}
+        of
+        ${journey.steps.length}.
+        ${
+          journey.goal
+            ? `Your goal is: ${escapeHtml(
+                journey.goal
+              )}`
+            : "You can decide what done looks like as you go."
+        }
       </p>
+
+      ${
+        journey.parkedThoughts &&
+        journey.parkedThoughts.length
+          ? `
+            <p class="hero-text">
+              You also have
+              ${journey.parkedThoughts.length}
+              ${
+                journey.parkedThoughts.length === 1
+                  ? "thought"
+                  : "thoughts"
+              }
+              safely parked.
+            </p>
+          `
+          : ""
+      }
 
       <div class="hero-actions">
         <button
           type="button"
           class="primary-button"
-          id="return-small-step-button"
+          id="pick-up-trail-button"
         >
-          I’m Ready
-        </button>
-
-        <button
-          type="button"
-          class="secondary-button"
-          id="back-small-step-button"
-        >
-          Back to My Step
+          Pick Up My Trail
         </button>
       </div>
     </section>
@@ -3785,21 +4656,7 @@ function showSmallerStep(
 
   document
     .getElementById(
-      "return-small-step-button"
-    )
-    .addEventListener(
-      "click",
-      () => {
-        showJourneyWorkspace(
-          journey,
-          stepIndex
-        );
-      }
-    );
-
-  document
-    .getElementById(
-      "back-small-step-button"
+      "pick-up-trail-button"
     )
     .addEventListener(
       "click",
