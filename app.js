@@ -2834,7 +2834,6 @@ function openRechargeCoveFromMyPace() {
     "function"
   ) {
     showHomeRechargeCove();
-    addRechargeReturnToMyPace();
   }
 }
 
@@ -4628,6 +4627,20 @@ function showHomeRechargeCove() {
       </div>
 
       <div class="hero-actions">
+        ${
+          compassRechargeReturnContext === "my-pace"
+            ? `
+              <button
+                type="button"
+                class="secondary-button"
+                id="return-to-my-pace"
+              >
+                Return to My Pace
+              </button>
+            `
+            : ""
+        }
+
         <button
           type="button"
           class="primary-button"
@@ -4664,6 +4677,26 @@ function showHomeRechargeCove() {
       "click",
       showToolkitHub
     );
+
+
+  document
+    .getElementById("return-to-my-pace")
+    ?.addEventListener("click", () => {
+      compassRechargeReturnContext = "";
+
+      if (
+        compassFocusState
+          .timerPausedRemaining > 0
+      ) {
+        showCompassTimer(
+          "Break finished. Your timer is still paused."
+        );
+      } else {
+        showCompassFocusSpace(
+          "Break finished. Your progress is unchanged."
+        );
+      }
+    });
 }
 
 const materialBasket = [];
