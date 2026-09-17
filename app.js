@@ -287,14 +287,9 @@ function materialAction(icon, title, subtitle, id) {
 }
 
 function connectMaterialBasketEvents() {
-  const photoInput =
-    document.getElementById("photo-input");
-
-  const pdfInput =
-    document.getElementById("pdf-input");
-
-  const documentInput =
-    document.getElementById("document-input");
+  const photoInput = document.getElementById("photo-input");
+  const pdfInput = document.getElementById("pdf-input");
+  const documentInput = document.getElementById("document-input");
 
   document
     .getElementById("add-photo-button")
@@ -316,60 +311,30 @@ function connectMaterialBasketEvents() {
 
   document
     .getElementById("paste-text-button")
-    .addEventListener(
-      "click",
-      showPasteTextPanel
-    );
+    .addEventListener("click", showPasteTextPanel);
 
-  photoInput.addEventListener(
-    "change",
-    (event) => {
-      addFilesToBasket(
-        event.target.files,
-        "photo"
-      );
+  photoInput.addEventListener("change", (event) => {
+    addFilesToBasket(event.target.files, "photo");
+    event.target.value = "";
+  });
 
-      event.target.value = "";
-    }
-  );
+  pdfInput.addEventListener("change", (event) => {
+    addFilesToBasket(event.target.files, "pdf");
+    event.target.value = "";
+  });
 
-  pdfInput.addEventListener(
-    "change",
-    (event) => {
-      addFilesToBasket(
-        event.target.files,
-        "pdf"
-      );
-
-      event.target.value = "";
-    }
-  );
-
-  documentInput.addEventListener(
-    "change",
-    (event) => {
-      addFilesToBasket(
-        event.target.files,
-        "document"
-      );
-
-      event.target.value = "";
-    }
-  );
+  documentInput.addEventListener("change", (event) => {
+    addFilesToBasket(event.target.files, "document");
+    event.target.value = "";
+  });
 
   document
     .getElementById("back-choice-button")
-    .addEventListener(
-      "click",
-      showJourneyStartScreen
-    );
+    .addEventListener("click", showJourneyStartScreen);
 
   document
     .getElementById("build-path-button")
-    .addEventListener(
-      "click",
-      showPathPreview
-    );
+    .addEventListener("click", showPathPreview);
 }
 
 function addFilesToBasket(fileList, type) {
@@ -393,27 +358,16 @@ function addFilesToBasket(fileList, type) {
 }
 
 function showPasteTextPanel() {
-  const existingPanel =
-    document.getElementById(
-      "paste-text-panel"
-    );
+  const existingPanel = document.getElementById("paste-text-panel");
 
   if (existingPanel) {
-    existingPanel
-      .querySelector("textarea")
-      .focus();
-
+    existingPanel.querySelector("textarea").focus();
     return;
   }
 
-  const basketSection =
-    document.querySelector(
-      ".basket-section"
-    );
+  const basketSection = document.querySelector(".basket-section");
 
-  const panel =
-    document.createElement("section");
-
+  const panel = document.createElement("section");
   panel.id = "paste-text-panel";
   panel.className = "paste-text-panel";
 
@@ -455,25 +409,16 @@ function showPasteTextPanel() {
   basketSection.before(panel);
 
   document
-    .getElementById(
-      "cancel-paste-button"
-    )
+    .getElementById("cancel-paste-button")
     .addEventListener("click", () => {
       panel.remove();
     });
 
   document
-    .getElementById(
-      "save-paste-button"
-    )
+    .getElementById("save-paste-button")
     .addEventListener("click", () => {
-      const textarea =
-        document.getElementById(
-          "pasted-material"
-        );
-
-      const text =
-        textarea.value.trim();
+      const textarea = document.getElementById("pasted-material");
+      const text = textarea.value.trim();
 
       if (!text) {
         textarea.focus();
@@ -490,59 +435,32 @@ function showPasteTextPanel() {
       });
 
       panel.remove();
-
       renderMaterialBasket();
     });
 
-  document
-    .getElementById("pasted-material")
-    .focus();
+  document.getElementById("pasted-material").focus();
 }
 
 function createTextMaterialName(text) {
-  const firstLine =
-    text.split("\n")[0].trim();
-
-  const shortened =
-    firstLine.slice(0, 45);
+  const firstLine = text.split("\n")[0].trim();
+  const shortened = firstLine.slice(0, 45);
 
   if (!shortened) {
     return "Pasted text";
   }
 
-  return shortened.length <
-    firstLine.length
+  return shortened.length < firstLine.length
     ? `${shortened}…`
     : shortened;
 }
 
 function renderMaterialBasket() {
-  const list =
-    document.getElementById(
-      "material-list"
-    );
+  const list = document.getElementById("material-list");
+  const emptyBasket = document.getElementById("empty-basket");
+  const count = document.getElementById("material-count");
+  const buildButton = document.getElementById("build-path-button");
 
-  const emptyBasket =
-    document.getElementById(
-      "empty-basket"
-    );
-
-  const count =
-    document.getElementById(
-      "material-count"
-    );
-
-  const buildButton =
-    document.getElementById(
-      "build-path-button"
-    );
-
-  if (
-    !list ||
-    !emptyBasket ||
-    !count ||
-    !buildButton
-  ) {
+  if (!list || !emptyBasket || !count || !buildButton) {
     return;
   }
 
@@ -559,9 +477,7 @@ function renderMaterialBasket() {
   if (materialBasket.length === 0) {
     list.innerHTML = "";
     emptyBasket.hidden = false;
-
     renderUndoArea();
-
     return;
   }
 
@@ -570,8 +486,7 @@ function renderMaterialBasket() {
   list.innerHTML = materialBasket
     .map((material, index) => {
       const reviewStatus =
-        material.extractionStatus ===
-        "confirmed"
+        material.extractionStatus === "confirmed"
           ? `
             <span class="material-reviewed">
               ✓ Text checked
@@ -585,9 +500,7 @@ function renderMaterialBasket() {
             class="material-card-icon"
             aria-hidden="true"
           >
-            ${getMaterialIcon(
-              material.type
-            )}
+            ${getMaterialIcon(material.type)}
           </div>
 
           <div class="material-card-content">
@@ -596,21 +509,16 @@ function renderMaterialBasket() {
             </p>
 
             <h4>
-              ${escapeHtml(
-                material.name
-              )}
+              ${escapeHtml(material.name)}
             </h4>
 
             <p>
-              ${getMaterialDescription(
-                material
-              )}
+              ${getMaterialDescription(material)}
             </p>
 
             ${reviewStatus}
 
             <div class="material-card-actions">
-
               <button
                 type="button"
                 class="small-action-button review-material-button"
@@ -639,11 +547,7 @@ function renderMaterialBasket() {
                 type="button"
                 class="small-action-button move-up-button"
                 data-material-id="${material.id}"
-                ${
-                  index === 0
-                    ? "disabled"
-                    : ""
-                }
+                ${index === 0 ? "disabled" : ""}
               >
                 Move Up
               </button>
@@ -652,12 +556,7 @@ function renderMaterialBasket() {
                 type="button"
                 class="small-action-button move-down-button"
                 data-material-id="${material.id}"
-                ${
-                  index ===
-                  materialBasket.length - 1
-                    ? "disabled"
-                    : ""
-                }
+                ${index === materialBasket.length - 1 ? "disabled" : ""}
               >
                 Move Down
               </button>
@@ -669,7 +568,6 @@ function renderMaterialBasket() {
               >
                 Remove
               </button>
-
             </div>
           </div>
         </article>
@@ -683,148 +581,92 @@ function renderMaterialBasket() {
 
 function connectMaterialCardEvents() {
   document
-    .querySelectorAll(
-      ".review-material-button"
-    )
+    .querySelectorAll(".review-material-button")
     .forEach((button) => {
-      button.addEventListener(
-        "click",
-        () => {
-          reviewMaterialText(
-            button.dataset.materialId
-          );
-        }
-      );
+      button.addEventListener("click", () => {
+        reviewMaterialText(button.dataset.materialId);
+      });
     });
 
   document
-    .querySelectorAll(
-      ".preview-material-button"
-    )
+    .querySelectorAll(".preview-material-button")
     .forEach((button) => {
-      button.addEventListener(
-        "click",
-        () => {
-          previewMaterial(
-            button.dataset.materialId
-          );
-        }
-      );
+      button.addEventListener("click", () => {
+        previewMaterial(button.dataset.materialId);
+      });
     });
 
   document
-    .querySelectorAll(
-      ".rename-material-button"
-    )
+    .querySelectorAll(".rename-material-button")
     .forEach((button) => {
-      button.addEventListener(
-        "click",
-        () => {
-          renameMaterial(
-            button.dataset.materialId
-          );
-        }
-      );
+      button.addEventListener("click", () => {
+        renameMaterial(button.dataset.materialId);
+      });
     });
 
   document
-    .querySelectorAll(
-      ".move-up-button"
-    )
+    .querySelectorAll(".move-up-button")
     .forEach((button) => {
-      button.addEventListener(
-        "click",
-        () => {
-          moveMaterial(
-            button.dataset.materialId,
-            -1
-          );
-        }
-      );
+      button.addEventListener("click", () => {
+        moveMaterial(button.dataset.materialId, -1);
+      });
     });
 
   document
-    .querySelectorAll(
-      ".move-down-button"
-    )
+    .querySelectorAll(".move-down-button")
     .forEach((button) => {
-      button.addEventListener(
-        "click",
-        () => {
-          moveMaterial(
-            button.dataset.materialId,
-            1
-          );
-        }
-      );
+      button.addEventListener("click", () => {
+        moveMaterial(button.dataset.materialId, 1);
+      });
     });
 
   document
-    .querySelectorAll(
-      ".remove-material-button"
-    )
+    .querySelectorAll(".remove-material-button")
     .forEach((button) => {
-      button.addEventListener(
-        "click",
-        () => {
-          removeMaterial(
-            button.dataset.materialId
-          );
-        }
-      );
+      button.addEventListener("click", () => {
+        removeMaterial(button.dataset.materialId);
+      });
     });
 }
 
 function renameMaterial(materialId) {
-  const material =
-    materialBasket.find(
-      (item) =>
-        item.id === materialId
-    );
+  const material = materialBasket.find(
+    (item) => item.id === materialId
+  );
 
   if (!material) {
     return;
   }
 
-  const newName =
-    window.prompt(
-      "Choose a new name for this material:",
-      material.name
-    );
+  const newName = window.prompt(
+    "Choose a new name for this material:",
+    material.name
+  );
 
   if (newName === null) {
     return;
   }
 
-  const cleanedName =
-    newName.trim();
+  const cleanedName = newName.trim();
 
   if (!cleanedName) {
     return;
   }
 
-  material.name =
-    cleanedName.slice(0, 120);
-
+  material.name = cleanedName.slice(0, 120);
   renderMaterialBasket();
 }
 
-function moveMaterial(
-  materialId,
-  direction
-) {
-  const currentIndex =
-    materialBasket.findIndex(
-      (item) =>
-        item.id === materialId
-    );
+function moveMaterial(materialId, direction) {
+  const currentIndex = materialBasket.findIndex(
+    (item) => item.id === materialId
+  );
 
   if (currentIndex === -1) {
     return;
   }
 
-  const newIndex =
-    currentIndex + direction;
+  const newIndex = currentIndex + direction;
 
   if (
     newIndex < 0 ||
@@ -833,50 +675,32 @@ function moveMaterial(
     return;
   }
 
-  const [material] =
-    materialBasket.splice(
-      currentIndex,
-      1
-    );
+  const [material] = materialBasket.splice(currentIndex, 1);
 
-  materialBasket.splice(
-    newIndex,
-    0,
-    material
-  );
+  materialBasket.splice(newIndex, 0, material);
 
   renderMaterialBasket();
 }
 
 function removeMaterial(materialId) {
-  const index =
-    materialBasket.findIndex(
-      (material) =>
-        material.id === materialId
-    );
+  const index = materialBasket.findIndex(
+    (material) => material.id === materialId
+  );
 
   if (index === -1) {
     return;
   }
 
-  lastRemovedMaterial =
-    materialBasket[index];
-
+  lastRemovedMaterial = materialBasket[index];
   lastRemovedIndex = index;
 
-  materialBasket.splice(
-    index,
-    1
-  );
+  materialBasket.splice(index, 1);
 
   renderMaterialBasket();
 }
 
 function renderUndoArea() {
-  const undoArea =
-    document.getElementById(
-      "undo-area"
-    );
+  const undoArea = document.getElementById("undo-area");
 
   if (!undoArea) {
     return;
@@ -894,9 +718,7 @@ function renderUndoArea() {
     >
       <span>
         <strong>
-          ${escapeHtml(
-            lastRemovedMaterial.name
-          )}
+          ${escapeHtml(lastRemovedMaterial.name)}
         </strong>
         was removed.
       </span>
@@ -911,13 +733,8 @@ function renderUndoArea() {
   `;
 
   document
-    .getElementById(
-      "undo-remove-button"
-    )
-    .addEventListener(
-      "click",
-      undoRemoveMaterial
-    );
+    .getElementById("undo-remove-button")
+    .addEventListener("click", undoRemoveMaterial);
 }
 
 function undoRemoveMaterial() {
@@ -946,18 +763,15 @@ function undoRemoveMaterial() {
 }
 
 function previewMaterial(materialId) {
-  const material =
-    materialBasket.find(
-      (item) =>
-        item.id === materialId
-    );
+  const material = materialBasket.find(
+    (item) => item.id === materialId
+  );
 
   if (!material) {
     return;
   }
 
-  const main =
-    document.querySelector("main");
+  const main = document.querySelector("main");
 
   let previewContent = "";
 
@@ -968,51 +782,34 @@ function previewMaterial(materialId) {
     previewContent = `
       <img
         src="${material.previewUrl}"
-        alt="Preview of ${escapeHtml(
-          material.name
-        )}"
+        alt="Preview of ${escapeHtml(material.name)}"
         class="material-preview-image"
       />
     `;
-  } else if (
-    material.type === "text"
-  ) {
+  } else if (material.type === "text") {
     previewContent = `
       <div class="text-preview">
-        ${escapeHtml(
-          material.text
-        ).replaceAll(
-          "\n",
-          "<br>"
-        )}
+        ${escapeHtml(material.text).replaceAll("\n", "<br>")}
       </div>
     `;
   } else {
     previewContent = `
       <div class="file-preview-placeholder">
         <span aria-hidden="true">
-          ${getMaterialIcon(
-            material.type
-          )}
+          ${getMaterialIcon(material.type)}
         </span>
 
         <h3>
-          ${escapeHtml(
-            material.name
-          )}
+          ${escapeHtml(material.name)}
         </h3>
 
         <p>
-          A visual preview for this file
-          type is not available yet.
+          A visual preview for this file type
+          is not available yet.
         </p>
 
         <p>
-          ${escapeHtml(
-            getMaterialDescription(
-              material
-            )
-          )}
+          ${escapeHtml(getMaterialDescription(material))}
         </p>
       </div>
     `;
@@ -1029,9 +826,7 @@ function previewMaterial(materialId) {
         </p>
 
         <h2 id="preview-title">
-          ${escapeHtml(
-            material.name
-          )}
+          ${escapeHtml(material.name)}
         </h2>
       </div>
 
@@ -1052,30 +847,22 @@ function previewMaterial(materialId) {
   `;
 
   document
-    .getElementById(
-      "return-to-basket-button"
-    )
-    .addEventListener(
-      "click",
-      () => showMaterialBasket()
-    );
+    .getElementById("return-to-basket-button")
+    .addEventListener("click", () => {
+      showMaterialBasket();
+    });
 }
 
-async function reviewMaterialText(
-  materialId
-) {
-  const material =
-    materialBasket.find(
-      (item) =>
-        item.id === materialId
-    );
+async function reviewMaterialText(materialId) {
+  const material = materialBasket.find(
+    (item) => item.id === materialId
+  );
 
   if (!material) {
     return;
   }
 
-  const main =
-    document.querySelector("main");
+  const main = document.querySelector("main");
 
   main.innerHTML = `
     <section
@@ -1088,9 +875,7 @@ async function reviewMaterialText(
         </p>
 
         <h2 id="review-title">
-          ${escapeHtml(
-            material.name
-          )}
+          ${escapeHtml(material.name)}
         </h2>
 
         <p class="hero-text">
@@ -1124,48 +909,28 @@ async function reviewMaterialText(
   `;
 
   document
-    .getElementById(
-      "review-back-button"
-    )
-    .addEventListener(
-      "click",
-      () => showMaterialBasket()
-    );
+    .getElementById("review-back-button")
+    .addEventListener("click", () => {
+      showMaterialBasket();
+    });
 
   try {
-    const result =
-      await extractTextFromMaterial(
-        material
-      );
+    const result = await extractTextFromMaterial(material);
 
-    showExtractionResult(
-      material,
-      result
-    );
+    showExtractionResult(material, result);
   } catch (error) {
-    const status =
-      document.getElementById(
-        "extraction-status"
-      );
+    console.error("Material extraction failed:", error);
+
+    const status = document.getElementById("extraction-status");
 
     status.textContent =
       "I couldn't read this material yet. Your original file is still safe here.";
   }
 }
 
-function showExtractionResult(
-  material,
-  result
-) {
-  const status =
-    document.getElementById(
-      "extraction-status"
-    );
-
-  const resultArea =
-    document.getElementById(
-      "extraction-result"
-    );
+function showExtractionResult(material, result) {
+  const status = document.getElementById("extraction-status");
+  const resultArea = document.getElementById("extraction-result");
 
   if (!status || !resultArea) {
     return;
@@ -1185,9 +950,7 @@ function showExtractionResult(
       <textarea
         id="extracted-text"
         rows="16"
-      >${escapeHtml(
-        result.text
-      )}</textarea>
+      >${escapeHtml(result.text)}</textarea>
 
       <div class="paste-actions">
         <button
@@ -1201,54 +964,38 @@ function showExtractionResult(
     `;
 
     document
-      .getElementById(
-        "confirm-extracted-text"
-      )
-      .addEventListener(
-        "click",
-        () => {
-          const editedText =
-            document
-              .getElementById(
-                "extracted-text"
-              )
-              .value
-              .trim();
+      .getElementById("confirm-extracted-text")
+      .addEventListener("click", () => {
+        const editedText = document
+          .getElementById("extracted-text")
+          .value
+          .trim();
 
-          material.extractedText =
-            editedText;
+        material.extractedText = editedText;
+        material.extractionStatus = "confirmed";
 
-          material.extractionStatus =
-            "confirmed";
-
-          showMaterialBasket();
-        }
-      );
+        showMaterialBasket();
+      });
 
     return;
   }
 
-  if (
-    result.status ===
-    "needs-pdf-reader"
-  ) {
+  if (result.status === "empty") {
     status.textContent =
-      "This PDF is ready for the PDF reading layer we're adding next.";
+      "I opened this document, but I couldn't find readable text inside it.";
 
     resultArea.innerHTML = `
       <div class="file-preview-placeholder">
-        <span aria-hidden="true">
-          📄
-        </span>
+        <span aria-hidden="true">🗂️</span>
 
         <h3>
-          PDF text reader is next
+          No readable text found
         </h3>
 
         <p>
-          We will first look for real
-          selectable text.
-          Scanned PDFs will later use OCR.
+          The document may contain images, drawings,
+          scanned pages, or content that needs a
+          different reading method.
         </p>
       </div>
     `;
@@ -1256,18 +1003,57 @@ function showExtractionResult(
     return;
   }
 
-  if (
-    result.status ===
-    "needs-docx-reader"
-  ) {
+  if (result.status === "error") {
+    status.textContent =
+      "I couldn't read this document yet. Your original file has not been changed.";
+
+    resultArea.innerHTML = `
+      <div class="file-preview-placeholder">
+        <span aria-hidden="true">🗂️</span>
+
+        <h3>
+          This document needs another look
+        </h3>
+
+        <p>
+          You can return to your basket and keep
+          the original file there.
+        </p>
+      </div>
+    `;
+
+    return;
+  }
+
+  if (result.status === "needs-pdf-reader") {
+    status.textContent =
+      "This PDF is ready for the PDF reading layer we're adding next.";
+
+    resultArea.innerHTML = `
+      <div class="file-preview-placeholder">
+        <span aria-hidden="true">📄</span>
+
+        <h3>
+          PDF text reader is next
+        </h3>
+
+        <p>
+          We will first look for real selectable text.
+          Scanned PDFs will later use OCR instead.
+        </p>
+      </div>
+    `;
+
+    return;
+  }
+
+  if (result.status === "needs-docx-reader") {
     status.textContent =
       "This DOCX is ready for the document reading layer we're adding next.";
 
     resultArea.innerHTML = `
       <div class="file-preview-placeholder">
-        <span aria-hidden="true">
-          🗂️
-        </span>
+        <span aria-hidden="true">🗂️</span>
 
         <h3>
           DOCX reader is next
@@ -1283,17 +1069,13 @@ function showExtractionResult(
     return;
   }
 
-  if (
-    result.status === "needs-ocr"
-  ) {
+  if (result.status === "needs-ocr") {
     status.textContent =
       "Photos will go through the image preparation and OCR layer.";
 
     resultArea.innerHTML = `
       <div class="file-preview-placeholder">
-        <span aria-hidden="true">
-          📷
-        </span>
+        <span aria-hidden="true">📷</span>
 
         <h3>
           Photo reading comes after
@@ -1325,18 +1107,12 @@ function getMaterialIcon(type) {
   return icons[type] || "📎";
 }
 
-function getMaterialDescription(
-  material
-) {
+function getMaterialDescription(material) {
   if (material.type === "text") {
     return "Pasted text";
   }
 
-  return `${formatFileSize(
-    material.size
-  )} · ${getReadableType(
-    material.type
-  )}`;
+  return `${formatFileSize(material.size)} · ${getReadableType(material.type)}`;
 }
 
 function getReadableType(type) {
@@ -1355,9 +1131,7 @@ function formatFileSize(bytes) {
   }
 
   if (bytes < 1024 * 1024) {
-    return `${(
-      bytes / 1024
-    ).toFixed(1)} KB`;
+    return `${(bytes / 1024).toFixed(1)} KB`;
   }
 
   return `${(
@@ -1367,8 +1141,7 @@ function formatFileSize(bytes) {
 }
 
 function showPathPreview() {
-  const main =
-    document.querySelector("main");
+  const main = document.querySelector("main");
 
   main.innerHTML = `
     <section
@@ -1417,27 +1190,18 @@ function showPathPreview() {
   `;
 
   document
-    .getElementById(
-      "return-basket-button"
-    )
-    .addEventListener(
-      "click",
-      () => showMaterialBasket()
-    );
+    .getElementById("return-basket-button")
+    .addEventListener("click", () => {
+      showMaterialBasket();
+    });
 
   document
-    .getElementById(
-      "continue-path-button"
-    )
-    .addEventListener(
-      "click",
-      showJourneyDetails
-    );
+    .getElementById("continue-path-button")
+    .addEventListener("click", showJourneyDetails);
 }
 
 function showJourneyDetails() {
-  const main =
-    document.querySelector("main");
+  const main = document.querySelector("main");
 
   main.innerHTML = `
     <section
@@ -1520,53 +1284,36 @@ function showJourneyDetails() {
   `;
 
   document
-    .getElementById(
-      "details-back-button"
-    )
-    .addEventListener(
-      "click",
-      showPathPreview
-    );
+    .getElementById("details-back-button")
+    .addEventListener("click", showPathPreview);
 
   document
-    .getElementById(
-      "journey-details-form"
-    )
-    .addEventListener(
-      "submit",
-      (event) => {
-        event.preventDefault();
+    .getElementById("journey-details-form")
+    .addEventListener("submit", (event) => {
+      event.preventDefault();
 
-        const journeyTitle =
-          document
-            .getElementById(
-              "journey-title"
-            )
-            .value
-            .trim();
+      const journeyTitle = document
+        .getElementById("journey-title")
+        .value
+        .trim();
 
-        const journeyGoal =
-          document
-            .getElementById(
-              "journey-goal"
-            )
-            .value
-            .trim();
+      const journeyGoal = document
+        .getElementById("journey-goal")
+        .value
+        .trim();
 
-        showFirstJourneyPath(
-          journeyTitle,
-          journeyGoal
-        );
-      }
-    );
+      showFirstJourneyPath(
+        journeyTitle,
+        journeyGoal
+      );
+    });
 }
 
 function showFirstJourneyPath(
   journeyTitle,
   journeyGoal
 ) {
-  const main =
-    document.querySelector("main");
+  const main = document.querySelector("main");
 
   main.innerHTML = `
     <section
@@ -1579,18 +1326,14 @@ function showFirstJourneyPath(
         </p>
 
         <h2 id="first-path-title">
-          ${escapeHtml(
-            journeyTitle
-          )}
+          ${escapeHtml(journeyTitle)}
         </h2>
 
         ${
           journeyGoal
             ? `
               <p class="hero-text">
-                ${escapeHtml(
-                  journeyGoal
-                )}
+                ${escapeHtml(journeyGoal)}
               </p>
             `
             : `
@@ -1653,20 +1396,13 @@ function showFirstJourneyPath(
   `;
 
   document
-    .getElementById(
-      "edit-materials-button"
-    )
-    .addEventListener(
-      "click",
-      () => showMaterialBasket()
-    );
+    .getElementById("edit-materials-button")
+    .addEventListener("click", () => {
+      showMaterialBasket();
+    });
 }
 
-function pathStep(
-  number,
-  title,
-  description
-) {
+function pathStep(number, title, description) {
   return `
     <article class="path-step">
       <span>${number}</span>
