@@ -19,6 +19,852 @@ beginJourneyButtons.forEach((button) => {
 
 
 // ------------------------------------------------------------
+// Teacher + Product Polish V1
+// ------------------------------------------------------------
+
+const teacherDemoStudents = [
+  {
+    id: "learner-river",
+    nickname: "River",
+    status: "Exploring",
+    journey: "Science Presentation",
+    step: "Build the Bones",
+    shared: true,
+    note: "Used Make It Smaller and returned after a break.",
+  },
+  {
+    id: "learner-sky",
+    nickname: "Sky",
+    status: "Waiting for You",
+    journey: "Reading Journey",
+    step: "Drop an Anchor",
+    shared: true,
+    note: "Progress shared by learner.",
+  },
+  {
+    id: "learner-moss",
+    nickname: "Moss",
+    status: "Private",
+    journey: "",
+    step: "",
+    shared: false,
+    note: "",
+  },
+];
+
+function installTeacherButton() {
+  if (
+    document.getElementById(
+      "teacher-space-button"
+    )
+  ) {
+    return;
+  }
+
+  const nav =
+    document.querySelector("nav");
+
+  if (!nav) return;
+
+  const button =
+    document.createElement("button");
+
+  button.type = "button";
+  button.id = "teacher-space-button";
+  button.className = "nav-button";
+  button.textContent = "Teacher Space";
+
+  button.addEventListener(
+    "click",
+    showTeacherDashboard
+  );
+
+  nav.appendChild(button);
+}
+
+function showTeacherDashboard() {
+  const main =
+    document.querySelector("main");
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="teacher-dashboard-title"
+    >
+      <div class="material-heading">
+        <p class="eyebrow">
+          Teacher Space
+        </p>
+
+        <h2 id="teacher-dashboard-title">
+          Different Spaces. Different Ways to Participate.
+        </h2>
+
+        <p class="hero-text">
+          See learning progress that has been
+          shared with you. Accessibility choices
+          and private notes stay with the learner.
+        </p>
+      </div>
+
+      <div class="home-grid">
+        <article class="home-card">
+          <h3>My Class</h3>
+          <p>
+            A calm overview of learners and
+            the Journeys they choose to share.
+          </p>
+          <button
+            type="button"
+            id="open-demo-class-button"
+          >
+            Open Class
+          </button>
+        </article>
+
+        <article class="home-card">
+          <h3>Assign a Journey</h3>
+          <p>
+            Give everyone the same goal while
+            leaving room for different paths.
+          </p>
+          <button
+            type="button"
+            id="assign-journey-button"
+          >
+            Create Assignment
+          </button>
+        </article>
+
+        <article class="home-card">
+          <h3>Teacher Lookbook</h3>
+          <p>
+            A future home for shared Journey
+            moments and Goal Looks.
+          </p>
+          <button
+            type="button"
+            id="teacher-lookbook-button"
+          >
+            Preview
+          </button>
+        </article>
+      </div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="secondary-button"
+          id="teacher-home-button"
+        >
+          Back Home
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "open-demo-class-button"
+    )
+    .addEventListener(
+      "click",
+      showTeacherClass
+    );
+
+  document
+    .getElementById(
+      "assign-journey-button"
+    )
+    .addEventListener(
+      "click",
+      showTeacherAssignment
+    );
+
+  document
+    .getElementById(
+      "teacher-lookbook-button"
+    )
+    .addEventListener(
+      "click",
+      showTeacherLookbook
+    );
+
+  document
+    .getElementById(
+      "teacher-home-button"
+    )
+    .addEventListener(
+      "click",
+      () => window.location.reload()
+    );
+}
+
+function showTeacherClass() {
+  const main =
+    document.querySelector("main");
+
+  const cards =
+    teacherDemoStudents
+      .map((student) => {
+        if (!student.shared) {
+          return `
+            <article class="home-card">
+              <h3>
+                ${escapeHtml(student.nickname)}
+              </h3>
+              <p>
+                This learner has not shared
+                Journey progress.
+              </p>
+              <span class="status-pill">
+                Private
+              </span>
+            </article>
+          `;
+        }
+
+        return `
+          <article class="home-card">
+            <h3>
+              ${escapeHtml(student.nickname)}
+            </h3>
+
+            <p>
+              <strong>Journey:</strong>
+              ${escapeHtml(student.journey)}
+            </p>
+
+            <p>
+              <strong>Current place:</strong>
+              ${escapeHtml(student.step)}
+            </p>
+
+            <p>
+              <strong>Status:</strong>
+              ${escapeHtml(student.status)}
+            </p>
+
+            <button
+              type="button"
+              data-student-id="${student.id}"
+              class="open-student-progress-button"
+            >
+              View Shared Progress
+            </button>
+          </article>
+        `;
+      })
+      .join("");
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="teacher-class-title"
+    >
+      <p class="eyebrow">
+        Teacher Space · My Class
+      </p>
+
+      <h2 id="teacher-class-title">
+        Shared learning paths
+      </h2>
+
+      <p class="hero-text">
+        These cards describe what happened.
+        They do not diagnose, rank or label
+        learners.
+      </p>
+
+      <div class="home-grid">
+        ${cards}
+      </div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="secondary-button"
+          id="class-dashboard-button"
+        >
+          Back to Teacher Space
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .querySelectorAll(
+      ".open-student-progress-button"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          const student =
+            teacherDemoStudents.find(
+              (item) =>
+                item.id ===
+                button.dataset.studentId
+            );
+
+          if (student) {
+            showTeacherStudentProgress(
+              student
+            );
+          }
+        }
+      );
+    });
+
+  document
+    .getElementById(
+      "class-dashboard-button"
+    )
+    .addEventListener(
+      "click",
+      showTeacherDashboard
+    );
+}
+
+function showTeacherStudentProgress(student) {
+  const main =
+    document.querySelector("main");
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="student-progress-title"
+    >
+      <p class="eyebrow">
+        Shared Progress
+      </p>
+
+      <h2 id="student-progress-title">
+        ${escapeHtml(student.nickname)}
+      </h2>
+
+      <div class="comfort-panel">
+        <div class="comfort-control">
+          <strong>Current Journey</strong>
+          <p>
+            ${escapeHtml(student.journey)}
+          </p>
+        </div>
+
+        <div class="comfort-control">
+          <strong>Current Place</strong>
+          <p>
+            ${escapeHtml(student.step)}
+          </p>
+        </div>
+
+        <div class="comfort-control">
+          <strong>Observation</strong>
+          <p>
+            ${escapeHtml(student.note)}
+          </p>
+        </div>
+
+        <div class="comfort-control">
+          <strong>Privacy</strong>
+          <p>
+            Private journal entries, personal
+            accessibility preferences and
+            unshared Journeys are not shown here.
+          </p>
+        </div>
+      </div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="secondary-button"
+          id="student-progress-back-button"
+        >
+          Back to Class
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "student-progress-back-button"
+    )
+    .addEventListener(
+      "click",
+      showTeacherClass
+    );
+}
+
+function showTeacherAssignment() {
+  const main =
+    document.querySelector("main");
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="teacher-assignment-title"
+    >
+      <p class="eyebrow">
+        Assign a Journey
+      </p>
+
+      <h2 id="teacher-assignment-title">
+        Set the destination, not one fixed route.
+      </h2>
+
+      <div class="comfort-panel">
+        <div class="comfort-control">
+          <label for="teacher-assignment-title-input">
+            Assignment
+          </label>
+          <input
+            id="teacher-assignment-title-input"
+            type="text"
+            placeholder="e.g. Solar system presentation"
+          />
+        </div>
+
+        <div class="comfort-control">
+          <label for="teacher-assignment-goal-input">
+            What should learners reach?
+          </label>
+          <textarea
+            id="teacher-assignment-goal-input"
+            rows="5"
+            placeholder="Describe the shared learning goal."
+          ></textarea>
+        </div>
+
+        <div class="comfort-control">
+          <label for="teacher-assignment-date-input">
+            Optional date
+          </label>
+          <input
+            id="teacher-assignment-date-input"
+            type="date"
+          />
+        </div>
+      </div>
+
+      <p>
+        Learners can still use their own
+        supports, change how they approach
+        steps and personalise their space.
+      </p>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="primary-button"
+          id="teacher-preview-assignment-button"
+        >
+          Preview Assignment
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="assignment-dashboard-button"
+        >
+          Back to Teacher Space
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "teacher-preview-assignment-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        const title =
+          document
+            .getElementById(
+              "teacher-assignment-title-input"
+            )
+            .value
+            .trim() ||
+          "New Journey";
+
+        const goal =
+          document
+            .getElementById(
+              "teacher-assignment-goal-input"
+            )
+            .value
+            .trim() ||
+          "Shared learning goal";
+
+        const date =
+          document
+            .getElementById(
+              "teacher-assignment-date-input"
+            )
+            .value;
+
+        showTeacherAssignmentPreview(
+          title,
+          goal,
+          date
+        );
+      }
+    );
+
+  document
+    .getElementById(
+      "assignment-dashboard-button"
+    )
+    .addEventListener(
+      "click",
+      showTeacherDashboard
+    );
+}
+
+function showTeacherAssignmentPreview(
+  title,
+  goal,
+  date
+) {
+  const main =
+    document.querySelector("main");
+
+  main.innerHTML = `
+    <section
+      class="hero"
+      aria-labelledby="assignment-preview-title"
+    >
+      <p class="eyebrow">
+        Assignment Preview
+      </p>
+
+      <h2 id="assignment-preview-title">
+        ${escapeHtml(title)}
+      </h2>
+
+      <p class="hero-text">
+        ${escapeHtml(goal)}
+      </p>
+
+      ${
+        date
+          ? `
+            <p>
+              <strong>Date:</strong>
+              ${escapeHtml(date)}
+            </p>
+          `
+          : `
+            <p>
+              No date added.
+            </p>
+          `
+      }
+
+      <p>
+        Same Goal. Different Paths.
+      </p>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="secondary-button"
+          id="edit-assignment-button"
+        >
+          Edit
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="assignment-preview-dashboard-button"
+        >
+          Back to Teacher Space
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "edit-assignment-button"
+    )
+    .addEventListener(
+      "click",
+      showTeacherAssignment
+    );
+
+  document
+    .getElementById(
+      "assignment-preview-dashboard-button"
+    )
+    .addEventListener(
+      "click",
+      showTeacherDashboard
+    );
+}
+
+function showTeacherLookbook() {
+  const main =
+    document.querySelector("main");
+
+  main.innerHTML = `
+    <section
+      class="hero"
+      aria-labelledby="teacher-lookbook-title"
+    >
+      <p class="eyebrow">
+        Teacher Lookbook
+      </p>
+
+      <h2 id="teacher-lookbook-title">
+        Shared moments can live here.
+      </h2>
+
+      <p class="hero-text">
+        This V1 is the structure only.
+        Later, learner-approved Goal Looks
+        and Journey moments can appear here
+        without exposing private notes.
+      </p>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="secondary-button"
+          id="lookbook-dashboard-button"
+        >
+          Back to Teacher Space
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "lookbook-dashboard-button"
+    )
+    .addEventListener(
+      "click",
+      showTeacherDashboard
+    );
+}
+
+function showJourneyCard(journey) {
+  const main =
+    document.querySelector("main");
+
+  const steps =
+    Array.isArray(journey.steps)
+      ? journey.steps
+      : [];
+
+  const currentIndex =
+    Math.max(
+      0,
+      Math.min(
+        Number(journey.currentStepIndex) || 0,
+        Math.max(steps.length - 1, 0)
+      )
+    );
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="journey-card-title"
+    >
+      <p class="eyebrow">
+        Journey Card
+      </p>
+
+      <h2 id="journey-card-title">
+        ${escapeHtml(
+          journey.title ||
+            "My Journey"
+        )}
+      </h2>
+
+      <div class="comfort-panel">
+        <div class="comfort-control">
+          <strong>Goal</strong>
+          <p>
+            ${escapeHtml(
+              journey.goal ||
+                "Keep exploring."
+            )}
+          </p>
+        </div>
+
+        <div class="comfort-control">
+          <strong>Current Place</strong>
+          <p>
+            ${
+              steps.length
+                ? `Step ${currentIndex + 1} of ${steps.length}: ${escapeHtml(
+                    steps[currentIndex].title
+                  )}`
+                : "Your trail is ready to begin."
+            }
+          </p>
+        </div>
+
+        <div class="comfort-control">
+          <strong>Parked Thoughts</strong>
+          <p>
+            ${
+              Array.isArray(
+                journey.parkedThoughts
+              )
+                ? journey.parkedThoughts.length
+                : 0
+            }
+            saved for later.
+          </p>
+        </div>
+      </div>
+
+      <p>
+        Changing the plan is not failing
+        the plan.
+      </p>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="primary-button"
+          id="journey-card-continue-button"
+        >
+          Pick Up My Trail
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="journey-card-home-button"
+        >
+          Back Home
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "journey-card-continue-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showJourneyWorkspace(
+          journey,
+          currentIndex
+        );
+      }
+    );
+
+  document
+    .getElementById(
+      "journey-card-home-button"
+    )
+    .addEventListener(
+      "click",
+      () => window.location.reload()
+    );
+}
+
+function addJourneyCardShortcut() {
+  const journey =
+    compassStudentState.activeJourney;
+
+  if (
+    !journey ||
+    document.getElementById(
+      "journey-card-shortcut"
+    )
+  ) {
+    return;
+  }
+
+  const grid =
+    document.querySelector(
+      ".home-grid"
+    );
+
+  if (!grid) return;
+
+  const card =
+    document.createElement(
+      "article"
+    );
+
+  card.id =
+    "journey-card-shortcut";
+  card.className =
+    "home-card";
+
+  card.innerHTML = `
+    <span
+      class="card-icon"
+      aria-hidden="true"
+    >
+      🗺️
+    </span>
+
+    <h3>My Journey Card</h3>
+
+    <p>
+      See where you are without turning
+      progress into a grade.
+    </p>
+
+    <button
+      type="button"
+      id="open-journey-card-button"
+    >
+      Open Journey Card
+    </button>
+  `;
+
+  grid.appendChild(card);
+
+  document
+    .getElementById(
+      "open-journey-card-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showJourneyCard(
+          JSON.parse(
+            JSON.stringify(
+              compassStudentState
+                .activeJourney
+            )
+          )
+        );
+      }
+    );
+}
+
+function installProductPolishV1() {
+  installTeacherButton();
+
+  window.setTimeout(
+    addJourneyCardShortcut,
+    0
+  );
+}
+
+window.addEventListener(
+  "load",
+  installProductPolishV1
+);
+
+
+// ------------------------------------------------------------
 // Persistence V1 — this-device storage
 // ------------------------------------------------------------
 // This is intentionally local-only for now.
