@@ -19,7 +19,7 @@ async function getOpenCv() {
   await new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       reject(new Error("OpenCV loading timed out."));
-    }, 15000);
+    }, 20000);
 
     cv.onRuntimeInitialized = () => {
       clearTimeout(timeout);
@@ -36,7 +36,7 @@ async function getOcrWorker() {
   }
 
   if (!window.Tesseract) {
-    throw new Error("OCR reader is not available.");
+    throw new Error("Tesseract is not available.");
   }
 
   ocrWorker = await window.Tesseract.createWorker(
@@ -52,44 +52,58 @@ async function getOcrWorker() {
   return ocrWorker;
 }
 
-async function readPhotoText(file) {
+async function readPhotoText(file, manualCorners = null) {
   const originalUrl = URL.createObjectURL(file);
 
   try {
     const image = await loadImage(originalUrl);
 
-    const corrected = await prepareDocumentImage(image);
+    const prepared = await prepareDocumentImage(
+      image,
+      manualCorners
+    );
 
     const worker = await getOcrWorker();
 
     const result = await worker.recognize(
-      corrected.dataUrl
+      prepared.processedImage
     );
 
-    const text = (
-      result.data.text || ""
-    ).trim();
-
-    if (!text) {
-      return {
-        status: "empty",
-        text: "",
-        method: "photo-ocr",
-        perspectiveCorrected:
-          corrected.perspectiveCorrected,
-        processedImage:
-          corrected.dataUrl,
-      };
-    }
+    const text = (result.data.text || "").trim();
 
     return {
-      status: "ready",
+      status: text ? "ready" : "empty",
       text,
       method: "photo-ocr",
-      perspectiveCorrected:
-        corrected.perspectiveCorrected,
+
       processedImage:
-        corrected.dataUrl,
+        prepared.processedImage,
+
+      originalImage:
+        prepared.originalImage,
+
+      perspectiveCorrected:
+        prepared.perspectiveCorrected,
+
+      detectedCorners:
+        prepared.detectedCorners,
+
+      originalWidth:
+        image.naturalWidth,
+
+      originalHeight:
+        image.naturalHeight,
+    };
+  } catch (error) {
+    console.error(
+      "Photo OCR failed:",
+      error
+    );
+
+    return {
+      status: "error",
+      text: "",
+      method: "photo-ocr",
     };
   } finally {
     URL.revokeObjectURL(originalUrl);
@@ -118,63 +132,81 @@ function loadImage(url) {
   );
 }
 
-async function prepareDocumentImage(image) {
+async function prepareDocumentImage(
+  image,
+  manualCorners = null
+) {
   const cv = await getOpenCv();
 
-  const sourceCanvas =
+  const originalCanvas =
     document.createElement("canvas");
 
-  sourceCanvas.width =
+  originalCanvas.width =
     image.naturalWidth;
 
-  sourceCanvas.height =
+  originalCanvas.height =
     image.naturalHeight;
 
-  const sourceContext =
-    sourceCanvas.getContext("2d");
+  const originalContext =
+    originalCanvas.getContext("2d");
 
-  sourceContext.drawImage(
+  originalContext.drawImage(
     image,
     0,
     0
   );
 
+  const originalImage =
+    originalCanvas.toDataURL(
+      "image/jpeg",
+      0.92
+    );
+
   const maxDimension = 1800;
 
   let scale = 1;
 
-  if (
+  const largestDimension =
     Math.max(
-      sourceCanvas.width,
-      sourceCanvas.height
-    ) > maxDimension
+      image.naturalWidth,
+      image.naturalHeight
+    );
+
+  if (
+    largestDimension >
+    maxDimension
   ) {
     scale =
       maxDimension /
-      Math.max(
-        sourceCanvas.width,
-        sourceCanvas.height
-      );
+      largestDimension;
   }
 
   const workingCanvas =
     document.createElement("canvas");
 
   workingCanvas.width =
-    Math.round(
-      sourceCanvas.width * scale
+    Math.max(
+      1,
+      Math.round(
+        image.naturalWidth *
+        scale
+      )
     );
 
   workingCanvas.height =
-    Math.round(
-      sourceCanvas.height * scale
+    Math.max(
+      1,
+      Math.round(
+        image.naturalHeight *
+        scale
+      )
     );
 
   const workingContext =
     workingCanvas.getContext("2d");
 
   workingContext.drawImage(
-    sourceCanvas,
+    image,
     0,
     0,
     workingCanvas.width,
@@ -184,19 +216,137 @@ async function prepareDocumentImage(image) {
   const src =
     cv.imread(workingCanvas);
 
-  const gray = new cv.Mat();
-  const blurred = new cv.Mat();
-  const edges = new cv.Mat();
+  try {
+    let corners = null;
+
+    if (manualCorners) {
+      corners =
+        manualCorners.map(
+          (point) => ({
+            x:
+              point.x *
+              scale,
+
+            y:
+              point.y *
+              scale,
+          })
+        );
+    } else {
+      corners =
+        detectDocumentCorners(
+          cv,
+          src
+        );
+    }
+
+    if (
+      corners &&
+      corners.length === 4
+    ) {
+      const warped =
+        warpDocument(
+          cv,
+          src,
+          corners
+        );
+
+      try {
+        const processedImage =
+          enhanceImageForOcr(
+            cv,
+            warped
+          );
+
+        return {
+          originalImage,
+          processedImage,
+          perspectiveCorrected:
+            true,
+
+          detectedCorners:
+            corners.map(
+              (point) => ({
+                x:
+                  point.x /
+                  scale,
+
+                y:
+                  point.y /
+                  scale,
+              })
+            ),
+        };
+      } finally {
+        warped.delete();
+      }
+    }
+
+    return {
+      originalImage,
+
+      processedImage:
+        enhanceImageForOcr(
+          cv,
+          src
+        ),
+
+      perspectiveCorrected:
+        false,
+
+      detectedCorners: [
+        {
+          x: 0,
+          y: 0,
+        },
+
+        {
+          x:
+            image.naturalWidth,
+          y: 0,
+        },
+
+        {
+          x:
+            image.naturalWidth,
+          y:
+            image.naturalHeight,
+        },
+
+        {
+          x: 0,
+          y:
+            image.naturalHeight,
+        },
+      ],
+    };
+  } finally {
+    src.delete();
+  }
+}
+
+function detectDocumentCorners(
+  cv,
+  source
+) {
+  const gray =
+    new cv.Mat();
+
+  const blurred =
+    new cv.Mat();
+
+  const edges =
+    new cv.Mat();
+
   const contours =
     new cv.MatVector();
+
   const hierarchy =
     new cv.Mat();
 
-  let warped = null;
-
   try {
     cv.cvtColor(
-      src,
+      source,
       gray,
       cv.COLOR_RGBA2GRAY
     );
@@ -205,16 +355,14 @@ async function prepareDocumentImage(image) {
       gray,
       blurred,
       new cv.Size(5, 5),
-      0,
-      0,
-      cv.BORDER_DEFAULT
+      0
     );
 
     cv.Canny(
       blurred,
       edges,
-      60,
-      180
+      50,
+      160
     );
 
     cv.findContours(
@@ -225,21 +373,22 @@ async function prepareDocumentImage(image) {
       cv.CHAIN_APPROX_SIMPLE
     );
 
-    let bestContour = null;
+    let bestPoints = null;
     let bestArea = 0;
 
     const minimumArea =
-      src.rows *
-      src.cols *
-      0.15;
+      source.rows *
+      source.cols *
+      0.12;
 
     for (
-      let i = 0;
-      i < contours.size();
-      i += 1
+      let index = 0;
+      index <
+      contours.size();
+      index += 1
     ) {
       const contour =
-        contours.get(i);
+        contours.get(index);
 
       const perimeter =
         cv.arcLength(
@@ -253,7 +402,8 @@ async function prepareDocumentImage(image) {
       cv.approxPolyDP(
         contour,
         approx,
-        0.02 * perimeter,
+        0.02 *
+        perimeter,
         true
       );
 
@@ -266,188 +416,224 @@ async function prepareDocumentImage(image) {
 
       if (
         approx.rows === 4 &&
-        area > minimumArea &&
-        area > bestArea
+        area >
+          minimumArea &&
+        area >
+          bestArea
       ) {
-        if (bestContour) {
-          bestContour.delete();
-        }
-
-        bestContour =
-          approx.clone();
-
         bestArea = area;
+
+        bestPoints =
+          extractContourPoints(
+            approx
+          );
       }
 
       approx.delete();
       contour.delete();
     }
 
-    if (!bestContour) {
-      return enhanceForOcr(
-        cv,
-        src,
-        false
-      );
+    if (
+      !bestPoints ||
+      bestPoints.length !== 4
+    ) {
+      return null;
     }
 
-    const points =
-      extractContourPoints(
-        bestContour
-      );
-
-    bestContour.delete();
-
-    const ordered =
-      orderPoints(points);
-
-    const topWidth =
-      distance(
-        ordered.topLeft,
-        ordered.topRight
-      );
-
-    const bottomWidth =
-      distance(
-        ordered.bottomLeft,
-        ordered.bottomRight
-      );
-
-    const leftHeight =
-      distance(
-        ordered.topLeft,
-        ordered.bottomLeft
-      );
-
-    const rightHeight =
-      distance(
-        ordered.topRight,
-        ordered.bottomRight
-      );
-
-    const width = Math.max(
-      1,
-      Math.round(
-        Math.max(
-          topWidth,
-          bottomWidth
-        )
-      )
-    );
-
-    const height = Math.max(
-      1,
-      Math.round(
-        Math.max(
-          leftHeight,
-          rightHeight
-        )
-      )
-    );
-
-    const sourcePoints =
-      cv.matFromArray(
-        4,
-        1,
-        cv.CV_32FC2,
-        [
-          ordered.topLeft.x,
-          ordered.topLeft.y,
-
-          ordered.topRight.x,
-          ordered.topRight.y,
-
-          ordered.bottomRight.x,
-          ordered.bottomRight.y,
-
-          ordered.bottomLeft.x,
-          ordered.bottomLeft.y,
-        ]
-      );
-
-    const destinationPoints =
-      cv.matFromArray(
-        4,
-        1,
-        cv.CV_32FC2,
-        [
-          0,
-          0,
-
-          width - 1,
-          0,
-
-          width - 1,
-          height - 1,
-
-          0,
-          height - 1,
-        ]
-      );
-
-    const matrix =
-      cv.getPerspectiveTransform(
-        sourcePoints,
-        destinationPoints
-      );
-
-    warped =
-      new cv.Mat();
-
-    cv.warpPerspective(
-      src,
-      warped,
-      matrix,
-      new cv.Size(
-        width,
-        height
-      ),
-      cv.INTER_LINEAR,
-      cv.BORDER_CONSTANT,
-      new cv.Scalar()
-    );
-
-    sourcePoints.delete();
-    destinationPoints.delete();
-    matrix.delete();
-
-    return enhanceForOcr(
-      cv,
-      warped,
-      true
+    return orderPoints(
+      bestPoints
     );
   } finally {
-    src.delete();
     gray.delete();
     blurred.delete();
     edges.delete();
     contours.delete();
     hierarchy.delete();
-
-    if (warped) {
-      warped.delete();
-    }
   }
 }
 
-function enhanceForOcr(
+function orderPoints(points) {
+  const sorted =
+    [...points].sort(
+      (a, b) =>
+        a.y - b.y
+    );
+
+  const top =
+    sorted
+      .slice(0, 2)
+      .sort(
+        (a, b) =>
+          a.x - b.x
+      );
+
+  const bottom =
+    sorted
+      .slice(2, 4)
+      .sort(
+        (a, b) =>
+          a.x - b.x
+      );
+
+  return [
+    top[0],
+    top[1],
+    bottom[1],
+    bottom[0],
+  ];
+}
+
+function warpDocument(
   cv,
   source,
-  perspectiveCorrected
+  corners
+) {
+  const [
+    topLeft,
+    topRight,
+    bottomRight,
+    bottomLeft,
+  ] = corners;
+
+  const widthTop =
+    distance(
+      topLeft,
+      topRight
+    );
+
+  const widthBottom =
+    distance(
+      bottomLeft,
+      bottomRight
+    );
+
+  const heightLeft =
+    distance(
+      topLeft,
+      bottomLeft
+    );
+
+  const heightRight =
+    distance(
+      topRight,
+      bottomRight
+    );
+
+  const width =
+    Math.max(
+      1,
+      Math.round(
+        Math.max(
+          widthTop,
+          widthBottom
+        )
+      )
+    );
+
+  const height =
+    Math.max(
+      1,
+      Math.round(
+        Math.max(
+          heightLeft,
+          heightRight
+        )
+      )
+    );
+
+  const sourcePoints =
+    cv.matFromArray(
+      4,
+      1,
+      cv.CV_32FC2,
+      [
+        topLeft.x,
+        topLeft.y,
+
+        topRight.x,
+        topRight.y,
+
+        bottomRight.x,
+        bottomRight.y,
+
+        bottomLeft.x,
+        bottomLeft.y,
+      ]
+    );
+
+  const destinationPoints =
+    cv.matFromArray(
+      4,
+      1,
+      cv.CV_32FC2,
+      [
+        0,
+        0,
+
+        width - 1,
+        0,
+
+        width - 1,
+        height - 1,
+
+        0,
+        height - 1,
+      ]
+    );
+
+  const transform =
+    cv.getPerspectiveTransform(
+      sourcePoints,
+      destinationPoints
+    );
+
+  const output =
+    new cv.Mat();
+
+  cv.warpPerspective(
+    source,
+    output,
+    transform,
+    new cv.Size(
+      width,
+      height
+    ),
+    cv.INTER_LINEAR,
+    cv.BORDER_CONSTANT,
+    new cv.Scalar(
+      255,
+      255,
+      255,
+      255
+    )
+  );
+
+  sourcePoints.delete();
+  destinationPoints.delete();
+  transform.delete();
+
+  return output;
+}
+
+function enhanceImageForOcr(
+  cv,
+  source
 ) {
   const gray =
     new cv.Mat();
 
-  const cleaned =
+  const output =
     new cv.Mat();
 
-  const outputCanvas =
+  const canvas =
     document.createElement(
       "canvas"
     );
 
   try {
-    if (source.channels() === 4) {
+    if (
+      source.channels() === 4
+    ) {
       cv.cvtColor(
         source,
         gray,
@@ -467,30 +653,25 @@ function enhanceForOcr(
 
     cv.adaptiveThreshold(
       gray,
-      cleaned,
+      output,
       255,
       cv.ADAPTIVE_THRESH_GAUSSIAN_C,
       cv.THRESH_BINARY,
       31,
-      15
+      13
     );
 
     cv.imshow(
-      outputCanvas,
-      cleaned
+      canvas,
+      output
     );
 
-    return {
-      dataUrl:
-        outputCanvas.toDataURL(
-          "image/png"
-        ),
-
-      perspectiveCorrected,
-    };
+    return canvas.toDataURL(
+      "image/png"
+    );
   } finally {
     gray.delete();
-    cleaned.delete();
+    output.delete();
   }
 }
 
@@ -500,16 +681,20 @@ function extractContourPoints(
   const points = [];
 
   for (
-    let i = 0;
-    i < contour.data32S.length;
-    i += 2
+    let index = 0;
+    index <
+    contour.data32S.length;
+    index += 2
   ) {
     points.push({
       x:
-        contour.data32S[i],
+        contour.data32S[
+          index
+        ],
+
       y:
         contour.data32S[
-          i + 1
+          index + 1
         ],
     });
   }
@@ -517,66 +702,9 @@ function extractContourPoints(
   return points;
 }
 
-function orderPoints(points) {
-  const sum = (point) =>
-    point.x + point.y;
-
-  const difference = (point) =>
-    point.y - point.x;
-
-  const topLeft =
-    points.reduce(
-      (best, point) =>
-        sum(point) <
-        sum(best)
-          ? point
-          : best
-    );
-
-  const bottomRight =
-    points.reduce(
-      (best, point) =>
-        sum(point) >
-        sum(best)
-          ? point
-          : best
-    );
-
-  const topRight =
-    points.reduce(
-      (best, point) =>
-        difference(point) <
-        difference(best)
-          ? point
-          : best
-    );
-
-  const bottomLeft =
-    points.reduce(
-      (best, point) =>
-        difference(point) >
-        difference(best)
-          ? point
-          : best
-    );
-
-  return {
-    topLeft,
-    topRight,
-    bottomRight,
-    bottomLeft,
-  };
-}
-
 function distance(a, b) {
-  return Math.sqrt(
-    Math.pow(
-      b.x - a.x,
-      2
-    ) +
-      Math.pow(
-        b.y - a.y,
-        2
-      )
+  return Math.hypot(
+    b.x - a.x,
+    b.y - a.y
   );
 }
