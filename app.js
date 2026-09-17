@@ -2465,6 +2465,7 @@ function wireHomeExperience() {
 }
 
 wireHomeExperience();
+installCompassFocusButton();
 
 function backHome() {
   window.location.reload();
