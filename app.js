@@ -2375,6 +2375,13 @@ function showPathPreview() {
   const main =
     document.querySelector("main");
 
+  const reviewedCount =
+    materialBasket.filter(
+      (material) =>
+        material.extractionStatus ===
+        "confirmed"
+    ).length;
+
   main.innerHTML = `
     <section
       class="hero"
@@ -2397,9 +2404,15 @@ function showPathPreview() {
             : "materials"
         }.
 
-        Next, Compass Trail will help
-        turn what you brought into
-        an editable Journey.
+        ${
+          reviewedCount > 0
+            ? `${reviewedCount} ${
+                reviewedCount === 1
+                  ? "material has"
+                  : "materials have"
+              } checked text ready to help shape your path.`
+            : `You can still build a path now. Checking the text first can make the suggestion more specific.`
+        }
       </p>
 
       <div class="hero-actions">
@@ -2476,8 +2489,9 @@ function showJourneyDetails() {
 
           <span>
             For example:
-            science presentation
-            or maths homework.
+            science presentation,
+            maths homework
+            or a chapter to read.
           </span>
         </label>
 
@@ -2562,17 +2576,576 @@ function showJourneyDetails() {
             .value
             .trim();
 
+        const journey =
+          buildJourneySuggestion(
+            journeyTitle,
+            journeyGoal
+          );
+
         showFirstJourneyPath(
-          journeyTitle,
-          journeyGoal
+          journey
         );
       }
     );
 }
 
-function showFirstJourneyPath(
+function getJourneySourceText() {
+  return materialBasket
+    .map((material) => {
+      if (
+        material.extractionStatus ===
+          "confirmed" &&
+        material.extractedText
+      ) {
+        return material.extractedText;
+      }
+
+      if (
+        material.type === "text" &&
+        material.text
+      ) {
+        return material.text;
+      }
+
+      return "";
+    })
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+function buildJourneySuggestion(
   journeyTitle,
   journeyGoal
+) {
+  const sourceText =
+    getJourneySourceText();
+
+  const analysisText = [
+    journeyTitle,
+    journeyGoal,
+    sourceText,
+  ]
+    .join("\n")
+    .toLowerCase();
+
+  const taskType =
+    detectJourneyTaskType(
+      analysisText
+    );
+
+  return {
+    title: journeyTitle,
+    goal: journeyGoal,
+    taskType,
+    sourceText,
+    steps:
+      createJourneySteps(
+        taskType
+      ).map(
+        (step) => ({
+          id: crypto.randomUUID(),
+          title: step.title,
+          description:
+            step.description,
+        })
+      ),
+  };
+}
+
+function detectJourneyTaskType(text) {
+  const scores = {
+    reading: 0,
+    writing: 0,
+    questions: 0,
+    study: 0,
+    maths: 0,
+    presentation: 0,
+    research: 0,
+    project: 0,
+  };
+
+  const keywordGroups = {
+    reading: [
+      "read",
+      "reading",
+      "chapter",
+      "article",
+      "book",
+      "text",
+      "passage",
+      "oku",
+      "okuma",
+      "metin",
+      "makale",
+      "bölüm",
+      "kitap",
+    ],
+
+    writing: [
+      "write",
+      "writing",
+      "essay",
+      "paragraph",
+      "report",
+      "draft",
+      "compose",
+      "yaz",
+      "yazma",
+      "yazı",
+      "kompozisyon",
+      "paragraf",
+      "rapor",
+      "makale yaz",
+    ],
+
+    questions: [
+      "answer",
+      "question",
+      "questions",
+      "worksheet",
+      "exercise",
+      "complete the",
+      "cevap",
+      "soru",
+      "sorular",
+      "çalışma kağıdı",
+      "alıştırma",
+      "etkinlik",
+    ],
+
+    study: [
+      "study",
+      "exam",
+      "test",
+      "quiz",
+      "revision",
+      "review",
+      "memorize",
+      "remember",
+      "çalış",
+      "sınav",
+      "test",
+      "tekrar",
+      "ezber",
+      "hatırla",
+    ],
+
+    maths: [
+      "math",
+      "maths",
+      "mathematics",
+      "calculate",
+      "equation",
+      "solve",
+      "fraction",
+      "algebra",
+      "geometry",
+      "matematik",
+      "hesapla",
+      "denklem",
+      "çöz",
+      "kesir",
+      "cebir",
+      "geometri",
+    ],
+
+    presentation: [
+      "presentation",
+      "slides",
+      "slide",
+      "present",
+      "powerpoint",
+      "sunum",
+      "slayt",
+      "sunmak",
+    ],
+
+    research: [
+      "research",
+      "sources",
+      "source",
+      "investigate",
+      "find information",
+      "araştır",
+      "araştırma",
+      "kaynak",
+      "bilgi bul",
+    ],
+
+    project: [
+      "project",
+      "create",
+      "make",
+      "build",
+      "design",
+      "poster",
+      "model",
+      "proje",
+      "oluştur",
+      "hazırla",
+      "tasarla",
+      "poster",
+      "model",
+    ],
+  };
+
+  Object.entries(
+    keywordGroups
+  ).forEach(
+    ([type, keywords]) => {
+      keywords.forEach(
+        (keyword) => {
+          if (
+            text.includes(keyword)
+          ) {
+            scores[type] +=
+              keyword.length > 6
+                ? 2
+                : 1;
+          }
+        }
+      );
+    }
+  );
+
+  const ranked =
+    Object.entries(scores)
+      .sort(
+        (a, b) =>
+          b[1] - a[1]
+      );
+
+  if (
+    ranked[0][1] === 0
+  ) {
+    return "general";
+  }
+
+  return ranked[0][0];
+}
+
+function createJourneySteps(
+  taskType
+) {
+  const paths = {
+    reading: [
+      {
+        title: "Take a Peek",
+        description:
+          "Look over the material before reading closely. Notice headings, questions and anything that stands out.",
+      },
+      {
+        title: "Dip In",
+        description:
+          "Read the first manageable section without needing to finish everything at once.",
+      },
+      {
+        title: "Drop an Anchor",
+        description:
+          "Pause and mark the main idea, an important detail or something you want to return to.",
+      },
+      {
+        title: "Keep Swimming",
+        description:
+          "Continue with the next small section and use support whenever the text feels heavy.",
+      },
+      {
+        title: "Gather What Stayed",
+        description:
+          "Collect the ideas, answers or notes that matter for what you need to do next.",
+      },
+    ],
+
+    writing: [
+      {
+        title: "Catch the Sparks",
+        description:
+          "Collect rough ideas, useful words and anything you might want to say. They do not need to be organised yet.",
+      },
+      {
+        title: "Find What Belongs Together",
+        description:
+          "Group related ideas so you can see the shape of what you want to write.",
+      },
+      {
+        title: "Give It a Backbone",
+        description:
+          "Choose a simple order for the beginning, middle and ending.",
+      },
+      {
+        title: "Let It Be Messy",
+        description:
+          "Write a first version without trying to make every sentence perfect.",
+      },
+      {
+        title: "See With Fresh Eyes",
+        description:
+          "Read it again and change anything that would make your meaning clearer.",
+      },
+      {
+        title: "Final Polish",
+        description:
+          "Check the details that matter for this task and decide when it feels ready.",
+      },
+    ],
+
+    questions: [
+      {
+        title: "See What’s Here",
+        description:
+          "Look through the questions and notice what kinds of answers they are asking for.",
+      },
+      {
+        title: "Find an Easy Entry",
+        description:
+          "Choose one question that feels possible to start with.",
+      },
+      {
+        title: "One Question at a Time",
+        description:
+          "Work through a small group instead of holding the whole worksheet in mind.",
+      },
+      {
+        title: "Park the Sticky Ones",
+        description:
+          "Set aside questions that need more help and keep moving where you can.",
+      },
+      {
+        title: "Come Back With Clues",
+        description:
+          "Return to the parked questions with notes, examples or another support.",
+      },
+      {
+        title: "Take a Fresh Look",
+        description:
+          "Check that each answer says what you mean before you finish.",
+      },
+    ],
+
+    study: [
+      {
+        title: "Find the Territory",
+        description:
+          "Notice what topics, pages or ideas you actually need to know.",
+      },
+      {
+        title: "Make It Bite-Sized",
+        description:
+          "Split the material into a few small study chunks.",
+      },
+      {
+        title: "Make It Stick",
+        description:
+          "Choose a memory support such as chunking, a mnemonic, a mind map or examples.",
+      },
+      {
+        title: "Try It Without Looking",
+        description:
+          "Recall a small part from memory and notice what is already staying with you.",
+      },
+      {
+        title: "Return to the Gaps",
+        description:
+          "Spend your next bit of energy only on the parts that still need attention.",
+      },
+      {
+        title: "One Last Check",
+        description:
+          "Do a short final recall and decide what would be most useful to revisit later.",
+      },
+    ],
+
+    maths: [
+      {
+        title: "Meet the Problem",
+        description:
+          "Look at what the question gives you without rushing to calculate.",
+      },
+      {
+        title: "Find What You Know",
+        description:
+          "Mark the numbers, facts, rules or examples that might help.",
+      },
+      {
+        title: "Find What You’re Looking For",
+        description:
+          "Say what the problem wants you to find in your own words.",
+      },
+      {
+        title: "Pick Something to Try",
+        description:
+          "Choose a method, formula, drawing or first calculation.",
+      },
+      {
+        title: "One Move at a Time",
+        description:
+          "Work through the solution in small visible steps.",
+      },
+      {
+        title: "Look Back",
+        description:
+          "Check whether the answer fits the question and revisit a step if you want to.",
+      },
+    ],
+
+    presentation: [
+      {
+        title: "Go on a Clue Hunt",
+        description:
+          "Find the topic, instructions, audience and anything the presentation must include.",
+      },
+      {
+        title: "Fill Your Basket",
+        description:
+          "Collect the facts, examples, images or ideas you may want to use.",
+      },
+      {
+        title: "Make the Pieces Fit",
+        description:
+          "Group related information and decide what belongs together.",
+      },
+      {
+        title: "Build the Bones",
+        description:
+          "Choose a simple slide order before worrying about decoration.",
+      },
+      {
+        title: "Bring It to Life",
+        description:
+          "Add the words and visuals that help each slide communicate one clear idea.",
+      },
+      {
+        title: "Give It a Test-Drive",
+        description:
+          "Run through the presentation and change anything that feels crowded or unclear.",
+      },
+      {
+        title: "Ready to Send It Off",
+        description:
+          "Check the final details and decide when it is ready to share.",
+      },
+    ],
+
+    research: [
+      {
+        title: "Name the Trail",
+        description:
+          "Turn the task into one clear question or thing you want to find out.",
+      },
+      {
+        title: "Gather Some Leads",
+        description:
+          "List useful search words, places to look and sources you already have.",
+      },
+      {
+        title: "Follow One Lead",
+        description:
+          "Explore one source at a time and collect only the information that helps your question.",
+      },
+      {
+        title: "Keep the Useful Pieces",
+        description:
+          "Save key facts, examples and where each one came from.",
+      },
+      {
+        title: "Make the Connections",
+        description:
+          "Group what you found and notice where sources agree, differ or leave gaps.",
+      },
+      {
+        title: "Shape What You Found",
+        description:
+          "Turn your research into the form the task needs: notes, writing, slides or something else.",
+      },
+    ],
+
+    project: [
+      {
+        title: "See the Whole Shape",
+        description:
+          "Look at what you are making and what the finished result needs to include.",
+      },
+      {
+        title: "Gather the Pieces",
+        description:
+          "Collect the information, materials and ideas you will need.",
+      },
+      {
+        title: "Choose a Starting Piece",
+        description:
+          "Pick one small part that can move the project forward.",
+      },
+      {
+        title: "Build in Small Pieces",
+        description:
+          "Work on one manageable section at a time.",
+      },
+      {
+        title: "Take a Fresh Look",
+        description:
+          "Pause, look at what you have and change the plan if another path works better.",
+      },
+      {
+        title: "Bring the Pieces Together",
+        description:
+          "Combine the parts, check the task requirements and decide what still matters.",
+      },
+    ],
+
+    general: [
+      {
+        title: "Take a Look Around",
+        description:
+          "See what you brought and get a feel for the task.",
+      },
+      {
+        title: "Find the Clues",
+        description:
+          "Notice what the task is asking you to do.",
+      },
+      {
+        title: "Make the Pieces Smaller",
+        description:
+          "Turn the task into a few manageable parts.",
+      },
+      {
+        title: "Choose Your First Move",
+        description:
+          "Start with one clear, small action.",
+      },
+      {
+        title: "Take a Fresh Look",
+        description:
+          "Pause and change the path if another way would work better.",
+      },
+    ],
+  };
+
+  return paths[taskType] ||
+    paths.general;
+}
+
+function getTaskTypeLabel(
+  taskType
+) {
+  const labels = {
+    reading: "Reading",
+    writing: "Writing",
+    questions: "Questions & Worksheet",
+    study: "Study & Revision",
+    maths: "Maths",
+    presentation: "Presentation",
+    research: "Research",
+    project: "Project",
+    general: "Flexible Path",
+  };
+
+  return labels[taskType] ||
+    labels.general;
+}
+
+function showFirstJourneyPath(
+  journey
 ) {
   const main =
     document.querySelector("main");
@@ -2584,21 +3157,21 @@ function showFirstJourneyPath(
     >
       <div class="material-heading">
         <p class="eyebrow">
-          Your First Path
+          Your Suggested Path
         </p>
 
         <h2 id="first-path-title">
           ${escapeHtml(
-            journeyTitle
+            journey.title
           )}
         </h2>
 
         ${
-          journeyGoal
+          journey.goal
             ? `
               <p class="hero-text">
                 ${escapeHtml(
-                  journeyGoal
+                  journey.goal
                 )}
               </p>
             `
@@ -2610,42 +3183,53 @@ function showFirstJourneyPath(
             `
         }
 
+        <p class="hero-text">
+          Compass Trail noticed this looks most like:
+          <strong>
+            ${escapeHtml(
+              getTaskTypeLabel(
+                journey.taskType
+              )
+            )}
+          </strong>.
+          You can still change every step.
+        </p>
+
         <p class="path-note">
           This path is a suggestion.
           Make it yours.
         </p>
       </div>
 
-      <div class="suggested-path">
-        ${pathStep(
-          1,
-          "Take a Look Around",
-          "See what you brought and get a feel for the task."
-        )}
-
-        ${pathStep(
-          2,
-          "Find the Clues",
-          "Notice what the task is asking you to do."
-        )}
-
-        ${pathStep(
-          3,
-          "Make the Pieces Smaller",
-          "Turn the task into a few manageable parts."
-        )}
-
-        ${pathStep(
-          4,
-          "Choose Your First Move",
-          "Start with one clear, small action."
-        )}
+      <div
+        class="suggested-path"
+        id="journey-step-list"
+      >
+        ${journey.steps
+          .map(
+            (step, index) =>
+              editablePathStep(
+                step,
+                index,
+                journey.steps.length
+              )
+          )
+          .join("")}
       </div>
 
       <div class="hero-actions">
         <button
           type="button"
+          class="secondary-button"
+          id="add-path-step-button"
+        >
+          Add a Step
+        </button>
+
+        <button
+          type="button"
           class="primary-button"
+          id="start-journey-button"
         >
           Start My Journey
         </button>
@@ -2661,6 +3245,60 @@ function showFirstJourneyPath(
     </section>
   `;
 
+  connectJourneyStepEvents(
+    journey
+  );
+
+  document
+    .getElementById(
+      "add-path-step-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        const title =
+          window.prompt(
+            "What would you like to add to your path?"
+          );
+
+        if (
+          title === null ||
+          !title.trim()
+        ) {
+          return;
+        }
+
+        journey.steps.push({
+          id: crypto.randomUUID(),
+          title:
+            title.trim().slice(
+              0,
+              100
+            ),
+          description:
+            "A step you added to make this path work better for you.",
+        });
+
+        showFirstJourneyPath(
+          journey
+        );
+      }
+    );
+
+  document
+    .getElementById(
+      "start-journey-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showJourneyWorkspace(
+          journey,
+          0
+        );
+      }
+    );
+
   document
     .getElementById(
       "edit-materials-button"
@@ -2669,6 +3307,578 @@ function showFirstJourneyPath(
       "click",
       () => {
         showMaterialBasket();
+      }
+    );
+}
+
+function editablePathStep(
+  step,
+  index,
+  total
+) {
+  return `
+    <article
+      class="path-step"
+      data-step-id="${step.id}"
+    >
+      <span>
+        ${index + 1}
+      </span>
+
+      <div>
+        <h3>
+          ${escapeHtml(
+            step.title
+          )}
+        </h3>
+
+        <p>
+          ${escapeHtml(
+            step.description
+          )}
+        </p>
+
+        <div class="material-card-actions">
+          <button
+            type="button"
+            class="small-action-button edit-path-step-button"
+            data-step-id="${step.id}"
+          >
+            Edit
+          </button>
+
+          <button
+            type="button"
+            class="small-action-button move-path-step-up-button"
+            data-step-id="${step.id}"
+            ${
+              index === 0
+                ? "disabled"
+                : ""
+            }
+          >
+            Move Up
+          </button>
+
+          <button
+            type="button"
+            class="small-action-button move-path-step-down-button"
+            data-step-id="${step.id}"
+            ${
+              index === total - 1
+                ? "disabled"
+                : ""
+            }
+          >
+            Move Down
+          </button>
+
+          <button
+            type="button"
+            class="small-action-button remove-path-step-button"
+            data-step-id="${step.id}"
+          >
+            Remove
+          </button>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function connectJourneyStepEvents(
+  journey
+) {
+  document
+    .querySelectorAll(
+      ".edit-path-step-button"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          const step =
+            journey.steps.find(
+              (item) =>
+                item.id ===
+                button.dataset.stepId
+            );
+
+          if (!step) {
+            return;
+          }
+
+          const newTitle =
+            window.prompt(
+              "Change this step:",
+              step.title
+            );
+
+          if (
+            newTitle === null ||
+            !newTitle.trim()
+          ) {
+            return;
+          }
+
+          step.title =
+            newTitle
+              .trim()
+              .slice(0, 100);
+
+          showFirstJourneyPath(
+            journey
+          );
+        }
+      );
+    });
+
+  document
+    .querySelectorAll(
+      ".move-path-step-up-button"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          moveJourneyStep(
+            journey,
+            button.dataset.stepId,
+            -1
+          );
+        }
+      );
+    });
+
+  document
+    .querySelectorAll(
+      ".move-path-step-down-button"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          moveJourneyStep(
+            journey,
+            button.dataset.stepId,
+            1
+          );
+        }
+      );
+    });
+
+  document
+    .querySelectorAll(
+      ".remove-path-step-button"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          const index =
+            journey.steps.findIndex(
+              (item) =>
+                item.id ===
+                button.dataset.stepId
+            );
+
+          if (index === -1) {
+            return;
+          }
+
+          journey.steps.splice(
+            index,
+            1
+          );
+
+          showFirstJourneyPath(
+            journey
+          );
+        }
+      );
+    });
+}
+
+function moveJourneyStep(
+  journey,
+  stepId,
+  direction
+) {
+  const index =
+    journey.steps.findIndex(
+      (step) =>
+        step.id === stepId
+    );
+
+  if (index === -1) {
+    return;
+  }
+
+  const newIndex =
+    index + direction;
+
+  if (
+    newIndex < 0 ||
+    newIndex >=
+      journey.steps.length
+  ) {
+    return;
+  }
+
+  const [step] =
+    journey.steps.splice(
+      index,
+      1
+    );
+
+  journey.steps.splice(
+    newIndex,
+    0,
+    step
+  );
+
+  showFirstJourneyPath(
+    journey
+  );
+}
+
+function showJourneyWorkspace(
+  journey,
+  stepIndex
+) {
+  const main =
+    document.querySelector("main");
+
+  if (
+    journey.steps.length === 0
+  ) {
+    showFirstJourneyPath(
+      journey
+    );
+    return;
+  }
+
+  const safeIndex =
+    clamp(
+      stepIndex,
+      0,
+      journey.steps.length - 1
+    );
+
+  const step =
+    journey.steps[safeIndex];
+
+  main.innerHTML = `
+    <section
+      class="hero"
+      aria-labelledby="workspace-title"
+    >
+      <p class="eyebrow">
+        ${safeIndex + 1}
+        of
+        ${journey.steps.length}
+      </p>
+
+      <h2 id="workspace-title">
+        ${escapeHtml(
+          step.title
+        )}
+      </h2>
+
+      <p class="hero-text">
+        ${escapeHtml(
+          step.description
+        )}
+      </p>
+
+      <p class="path-note">
+        Same Goal. Different Paths.
+      </p>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="secondary-button"
+          id="smaller-step-button"
+        >
+          Make This Smaller
+        </button>
+
+        ${
+          safeIndex > 0
+            ? `
+              <button
+                type="button"
+                class="secondary-button"
+                id="previous-journey-step-button"
+              >
+                Previous Step
+              </button>
+            `
+            : ""
+        }
+
+        ${
+          safeIndex <
+          journey.steps.length - 1
+            ? `
+              <button
+                type="button"
+                class="primary-button"
+                id="next-journey-step-button"
+              >
+                This Step Is Done
+              </button>
+            `
+            : `
+              <button
+                type="button"
+                class="primary-button"
+                id="finish-journey-button"
+              >
+                Finish for Now
+              </button>
+            `
+        }
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="change-path-button"
+        >
+          Change My Path
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "smaller-step-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showSmallerStep(
+          journey,
+          safeIndex
+        );
+      }
+    );
+
+  const previousButton =
+    document.getElementById(
+      "previous-journey-step-button"
+    );
+
+  if (previousButton) {
+    previousButton.addEventListener(
+      "click",
+      () => {
+        showJourneyWorkspace(
+          journey,
+          safeIndex - 1
+        );
+      }
+    );
+  }
+
+  const nextButton =
+    document.getElementById(
+      "next-journey-step-button"
+    );
+
+  if (nextButton) {
+    nextButton.addEventListener(
+      "click",
+      () => {
+        showJourneyWorkspace(
+          journey,
+          safeIndex + 1
+        );
+      }
+    );
+  }
+
+  const finishButton =
+    document.getElementById(
+      "finish-journey-button"
+    );
+
+  if (finishButton) {
+    finishButton.addEventListener(
+      "click",
+      () => {
+        showJourneyPauseScreen(
+          journey
+        );
+      }
+    );
+  }
+
+  document
+    .getElementById(
+      "change-path-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showFirstJourneyPath(
+          journey
+        );
+      }
+    );
+}
+
+function showSmallerStep(
+  journey,
+  stepIndex
+) {
+  const step =
+    journey.steps[stepIndex];
+
+  const main =
+    document.querySelector("main");
+
+  main.innerHTML = `
+    <section
+      class="hero"
+      aria-labelledby="smaller-step-title"
+    >
+      <p class="eyebrow">
+        Make It Smaller
+      </p>
+
+      <h2 id="smaller-step-title">
+        Try just this first.
+      </h2>
+
+      <p class="hero-text">
+        Open or look at the part you need for
+        <strong>
+          ${escapeHtml(
+            step.title
+          )}
+        </strong>.
+        You do not have to finish the whole step yet.
+      </p>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="primary-button"
+          id="return-small-step-button"
+        >
+          I’m Ready
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="back-small-step-button"
+        >
+          Back to My Step
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "return-small-step-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showJourneyWorkspace(
+          journey,
+          stepIndex
+        );
+      }
+    );
+
+  document
+    .getElementById(
+      "back-small-step-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showJourneyWorkspace(
+          journey,
+          stepIndex
+        );
+      }
+    );
+}
+
+function showJourneyPauseScreen(
+  journey
+) {
+  const main =
+    document.querySelector("main");
+
+  main.innerHTML = `
+    <section
+      class="hero"
+      aria-labelledby="pause-title"
+    >
+      <p class="eyebrow">
+        Your Trail Is Here
+      </p>
+
+      <h2 id="pause-title">
+        You can stop here
+        or keep exploring.
+      </h2>
+
+      <p class="hero-text">
+        Changing the plan is not failing the plan.
+        Your suggested path is still here whenever
+        you want to return to it.
+      </p>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="primary-button"
+          id="review-path-button"
+        >
+          Review My Path
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="pause-home-button"
+        >
+          Back Home
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "review-path-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        showFirstJourneyPath(
+          journey
+        );
+      }
+    );
+
+  document
+    .getElementById(
+      "pause-home-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        window.location.reload();
       }
     );
 }
