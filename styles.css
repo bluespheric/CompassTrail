@@ -711,3 +711,49 @@ button:disabled {
     animation: none !important;
   }
 }
+
+/* ------------------------------------------------------------
+   Compass Trail — Account + Cloud V1
+------------------------------------------------------------ */
+
+.account-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.account-grid .home-card {
+  gap: 0.65rem;
+  min-height: 0;
+}
+
+.account-grid .home-card h3 {
+  margin-top: 0;
+}
+
+.account-grid label {
+  margin-top: 0.35rem;
+}
+
+.account-grid input,
+.comfort-control input[type="password"] {
+  width: 100%;
+  max-width: 34rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 0.9rem 1rem;
+}
+
+#compass-account-status:empty {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .account-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
