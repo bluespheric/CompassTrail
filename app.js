@@ -19,6 +19,424 @@ beginJourneyButtons.forEach((button) => {
 
 
 // ------------------------------------------------------------
+// Persistence V1 — this-device storage
+// ------------------------------------------------------------
+// This is intentionally local-only for now.
+// Real cross-device accounts will require a protected backend
+// and managed authentication. Secret codes must never be stored
+// as plain text in production.
+
+const compassStateKey =
+  "compassTrailStudentStateV1";
+
+const compassStudentState = {
+  learnerName: "",
+  activeJourney: null,
+  lastSavedAt: null,
+};
+
+function saveStudentState() {
+  try {
+    compassStudentState.lastSavedAt =
+      new Date().toISOString();
+
+    localStorage.setItem(
+      compassStateKey,
+      JSON.stringify({
+        learnerName:
+          compassStudentState.learnerName,
+        activeJourney:
+          compassStudentState.activeJourney,
+        littleThings,
+        ideaGardenNotes,
+        myDaysItems,
+        lastSavedAt:
+          compassStudentState.lastSavedAt,
+      })
+    );
+  } catch (error) {
+    console.warn(
+      "Could not save Compass Trail state.",
+      error
+    );
+  }
+}
+
+function loadStudentState() {
+  try {
+    const raw =
+      localStorage.getItem(
+        compassStateKey
+      );
+
+    if (!raw) {
+      return;
+    }
+
+    const saved =
+      JSON.parse(raw);
+
+    if (
+      saved &&
+      typeof saved === "object"
+    ) {
+      compassStudentState.learnerName =
+        typeof saved.learnerName ===
+        "string"
+          ? saved.learnerName
+          : "";
+
+      compassStudentState.activeJourney =
+        saved.activeJourney || null;
+
+      compassStudentState.lastSavedAt =
+        saved.lastSavedAt || null;
+
+      if (
+        Array.isArray(
+          saved.littleThings
+        )
+      ) {
+        littleThings.splice(
+          0,
+          littleThings.length,
+          ...saved.littleThings
+        );
+      }
+
+      if (
+        Array.isArray(
+          saved.ideaGardenNotes
+        )
+      ) {
+        ideaGardenNotes.splice(
+          0,
+          ideaGardenNotes.length,
+          ...saved.ideaGardenNotes
+        );
+      }
+
+      if (
+        Array.isArray(
+          saved.myDaysItems
+        )
+      ) {
+        myDaysItems.splice(
+          0,
+          myDaysItems.length,
+          ...saved.myDaysItems
+        );
+      }
+    }
+  } catch (error) {
+    console.warn(
+      "Could not restore Compass Trail state.",
+      error
+    );
+  }
+}
+
+function rememberJourney(journey) {
+  if (!journey) {
+    return;
+  }
+
+  compassStudentState.activeJourney =
+    JSON.parse(
+      JSON.stringify(journey)
+    );
+
+  saveStudentState();
+}
+
+function installPersistenceObserver() {
+  document.addEventListener(
+    "click",
+    () => {
+      window.setTimeout(
+        saveStudentState,
+        0
+      );
+    }
+  );
+
+  document.addEventListener(
+    "change",
+    saveStudentState
+  );
+
+  window.addEventListener(
+    "beforeunload",
+    saveStudentState
+  );
+}
+
+function addContinueJourneyCard() {
+  const journey =
+    compassStudentState.activeJourney;
+
+  if (
+    !journey ||
+    !Array.isArray(journey.steps) ||
+    journey.steps.length === 0
+  ) {
+    return;
+  }
+
+  if (
+    document.getElementById(
+      "continue-journey-card"
+    )
+  ) {
+    return;
+  }
+
+  const grid =
+    document.querySelector(
+      ".home-grid"
+    );
+
+  if (!grid) {
+    return;
+  }
+
+  const index =
+    Math.max(
+      0,
+      Math.min(
+        Number(
+          journey.currentStepIndex
+        ) || 0,
+        journey.steps.length - 1
+      )
+    );
+
+  const step =
+    journey.steps[index];
+
+  const card =
+    document.createElement(
+      "article"
+    );
+
+  card.id =
+    "continue-journey-card";
+  card.className =
+    "home-card";
+
+  card.innerHTML = `
+    <span
+      class="card-icon"
+      aria-hidden="true"
+    >
+      🥾
+    </span>
+
+    <h3>
+      Pick Up My Trail
+    </h3>
+
+    <p>
+      ${escapeHtml(
+        journey.title ||
+          "Your Journey"
+      )}
+      · Step
+      ${index + 1}
+      of
+      ${journey.steps.length}
+      ·
+      ${escapeHtml(
+        step.title
+      )}
+    </p>
+
+    <button
+      type="button"
+      id="continue-saved-journey-button"
+    >
+      Continue Where I Left Off
+    </button>
+  `;
+
+  grid.prepend(card);
+
+  document
+    .getElementById(
+      "continue-saved-journey-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        const restored =
+          JSON.parse(
+            JSON.stringify(
+              compassStudentState
+                .activeJourney
+            )
+          );
+
+        showJourneyWorkspace(
+          restored,
+          restored.currentStepIndex ||
+            0,
+          "Welcome back. Your place was saved."
+        );
+      }
+    );
+}
+
+function showThisDeviceProfile() {
+  const main =
+    document.querySelector("main");
+
+  main.innerHTML = `
+    <section
+      class="hero"
+      aria-labelledby="profile-title"
+    >
+      <p class="eyebrow">
+        This Device
+      </p>
+
+      <h2 id="profile-title">
+        Keep your trail here.
+      </h2>
+
+      <p class="hero-text">
+        For this V1, progress is saved
+        only in this browser on this device.
+        No email, phone number or real name
+        is required.
+      </p>
+
+      <label for="learner-name-input">
+        <strong>
+          Nickname
+        </strong>
+      </label>
+
+      <input
+        id="learner-name-input"
+        type="text"
+        maxlength="40"
+        autocomplete="off"
+        value="${escapeHtml(
+          compassStudentState.learnerName
+        )}"
+        placeholder="Choose any nickname"
+      />
+
+      <p>
+        Avoid using private information
+        in your nickname.
+      </p>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="primary-button"
+          id="save-device-profile-button"
+        >
+          Save on This Device
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="device-profile-home-button"
+        >
+          Back Home
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "save-device-profile-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        compassStudentState.learnerName =
+          document
+            .getElementById(
+              "learner-name-input"
+            )
+            .value
+            .trim();
+
+        saveStudentState();
+
+        window.location.reload();
+      }
+    );
+
+  document
+    .getElementById(
+      "device-profile-home-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        window.location.reload();
+      }
+    );
+}
+
+function installDeviceProfileButton() {
+  if (
+    document.getElementById(
+      "device-profile-button"
+    )
+  ) {
+    return;
+  }
+
+  const nav =
+    document.querySelector("nav");
+
+  if (!nav) {
+    return;
+  }
+
+  const button =
+    document.createElement(
+      "button"
+    );
+
+  button.type = "button";
+  button.id =
+    "device-profile-button";
+  button.className =
+    "nav-button";
+  button.textContent =
+    compassStudentState.learnerName
+      ? compassStudentState.learnerName
+      : "This Device";
+
+  button.addEventListener(
+    "click",
+    showThisDeviceProfile
+  );
+
+  nav.appendChild(button);
+}
+
+function bootPersistenceV1() {
+  loadStudentState();
+  installPersistenceObserver();
+  installDeviceProfileButton();
+
+  window.setTimeout(
+    addContinueJourneyCard,
+    0
+  );
+}
+
+
+// ------------------------------------------------------------
 // Accessibility + Make It Mine V1
 // ------------------------------------------------------------
 
@@ -1129,6 +1547,8 @@ function showTooMuchPanel() {
 const littleThings = [];
 const ideaGardenNotes = [];
 const myDaysItems = [];
+
+bootPersistenceV1();
 
 function findButtonByLabel(label) {
   return [...document.querySelectorAll("button")]
@@ -5705,6 +6125,8 @@ function showJourneyWorkspace(
 
   journey.currentStepIndex =
     safeIndex;
+
+  rememberJourney(journey);
 
   const step =
     journey.steps[safeIndex];
