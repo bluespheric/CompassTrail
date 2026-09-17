@@ -134,10 +134,7 @@ async function extractPdfText(file) {
       .join("\n\n")
       .trim();
 
-    if (
-      !combinedText ||
-      totalCharacters < 20
-    ) {
+    if (!combinedText || totalCharacters < 20) {
       return {
         status: "needs-ocr",
         text: combinedText,
@@ -173,10 +170,7 @@ function buildPageText(items) {
   let lastY = null;
 
   for (const item of items) {
-    if (
-      !item ||
-      typeof item.str !== "string"
-    ) {
+    if (!item || typeof item.str !== "string") {
       continue;
     }
 
@@ -195,10 +189,7 @@ function buildPageText(items) {
       Math.abs(y - lastY) > 4
     ) {
       if (currentLine.length > 0) {
-        lines.push(
-          currentLine.join(" ")
-        );
-
+        lines.push(currentLine.join(" "));
         currentLine = [];
       }
     }
@@ -211,10 +202,7 @@ function buildPageText(items) {
 
     if (item.hasEOL) {
       if (currentLine.length > 0) {
-        lines.push(
-          currentLine.join(" ")
-        );
-
+        lines.push(currentLine.join(" "));
         currentLine = [];
       }
 
@@ -223,9 +211,7 @@ function buildPageText(items) {
   }
 
   if (currentLine.length > 0) {
-    lines.push(
-      currentLine.join(" ")
-    );
+    lines.push(currentLine.join(" "));
   }
 
   return lines.join("\n").trim();
