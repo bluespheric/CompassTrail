@@ -25,15 +25,25 @@
     </div>
 
     <nav aria-label="Main navigation">
-      <button type="button" class="nav-button">Home</button>
-      <button type="button" class="nav-button">My Journeys</button>
-      <button type="button" class="nav-button">Make It Mine</button>
+      <button type="button" class="nav-button">
+        Home
+      </button>
+
+      <button type="button" class="nav-button">
+        My Journeys
+      </button>
+
+      <button type="button" class="nav-button">
+        Make It Mine
+      </button>
     </nav>
   </header>
 
   <main>
     <section class="hero" aria-labelledby="welcome-title">
-      <p class="eyebrow">Your learning space</p>
+      <p class="eyebrow">
+        Your learning space
+      </p>
 
       <h2 id="welcome-title">
         Bring what you need to learn.
@@ -44,78 +54,177 @@
       </p>
 
       <div class="hero-actions">
-        <button type="button" class="primary-button">
+        <button
+          type="button"
+          class="primary-button"
+        >
           Begin My Journey
         </button>
 
-        <button type="button" class="secondary-button">
+        <button
+          type="button"
+          class="secondary-button"
+        >
           Keep Exploring
         </button>
       </div>
     </section>
 
-    <section class="home-grid" aria-label="Compass Trail tools">
+    <section
+      class="home-grid"
+      aria-label="Compass Trail tools"
+    >
       <article class="home-card">
-        <span class="card-icon" aria-hidden="true">🧭</span>
-        <h3>Start Something</h3>
+        <span
+          class="card-icon"
+          aria-hidden="true"
+        >
+          🧭
+        </span>
+
+        <h3>
+          Start Something
+        </h3>
+
         <p>
-          Turn homework, reading, projects or study into a manageable path.
+          Turn homework, reading, projects or study
+          into a manageable path.
         </p>
-        <button type="button">Create a Journey</button>
+
+        <button type="button">
+          Create a Journey
+        </button>
       </article>
 
       <article class="home-card">
-        <span class="card-icon" aria-hidden="true">🍃</span>
-        <h3>Little Things</h3>
+        <span
+          class="card-icon"
+          aria-hidden="true"
+        >
+          🍃
+        </span>
+
+        <h3>
+          Little Things
+        </h3>
+
         <p>
-          Keep track of small tasks that do not need a whole Journey.
+          Keep track of small tasks that do not need
+          a whole Journey.
         </p>
-        <button type="button">Open Little Things</button>
+
+        <button type="button">
+          Open Little Things
+        </button>
       </article>
 
       <article class="home-card">
-        <span class="card-icon" aria-hidden="true">📅</span>
-        <h3>My Days</h3>
+        <span
+          class="card-icon"
+          aria-hidden="true"
+        >
+          📅
+        </span>
+
+        <h3>
+          My Days
+        </h3>
+
         <p>
-          Plan things when it helps. Leave it alone when it doesn’t.
+          Plan things when it helps.
+          Leave it alone when it doesn’t.
         </p>
-        <button type="button">Open My Days</button>
+
+        <button type="button">
+          Open My Days
+        </button>
       </article>
 
       <article class="home-card">
-        <span class="card-icon" aria-hidden="true">🌱</span>
-        <h3>My Idea Garden</h3>
+        <span
+          class="card-icon"
+          aria-hidden="true"
+        >
+          🌱
+        </span>
+
+        <h3>
+          My Idea Garden
+        </h3>
+
         <p>
-          Keep useful notes, ideas, questions and things you want to remember.
+          Keep useful notes, ideas, questions
+          and things you want to remember.
         </p>
-        <button type="button">Open Idea Garden</button>
+
+        <button type="button">
+          Open Idea Garden
+        </button>
       </article>
 
       <article class="home-card">
-        <span class="card-icon" aria-hidden="true">🌿</span>
-        <h3>Recharge Cove</h3>
+        <span
+          class="card-icon"
+          aria-hidden="true"
+        >
+          🌿
+        </span>
+
+        <h3>
+          Recharge Cove
+        </h3>
+
         <p>
           Take a break without losing your place.
         </p>
-        <button type="button">Take a Break</button>
+
+        <button type="button">
+          Take a Break
+        </button>
       </article>
 
       <article class="home-card">
-        <span class="card-icon" aria-hidden="true">🪄</span>
-        <h3>Make It Mine</h3>
+        <span
+          class="card-icon"
+          aria-hidden="true"
+        >
+          🪄
+        </span>
+
+        <h3>
+          Make It Mine
+        </h3>
+
         <p>
-          Change text, motion, contrast, sound and other comfort settings.
+          Change text, motion, contrast, sound
+          and other comfort settings.
         </p>
-        <button type="button">Personalise My Space</button>
+
+        <button type="button">
+          Personalise My Space
+        </button>
       </article>
     </section>
   </main>
 
   <footer>
-    <p>Compass Trail — Same Goal. Different Paths.</p>
+    <p>
+      Compass Trail — Same Goal. Different Paths.
+    </p>
   </footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.12.3/mammoth.browser.min.js"></script>
+
+  <script type="module">
+    import * as pdfjsLib
+      from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.3.289/pdf.min.mjs";
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.3.289/pdf.worker.min.mjs";
+
+    window.pdfjsLib = pdfjsLib;
+  </script>
+
   <script src="extractors.js"></script>
   <script src="app.js"></script>
 </body>
