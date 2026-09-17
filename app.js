@@ -17,6 +17,1040 @@ beginJourneyButtons.forEach((button) => {
   }
 });
 
+
+// ------------------------------------------------------------
+// Core Student Experience V1
+// Little Things + My Days + Idea Garden + Toolkit + Home Recharge
+// ------------------------------------------------------------
+
+const littleThings = [];
+const ideaGardenNotes = [];
+const myDaysItems = [];
+
+function findButtonByLabel(label) {
+  return [...document.querySelectorAll("button")]
+    .find(
+      (button) =>
+        button.textContent.trim() === label
+    );
+}
+
+function wireHomeExperience() {
+  const littleThingsButton =
+    findButtonByLabel("Open Little Things");
+
+  if (littleThingsButton) {
+    littleThingsButton.addEventListener(
+      "click",
+      showLittleThings
+    );
+  }
+
+  const myDaysButton =
+    findButtonByLabel("Open My Days");
+
+  if (myDaysButton) {
+    myDaysButton.addEventListener(
+      "click",
+      showMyDays
+    );
+  }
+
+  const ideaGardenButton =
+    findButtonByLabel("Open Idea Garden");
+
+  if (ideaGardenButton) {
+    ideaGardenButton.addEventListener(
+      "click",
+      showIdeaGarden
+    );
+  }
+
+  const rechargeButton =
+    findButtonByLabel("Take a Break");
+
+  if (rechargeButton) {
+    rechargeButton.addEventListener(
+      "click",
+      showHomeRechargeCove
+    );
+  }
+
+  const keepExploringButton =
+    findButtonByLabel("Keep Exploring");
+
+  if (keepExploringButton) {
+    keepExploringButton.addEventListener(
+      "click",
+      showToolkitHub
+    );
+  }
+}
+
+wireHomeExperience();
+
+function backHome() {
+  window.location.reload();
+}
+
+function showLittleThings(
+  notice = ""
+) {
+  const main =
+    document.querySelector("main");
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="little-things-title"
+    >
+      <div class="material-heading">
+        <p class="eyebrow">
+          Little Things
+        </p>
+
+        <h2 id="little-things-title">
+          Small things can stay small.
+        </h2>
+
+        <p class="hero-text">
+          Add quick tasks that do not need
+          a whole Journey.
+        </p>
+      </div>
+
+      ${
+        notice
+          ? `
+            <div
+              class="undo-message"
+              role="status"
+            >
+              <span>
+                ${escapeHtml(notice)}
+              </span>
+            </div>
+          `
+          : ""
+      }
+
+      <div class="material-actions">
+        <label for="little-thing-input">
+          <strong>
+            What do you want to remember?
+          </strong>
+        </label>
+
+        <input
+          id="little-thing-input"
+          type="text"
+          maxlength="160"
+          placeholder="Example: Put the book in my bag"
+        />
+
+        <button
+          type="button"
+          class="primary-button"
+          id="add-little-thing-button"
+        >
+          Add Little Thing
+        </button>
+      </div>
+
+      <div
+        class="material-list"
+        id="little-things-list"
+        aria-live="polite"
+      >
+        ${renderLittleThings()}
+      </div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="secondary-button"
+          id="little-things-home-button"
+        >
+          Back Home
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "add-little-thing-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        const input =
+          document.getElementById(
+            "little-thing-input"
+          );
+
+        const value =
+          input.value.trim();
+
+        if (!value) {
+          input.focus();
+          return;
+        }
+
+        littleThings.push({
+          id: Date.now(),
+          text: value,
+          done: false,
+        });
+
+        showLittleThings(
+          "Added to Little Things."
+        );
+      }
+    );
+
+  document
+    .querySelectorAll(
+      ".little-thing-toggle"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          const item =
+            littleThings.find(
+              (entry) =>
+                entry.id ===
+                Number(
+                  button.dataset.id
+                )
+            );
+
+          if (!item) {
+            return;
+          }
+
+          item.done = !item.done;
+
+          showLittleThings(
+            item.done
+              ? "A little trail mark added. You can undo it anytime."
+              : "Put back on your list."
+          );
+        }
+      );
+    });
+
+  document
+    .querySelectorAll(
+      ".little-thing-remove"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          const index =
+            littleThings.findIndex(
+              (entry) =>
+                entry.id ===
+                Number(
+                  button.dataset.id
+                )
+            );
+
+          if (index < 0) {
+            return;
+          }
+
+          littleThings.splice(
+            index,
+            1
+          );
+
+          showLittleThings(
+            "Let go of that one."
+          );
+        }
+      );
+    });
+
+  document
+    .getElementById(
+      "little-things-home-button"
+    )
+    .addEventListener(
+      "click",
+      backHome
+    );
+}
+
+function renderLittleThings() {
+  if (
+    littleThings.length === 0
+  ) {
+    return `
+      <article class="material-card">
+        <div>
+          <h3>
+            Nothing waiting here.
+          </h3>
+
+          <p>
+            Add something small whenever
+            you want.
+          </p>
+        </div>
+      </article>
+    `;
+  }
+
+  return littleThings
+    .map(
+      (item) => `
+        <article class="material-card">
+          <div>
+            <h3>
+              ${escapeHtml(
+                item.text
+              )}
+            </h3>
+
+            <p>
+              ${
+                item.done
+                  ? "Trail mark added."
+                  : "Waiting for you."
+              }
+            </p>
+          </div>
+
+          <div class="material-card-actions">
+            <button
+              type="button"
+              class="small-action-button little-thing-toggle"
+              data-id="${item.id}"
+            >
+              ${
+                item.done
+                  ? "Undo"
+                  : "Leave a Trail"
+              }
+            </button>
+
+            <button
+              type="button"
+              class="small-action-button little-thing-remove"
+              data-id="${item.id}"
+            >
+              Let This Go
+            </button>
+          </div>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function showIdeaGarden(
+  notice = ""
+) {
+  const main =
+    document.querySelector("main");
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="idea-garden-title"
+    >
+      <div class="material-heading">
+        <p class="eyebrow">
+          My Idea Garden
+        </p>
+
+        <h2 id="idea-garden-title">
+          A place for things worth keeping.
+        </h2>
+
+        <p class="hero-text">
+          Notes can be unfinished,
+          tiny, messy or still becoming.
+        </p>
+      </div>
+
+      ${
+        notice
+          ? `
+            <div
+              class="undo-message"
+              role="status"
+            >
+              ${escapeHtml(notice)}
+            </div>
+          `
+          : ""
+      }
+
+      <div class="material-actions">
+        <label for="idea-garden-input">
+          <strong>
+            Add a note or idea
+          </strong>
+        </label>
+
+        <textarea
+          id="idea-garden-input"
+          rows="6"
+          maxlength="1200"
+          placeholder="Write anything you want to keep..."
+        ></textarea>
+
+        <button
+          type="button"
+          class="primary-button"
+          id="save-idea-button"
+        >
+          Plant This Idea
+        </button>
+      </div>
+
+      <div class="material-list">
+        ${renderIdeaGarden()}
+      </div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="secondary-button"
+          id="idea-garden-home-button"
+        >
+          Back Home
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "save-idea-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        const input =
+          document.getElementById(
+            "idea-garden-input"
+          );
+
+        const value =
+          input.value.trim();
+
+        if (!value) {
+          input.focus();
+          return;
+        }
+
+        ideaGardenNotes.unshift({
+          id: Date.now(),
+          text: value,
+        });
+
+        showIdeaGarden(
+          "Your idea is saved here."
+        );
+      }
+    );
+
+  document
+    .querySelectorAll(
+      ".idea-remove-button"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          const index =
+            ideaGardenNotes.findIndex(
+              (note) =>
+                note.id ===
+                Number(
+                  button.dataset.id
+                )
+            );
+
+          if (index >= 0) {
+            ideaGardenNotes.splice(
+              index,
+              1
+            );
+          }
+
+          showIdeaGarden(
+            "That note is no longer in your garden."
+          );
+        }
+      );
+    });
+
+  document
+    .getElementById(
+      "idea-garden-home-button"
+    )
+    .addEventListener(
+      "click",
+      backHome
+    );
+}
+
+function renderIdeaGarden() {
+  if (
+    ideaGardenNotes.length === 0
+  ) {
+    return `
+      <article class="material-card">
+        <div>
+          <h3>
+            Your garden has room.
+          </h3>
+
+          <p>
+            Your first note can be
+            as small as one sentence.
+          </p>
+        </div>
+      </article>
+    `;
+  }
+
+  return ideaGardenNotes
+    .map(
+      (note) => `
+        <article class="material-card">
+          <div>
+            <h3>
+              Saved Idea
+            </h3>
+
+            <p>
+              ${escapeHtml(
+                note.text
+              )}
+            </p>
+          </div>
+
+          <div class="material-card-actions">
+            <button
+              type="button"
+              class="small-action-button idea-remove-button"
+              data-id="${note.id}"
+            >
+              Let This Go
+            </button>
+          </div>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function showMyDays(
+  notice = ""
+) {
+  const main =
+    document.querySelector("main");
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="my-days-title"
+    >
+      <div class="material-heading">
+        <p class="eyebrow">
+          My Days
+        </p>
+
+        <h2 id="my-days-title">
+          Plans can change.
+        </h2>
+
+        <p class="hero-text">
+          Put something on a day when
+          that helps. Move or remove it
+          whenever the plan changes.
+        </p>
+      </div>
+
+      ${
+        notice
+          ? `
+            <div
+              class="undo-message"
+              role="status"
+            >
+              ${escapeHtml(notice)}
+            </div>
+          `
+          : ""
+      }
+
+      <div class="material-actions">
+        <label for="my-days-text">
+          <strong>
+            What is waiting for you?
+          </strong>
+        </label>
+
+        <input
+          id="my-days-text"
+          type="text"
+          maxlength="180"
+          placeholder="Example: Read chapter 3"
+        />
+
+        <label for="my-days-date">
+          <strong>
+            Choose a day
+          </strong>
+        </label>
+
+        <input
+          id="my-days-date"
+          type="date"
+        />
+
+        <label for="my-days-reminder">
+          <strong>
+            Reminder
+          </strong>
+        </label>
+
+        <select id="my-days-reminder">
+          <option value="none">
+            No reminder
+          </option>
+
+          <option value="at-time">
+            At the time
+          </option>
+
+          <option value="10-min">
+            10 minutes before
+          </option>
+
+          <option value="30-min">
+            30 minutes before
+          </option>
+
+          <option value="1-hour">
+            1 hour before
+          </option>
+
+          <option value="day-before">
+            Day before
+          </option>
+        </select>
+
+        <button
+          type="button"
+          class="primary-button"
+          id="add-my-days-item-button"
+        >
+          Add to My Days
+        </button>
+      </div>
+
+      <div class="material-list">
+        ${renderMyDays()}
+      </div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="secondary-button"
+          id="my-days-home-button"
+        >
+          Back Home
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "add-my-days-item-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        const textInput =
+          document.getElementById(
+            "my-days-text"
+          );
+
+        const dateInput =
+          document.getElementById(
+            "my-days-date"
+          );
+
+        const reminderInput =
+          document.getElementById(
+            "my-days-reminder"
+          );
+
+        const value =
+          textInput.value.trim();
+
+        if (!value) {
+          textInput.focus();
+          return;
+        }
+
+        myDaysItems.push({
+          id: Date.now(),
+          text: value,
+          date:
+            dateInput.value ||
+            "No date yet",
+          reminder:
+            reminderInput.value,
+        });
+
+        showMyDays(
+          "Added to My Days."
+        );
+      }
+    );
+
+  document
+    .querySelectorAll(
+      ".my-days-remove-button"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          const index =
+            myDaysItems.findIndex(
+              (item) =>
+                item.id ===
+                Number(
+                  button.dataset.id
+                )
+            );
+
+          if (index >= 0) {
+            myDaysItems.splice(
+              index,
+              1
+            );
+          }
+
+          showMyDays(
+            "The plan changed. That item was removed."
+          );
+        }
+      );
+    });
+
+  document
+    .getElementById(
+      "my-days-home-button"
+    )
+    .addEventListener(
+      "click",
+      backHome
+    );
+}
+
+function renderMyDays() {
+  if (
+    myDaysItems.length === 0
+  ) {
+    return `
+      <article class="material-card">
+        <div>
+          <h3>
+            Nothing planned yet.
+          </h3>
+
+          <p>
+            My Days is optional.
+            Use it only when a date helps.
+          </p>
+        </div>
+      </article>
+    `;
+  }
+
+  const reminderLabels = {
+    none: "No reminder",
+    "at-time": "At the time",
+    "10-min": "10 minutes before",
+    "30-min": "30 minutes before",
+    "1-hour": "1 hour before",
+    "day-before": "Day before",
+  };
+
+  return [...myDaysItems]
+    .sort(
+      (a, b) =>
+        String(a.date).localeCompare(
+          String(b.date)
+        )
+    )
+    .map(
+      (item) => `
+        <article class="material-card">
+          <div>
+            <h3>
+              ${escapeHtml(
+                item.text
+              )}
+            </h3>
+
+            <p>
+              ${escapeHtml(
+                item.date
+              )}
+              ·
+              ${escapeHtml(
+                reminderLabels[
+                  item.reminder
+                ] ||
+                  "No reminder"
+              )}
+            </p>
+          </div>
+
+          <div class="material-card-actions">
+            <button
+              type="button"
+              class="small-action-button my-days-remove-button"
+              data-id="${item.id}"
+            >
+              Change the Plan
+            </button>
+          </div>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function showToolkitHub() {
+  const main =
+    document.querySelector("main");
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="toolkit-title"
+    >
+      <div class="material-heading">
+        <p class="eyebrow">
+          My Toolkit
+        </p>
+
+        <h2 id="toolkit-title">
+          Pick the support that helps now.
+        </h2>
+
+        <p class="hero-text">
+          Support is a tool, not a penalty.
+          You do not need a reason to use one.
+        </p>
+      </div>
+
+      <div class="home-grid">
+        ${toolkitCard(
+          "🧩",
+          "Make It Smaller",
+          "Turn something big into a few tiny moves."
+        )}
+
+        ${toolkitCard(
+          "🌱",
+          "Starting Sparks",
+          "Find a softer first move when starting feels sticky."
+        )}
+
+        ${toolkitCard(
+          "🅿️",
+          "Park It",
+          "Put an unrelated thought somewhere safe for later."
+        )}
+
+        ${toolkitCard(
+          "🌿",
+          "Recharge Cove",
+          "Take a pause without losing your place."
+        )}
+
+        ${toolkitCard(
+          "📖",
+          "Read With Me",
+          "A home for read-aloud and reading supports as we build them."
+        )}
+
+        ${toolkitCard(
+          "🧠",
+          "Memory Tools",
+          "Chunking, mind maps and memory supports are coming into this toolkit."
+        )}
+      </div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="primary-button"
+          id="toolkit-recharge-button"
+        >
+          Open Recharge Cove
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="toolkit-home-button"
+        >
+          Back Home
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "toolkit-recharge-button"
+    )
+    .addEventListener(
+      "click",
+      showHomeRechargeCove
+    );
+
+  document
+    .getElementById(
+      "toolkit-home-button"
+    )
+    .addEventListener(
+      "click",
+      backHome
+    );
+}
+
+function toolkitCard(
+  icon,
+  title,
+  description
+) {
+  return `
+    <article class="home-card">
+      <span
+        class="card-icon"
+        aria-hidden="true"
+      >
+        ${icon}
+      </span>
+
+      <h3>
+        ${title}
+      </h3>
+
+      <p>
+        ${description}
+      </p>
+    </article>
+  `;
+}
+
+function showHomeRechargeCove() {
+  const main =
+    document.querySelector("main");
+
+  const ideas = [
+    "Look away from the screen and notice three things around you.",
+    "Stretch your hands, shoulders or back in a comfortable way.",
+    "Get a drink of water.",
+    "Stand up or change position for a moment.",
+    "Take ten slow steps if you have space.",
+    "Close your eyes or soften your gaze for a short moment.",
+    "Listen to one song or a short piece of music.",
+    "Doodle or make a few marks on paper.",
+    "Take a quiet minute without doing the task.",
+    "Choose your own kind of break.",
+  ];
+
+  main.innerHTML = `
+    <section
+      class="material-page"
+      aria-labelledby="home-recharge-title"
+    >
+      <div class="material-heading">
+        <p class="eyebrow">
+          Recharge Cove
+        </p>
+
+        <h2 id="home-recharge-title">
+          A pause does not erase progress.
+        </h2>
+
+        <p class="hero-text">
+          Choose any kind of break that helps.
+          No timer is required.
+        </p>
+      </div>
+
+      <div class="suggested-path">
+        ${ideas
+          .map(
+            (idea, index) =>
+              pathStep(
+                index + 1,
+                `Break idea ${index + 1}`,
+                escapeHtml(idea)
+              )
+          )
+          .join("")}
+      </div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="primary-button"
+          id="recharge-home-button"
+        >
+          Back Home
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="recharge-toolkit-button"
+        >
+          My Toolkit
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "recharge-home-button"
+    )
+    .addEventListener(
+      "click",
+      backHome
+    );
+
+  document
+    .getElementById(
+      "recharge-toolkit-button"
+    )
+    .addEventListener(
+      "click",
+      showToolkitHub
+    );
+}
+
 const materialBasket = [];
 
 let lastRemovedMaterial = null;
