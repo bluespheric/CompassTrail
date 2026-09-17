@@ -8902,28 +8902,40 @@ async function handleChangeSecret() {
     return;
   }
 
-  const token =
-    compassCloudSession?.access_token;
-
-  if (!token) {
-    cloudStatus(
-      "Please sign in again."
-    );
-    return;
-  }
-
   cloudStatus(
-    "Changing Secret Code…"
+    "Checking your session…"
   );
 
   try {
+    const {
+      data: { session },
+      error: sessionError,
+    } = await compassCloud.auth.getSession();
+
+    if (sessionError) {
+      throw sessionError;
+    }
+
+    if (!session?.access_token) {
+      cloudStatus(
+        "Please sign in again."
+      );
+      return;
+    }
+
+    compassCloudSession = session;
+
+    cloudStatus(
+      "Changing Secret Code…"
+    );
+
     await callCompassFunction(
       "account-recovery",
       {
         action: "change_secret",
         newSecretCode,
       },
-      token
+      session.access_token
     );
 
     input.value = "";
