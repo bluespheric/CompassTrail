@@ -4741,6 +4741,72 @@ window.addEventListener(
 );
 
 
+
+const COMPASS_THEME_KEY = "compassTrailTheme";
+
+function getCompassTheme() {
+  const saved = localStorage.getItem(COMPASS_THEME_KEY);
+  if (saved === "dark" || saved === "light") return saved;
+  return "light";
+}
+
+function applyCompassTheme(theme) {
+  const nextTheme = theme === "dark" ? "dark" : "light";
+  document.documentElement.dataset.compassTheme = nextTheme;
+  document.documentElement.style.colorScheme = nextTheme;
+
+  const button = document.getElementById("compass-theme-toggle");
+  if (button) {
+    const dark = nextTheme === "dark";
+    button.textContent = dark ? "Light Theme" : "Dark Theme";
+    button.setAttribute("aria-pressed", String(dark));
+    button.setAttribute(
+      "aria-label",
+      dark ? "Use light theme" : "Use dark theme"
+    );
+  }
+}
+
+function setCompassTheme(theme) {
+  localStorage.setItem(COMPASS_THEME_KEY, theme === "dark" ? "dark" : "light");
+  applyCompassTheme(getCompassTheme());
+  announceCompassStatus?.(
+    getCompassTheme() === "dark"
+      ? "Dark theme is on."
+      : "Light theme is on."
+  );
+}
+
+function toggleCompassTheme() {
+  setCompassTheme(getCompassTheme() === "dark" ? "light" : "dark");
+}
+
+function ensureCompassThemeToggle() {
+  applyCompassTheme(getCompassTheme());
+
+  if (document.getElementById("compass-theme-toggle")) return;
+
+  const nav =
+    document.querySelector("header nav") ||
+    document.querySelector(".top-nav") ||
+    document.querySelector("header");
+
+  if (!nav) return;
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.id = "compass-theme-toggle";
+  button.className = "theme-toggle";
+  button.addEventListener("click", toggleCompassTheme);
+  nav.appendChild(button);
+
+  applyCompassTheme(getCompassTheme());
+}
+
+applyCompassTheme(getCompassTheme());
+window.addEventListener("DOMContentLoaded", ensureCompassThemeToggle);
+window.addEventListener("load", ensureCompassThemeToggle);
+
 function addV1DiagnosticsHomeCard() {
   if (document.getElementById("v1-diagnostics-home-card")) return;
 
@@ -4830,6 +4896,15 @@ function getV1DiagnosticRows() {
           : "CHECK",
       detail:
         "A selectable-text PDF regression is still required. It must not be routed to scanned-PDF OCR."
+    },
+    {
+      name: "Theme setting",
+      result:
+        typeof getCompassTheme === "function"
+          ? String(getCompassTheme()).toUpperCase()
+          : "CHECK",
+      detail:
+        "Light and dark themes are persistent on this device and do not change learning progress."
     },
     {
       name: "Language setting",
