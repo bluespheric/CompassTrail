@@ -17,641 +17,68 @@ beginJourneyButtons.forEach((button) => {
   }
 });
 
+function wirePrimaryNavigation() {
+  const nav =
+    document.querySelector(
+      "header nav"
+    );
 
-// ------------------------------------------------------------
-// Teacher + Product Polish V1
-// ------------------------------------------------------------
-
-const teacherDemoStudents = [
-  {
-    id: "learner-river",
-    nickname: "River",
-    status: "Exploring",
-    journey: "Science Presentation",
-    step: "Build the Bones",
-    shared: true,
-    note: "Used Make It Smaller and returned after a break.",
-  },
-  {
-    id: "learner-sky",
-    nickname: "Sky",
-    status: "Waiting for You",
-    journey: "Reading Journey",
-    step: "Drop an Anchor",
-    shared: true,
-    note: "Progress shared by learner.",
-  },
-  {
-    id: "learner-moss",
-    nickname: "Moss",
-    status: "Private",
-    journey: "",
-    step: "",
-    shared: false,
-    note: "",
-  },
-];
-
-function installTeacherButton() {
-  if (
-    document.getElementById(
-      "teacher-space-button"
-    )
-  ) {
+  if (!nav) {
     return;
   }
 
-  const nav =
-    document.querySelector("nav");
-
-  if (!nav) return;
-
-  const button =
-    document.createElement("button");
-
-  button.type = "button";
-  button.id = "teacher-space-button";
-  button.className = "nav-button";
-  button.textContent = "Teacher Space";
-
-  button.addEventListener(
-    "click",
-    showTeacherDashboard
-  );
-
-  nav.appendChild(button);
-}
-
-function showTeacherDashboard() {
-  const main =
-    document.querySelector("main");
-
-  main.innerHTML = `
-    <section
-      class="material-page"
-      aria-labelledby="teacher-dashboard-title"
-    >
-      <div class="material-heading">
-        <p class="eyebrow">
-          Teacher Space
-        </p>
-
-        <h2 id="teacher-dashboard-title">
-          Different Spaces. Different Ways to Participate.
-        </h2>
-
-        <p class="hero-text">
-          See learning progress that has been
-          shared with you. Accessibility choices
-          and private notes stay with the learner.
-        </p>
-      </div>
-
-      <div class="home-grid">
-        <article class="home-card">
-          <h3>My Class</h3>
-          <p>
-            A calm overview of learners and
-            the Journeys they choose to share.
-          </p>
-          <button
-            type="button"
-            id="open-demo-class-button"
-          >
-            Open Class
-          </button>
-        </article>
-
-        <article class="home-card">
-          <h3>Assign a Journey</h3>
-          <p>
-            Give everyone the same goal while
-            leaving room for different paths.
-          </p>
-          <button
-            type="button"
-            id="assign-journey-button"
-          >
-            Create Assignment
-          </button>
-        </article>
-
-        <article class="home-card">
-          <h3>Teacher Lookbook</h3>
-          <p>
-            A future home for shared Journey
-            moments and Goal Looks.
-          </p>
-          <button
-            type="button"
-            id="teacher-lookbook-button"
-          >
-            Preview
-          </button>
-        </article>
-      </div>
-
-      <div class="hero-actions">
-        <button
-          type="button"
-          class="secondary-button"
-          id="teacher-home-button"
-        >
-          Back Home
-        </button>
-      </div>
-    </section>
-  `;
-
-  document
-    .getElementById(
-      "open-demo-class-button"
-    )
-    .addEventListener(
-      "click",
-      showTeacherClass
-    );
-
-  document
-    .getElementById(
-      "assign-journey-button"
-    )
-    .addEventListener(
-      "click",
-      showTeacherAssignment
-    );
-
-  document
-    .getElementById(
-      "teacher-lookbook-button"
-    )
-    .addEventListener(
-      "click",
-      showTeacherLookbook
-    );
-
-  document
-    .getElementById(
-      "teacher-home-button"
-    )
-    .addEventListener(
-      "click",
-      () => window.location.reload()
-    );
-}
-
-function showTeacherClass() {
-  const main =
-    document.querySelector("main");
-
-  const cards =
-    teacherDemoStudents
-      .map((student) => {
-        if (!student.shared) {
-          return `
-            <article class="home-card">
-              <h3>
-                ${escapeHtml(student.nickname)}
-              </h3>
-              <p>
-                This learner has not shared
-                Journey progress.
-              </p>
-              <span class="status-pill">
-                Private
-              </span>
-            </article>
-          `;
-        }
-
-        return `
-          <article class="home-card">
-            <h3>
-              ${escapeHtml(student.nickname)}
-            </h3>
-
-            <p>
-              <strong>Journey:</strong>
-              ${escapeHtml(student.journey)}
-            </p>
-
-            <p>
-              <strong>Current place:</strong>
-              ${escapeHtml(student.step)}
-            </p>
-
-            <p>
-              <strong>Status:</strong>
-              ${escapeHtml(student.status)}
-            </p>
-
-            <button
-              type="button"
-              data-student-id="${student.id}"
-              class="open-student-progress-button"
-            >
-              View Shared Progress
-            </button>
-          </article>
-        `;
-      })
-      .join("");
-
-  main.innerHTML = `
-    <section
-      class="material-page"
-      aria-labelledby="teacher-class-title"
-    >
-      <p class="eyebrow">
-        Teacher Space · My Class
-      </p>
-
-      <h2 id="teacher-class-title">
-        Shared learning paths
-      </h2>
-
-      <p class="hero-text">
-        These cards describe what happened.
-        They do not diagnose, rank or label
-        learners.
-      </p>
-
-      <div class="home-grid">
-        ${cards}
-      </div>
-
-      <div class="hero-actions">
-        <button
-          type="button"
-          class="secondary-button"
-          id="class-dashboard-button"
-        >
-          Back to Teacher Space
-        </button>
-      </div>
-    </section>
-  `;
-
-  document
+  nav
     .querySelectorAll(
-      ".open-student-progress-button"
+      ".nav-button"
     )
-    .forEach((button) => {
-      button.addEventListener(
-        "click",
-        () => {
-          const student =
-            teacherDemoStudents.find(
-              (item) =>
-                item.id ===
-                button.dataset.studentId
-            );
-
-          if (student) {
-            showTeacherStudentProgress(
-              student
-            );
-          }
+    .forEach(
+      (button) => {
+        if (
+          button.dataset
+            .compassNavWired ===
+          "true"
+        ) {
+          return;
         }
-      );
-    });
 
-  document
-    .getElementById(
-      "class-dashboard-button"
-    )
-    .addEventListener(
-      "click",
-      showTeacherDashboard
-    );
-}
+        const label =
+          button.textContent
+            .trim();
 
-function showTeacherStudentProgress(student) {
-  const main =
-    document.querySelector("main");
+        if (label === "Home") {
+          button.addEventListener(
+            "click",
+            backHome
+          );
+        } else if (
+          label ===
+          "My Journeys"
+        ) {
+          button.addEventListener(
+            "click",
+            showMyJourneys
+          );
+        } else {
+          return;
+        }
 
-  main.innerHTML = `
-    <section
-      class="material-page"
-      aria-labelledby="student-progress-title"
-    >
-      <p class="eyebrow">
-        Shared Progress
-      </p>
-
-      <h2 id="student-progress-title">
-        ${escapeHtml(student.nickname)}
-      </h2>
-
-      <div class="comfort-panel">
-        <div class="comfort-control">
-          <strong>Current Journey</strong>
-          <p>
-            ${escapeHtml(student.journey)}
-          </p>
-        </div>
-
-        <div class="comfort-control">
-          <strong>Current Place</strong>
-          <p>
-            ${escapeHtml(student.step)}
-          </p>
-        </div>
-
-        <div class="comfort-control">
-          <strong>Observation</strong>
-          <p>
-            ${escapeHtml(student.note)}
-          </p>
-        </div>
-
-        <div class="comfort-control">
-          <strong>Privacy</strong>
-          <p>
-            Private journal entries, personal
-            accessibility preferences and
-            unshared Journeys are not shown here.
-          </p>
-        </div>
-      </div>
-
-      <div class="hero-actions">
-        <button
-          type="button"
-          class="secondary-button"
-          id="student-progress-back-button"
-        >
-          Back to Class
-        </button>
-      </div>
-    </section>
-  `;
-
-  document
-    .getElementById(
-      "student-progress-back-button"
-    )
-    .addEventListener(
-      "click",
-      showTeacherClass
-    );
-}
-
-function showTeacherAssignment() {
-  const main =
-    document.querySelector("main");
-
-  main.innerHTML = `
-    <section
-      class="material-page"
-      aria-labelledby="teacher-assignment-title"
-    >
-      <p class="eyebrow">
-        Assign a Journey
-      </p>
-
-      <h2 id="teacher-assignment-title">
-        Set the destination, not one fixed route.
-      </h2>
-
-      <div class="comfort-panel">
-        <div class="comfort-control">
-          <label for="teacher-assignment-title-input">
-            Assignment
-          </label>
-          <input
-            id="teacher-assignment-title-input"
-            type="text"
-            placeholder="e.g. Solar system presentation"
-          />
-        </div>
-
-        <div class="comfort-control">
-          <label for="teacher-assignment-goal-input">
-            What should learners reach?
-          </label>
-          <textarea
-            id="teacher-assignment-goal-input"
-            rows="5"
-            placeholder="Describe the shared learning goal."
-          ></textarea>
-        </div>
-
-        <div class="comfort-control">
-          <label for="teacher-assignment-date-input">
-            Optional date
-          </label>
-          <input
-            id="teacher-assignment-date-input"
-            type="date"
-          />
-        </div>
-      </div>
-
-      <p>
-        Learners can still use their own
-        supports, change how they approach
-        steps and personalise their space.
-      </p>
-
-      <div class="hero-actions">
-        <button
-          type="button"
-          class="primary-button"
-          id="teacher-preview-assignment-button"
-        >
-          Preview Assignment
-        </button>
-
-        <button
-          type="button"
-          class="secondary-button"
-          id="assignment-dashboard-button"
-        >
-          Back to Teacher Space
-        </button>
-      </div>
-    </section>
-  `;
-
-  document
-    .getElementById(
-      "teacher-preview-assignment-button"
-    )
-    .addEventListener(
-      "click",
-      () => {
-        const title =
-          document
-            .getElementById(
-              "teacher-assignment-title-input"
-            )
-            .value
-            .trim() ||
-          "New Journey";
-
-        const goal =
-          document
-            .getElementById(
-              "teacher-assignment-goal-input"
-            )
-            .value
-            .trim() ||
-          "Shared learning goal";
-
-        const date =
-          document
-            .getElementById(
-              "teacher-assignment-date-input"
-            )
-            .value;
-
-        showTeacherAssignmentPreview(
-          title,
-          goal,
-          date
-        );
+        button.dataset
+          .compassNavWired =
+          "true";
       }
     );
-
-  document
-    .getElementById(
-      "assignment-dashboard-button"
-    )
-    .addEventListener(
-      "click",
-      showTeacherDashboard
-    );
 }
 
-function showTeacherAssignmentPreview(
-  title,
-  goal,
-  date
-) {
-  const main =
-    document.querySelector("main");
+wirePrimaryNavigation();
+window.addEventListener(
+  "load",
+  wirePrimaryNavigation
+);
 
-  main.innerHTML = `
-    <section
-      class="hero"
-      aria-labelledby="assignment-preview-title"
-    >
-      <p class="eyebrow">
-        Assignment Preview
-      </p>
 
-      <h2 id="assignment-preview-title">
-        ${escapeHtml(title)}
-      </h2>
-
-      <p class="hero-text">
-        ${escapeHtml(goal)}
-      </p>
-
-      ${
-        date
-          ? `
-            <p>
-              <strong>Date:</strong>
-              ${escapeHtml(date)}
-            </p>
-          `
-          : `
-            <p>
-              No date added.
-            </p>
-          `
-      }
-
-      <p>
-        Same Goal. Different Paths.
-      </p>
-
-      <div class="hero-actions">
-        <button
-          type="button"
-          class="secondary-button"
-          id="edit-assignment-button"
-        >
-          Edit
-        </button>
-
-        <button
-          type="button"
-          class="secondary-button"
-          id="assignment-preview-dashboard-button"
-        >
-          Back to Teacher Space
-        </button>
-      </div>
-    </section>
-  `;
-
-  document
-    .getElementById(
-      "edit-assignment-button"
-    )
-    .addEventListener(
-      "click",
-      showTeacherAssignment
-    );
-
-  document
-    .getElementById(
-      "assignment-preview-dashboard-button"
-    )
-    .addEventListener(
-      "click",
-      showTeacherDashboard
-    );
-}
-
-function showTeacherLookbook() {
-  const main =
-    document.querySelector("main");
-
-  main.innerHTML = `
-    <section
-      class="hero"
-      aria-labelledby="teacher-lookbook-title"
-    >
-      <p class="eyebrow">
-        Teacher Lookbook
-      </p>
-
-      <h2 id="teacher-lookbook-title">
-        Shared moments can live here.
-      </h2>
-
-      <p class="hero-text">
-        This V1 is the structure only.
-        Later, learner-approved Goal Looks
-        and Journey moments can appear here
-        without exposing private notes.
-      </p>
-
-      <div class="hero-actions">
-        <button
-          type="button"
-          class="secondary-button"
-          id="lookbook-dashboard-button"
-        >
-          Back to Teacher Space
-        </button>
-      </div>
-    </section>
-  `;
-
-  document
-    .getElementById(
-      "lookbook-dashboard-button"
-    )
-    .addEventListener(
-      "click",
-      showTeacherDashboard
-    );
-}
+// ------------------------------------------------------------
+// Journey Card + Product Polish V1
+// ------------------------------------------------------------
 
 function showJourneyCard(journey) {
   const main =
@@ -850,8 +277,6 @@ function addJourneyCardShortcut() {
 }
 
 function installProductPolishV1() {
-  installTeacherButton();
-
   window.setTimeout(
     addJourneyCardShortcut,
     0
@@ -1037,13 +462,18 @@ function rememberJourney(journey) {
     return;
   }
 
+  // Keep one stable local ID on the live Journey object before making
+  // any copies. Without this, reopening the same new Journey could create
+  // another saved Journey with a different ID.
+  const localId =
+    ensureJourneyLocalId(journey);
+
   const copy =
     JSON.parse(
       JSON.stringify(journey)
     );
 
-  const localId =
-    ensureJourneyLocalId(copy);
+  copy.localId = localId;
 
   const existingIndex =
     compassStudentState.journeys
@@ -1063,12 +493,12 @@ function rememberJourney(journey) {
   }
 
   compassStudentState.activeJourney =
-    copy;
+    JSON.parse(
+      JSON.stringify(copy)
+    );
 
   compassStudentState.cloudJourneyId =
-    copy.cloudJourneyId ||
-    compassStudentState.cloudJourneyId ||
-    null;
+    copy.cloudJourneyId || null;
 
   saveStudentState();
 }
@@ -4823,17 +4253,35 @@ function compassSensitiveReauthIsFresh() {
 }
 
 function showAccountSafety() {
-  const main = document.querySelector("main");
-  const signedIn = Boolean(compassCloudSession?.user?.id);
+  const main =
+    document.querySelector("main");
+
+  const signedIn =
+    Boolean(
+      compassCloudSession?.user?.id
+    );
+
+  const learnerSignedIn =
+    signedIn &&
+    getCompassProfileRole() ===
+      "learner";
 
   main.innerHTML = `
-    <section class="material-page" aria-labelledby="account-safety-title">
+    <section
+      class="material-page"
+      aria-labelledby="account-safety-title"
+    >
       <div class="material-heading">
-        <p class="eyebrow">Account Safety</p>
-        <h2 id="account-safety-title">Account and data controls</h2>
+        <p class="eyebrow">
+          Account Safety
+        </p>
+        <h2 id="account-safety-title">
+          Account and data controls
+        </h2>
         <p class="hero-text">
-          These controls explain what happens before a sensitive account action.
-          Compass Trail does not silently delete learning data.
+          Sensitive actions require a current
+          credential. Compass Trail does not
+          silently delete learning data.
         </p>
       </div>
 
@@ -4841,7 +4289,15 @@ function showAccountSafety() {
         <article class="material-card">
           <div class="material-card-content">
             <h3>Signed-in status</h3>
-            <p>${signedIn ? "You are signed in." : "You are signed out."}</p>
+            <p>
+              ${
+                signedIn
+                  ? `You are signed in as a ${escapeHtml(
+                      getCompassProfileRole()
+                    )} account.`
+                  : "You are signed out."
+              }
+            </p>
           </div>
         </article>
 
@@ -4849,10 +4305,14 @@ function showAccountSafety() {
           <div class="material-card-content">
             <h3>Change Secret Code</h3>
             <p>
-              Changing your Secret Code does not remove your Journeys or learning data.
-              The existing account recovery function handles the change.
+              Learners change a Secret Code from
+              My Account. The current Secret Code
+              is required before a new one is set.
             </p>
-            <button type="button" id="account-safety-open-account">
+            <button
+              type="button"
+              id="account-safety-open-account"
+            >
               Open My Account
             </button>
           </div>
@@ -4860,15 +4320,71 @@ function showAccountSafety() {
 
         <article class="material-card">
           <div class="material-card-content">
-            <h3>Delete account</h3>
-            <p>
-              Account deletion is not enabled yet.
-              It will require a fresh identity check, a clear confirmation,
-              and backend deletion rules before it can be used.
-            </p>
-            <button type="button" disabled aria-disabled="true">
-              Delete Account — Not Available Yet
-            </button>
+            <h3>Delete learner account</h3>
+
+            ${
+              learnerSignedIn
+                ? `
+                  <p>
+                    This permanently deletes the
+                    learner cloud account and cloud
+                    learning data linked to it.
+                    Compass Trail learner data stored
+                    in this browser is also cleared.
+                    Language, theme and visual-comfort
+                    settings stay on this browser.
+                  </p>
+
+                  <label
+                    for="account-delete-current-secret"
+                  >
+                    <strong>
+                      Current Secret Code
+                    </strong>
+                  </label>
+                  <input
+                    id="account-delete-current-secret"
+                    type="password"
+                    autocomplete="current-password"
+                  />
+
+                  <label
+                    for="account-delete-confirmation"
+                  >
+                    <strong>
+                      Type DELETE to confirm
+                    </strong>
+                  </label>
+                  <input
+                    id="account-delete-confirmation"
+                    type="text"
+                    autocomplete="off"
+                  />
+
+                  <button
+                    type="button"
+                    class="secondary-button"
+                    id="account-delete-button"
+                  >
+                    Delete My Learner Account
+                  </button>
+
+                  <p
+                    id="account-delete-status"
+                    class="path-note"
+                    role="status"
+                    aria-live="polite"
+                  ></p>
+                `
+                : `
+                  <p>
+                    Sign in with a learner account
+                    to use learner account deletion.
+                    Teacher accounts are not deleted
+                    from the learner controls.
+                  </p>
+                `
+            }
           </div>
         </article>
 
@@ -4876,15 +4392,23 @@ function showAccountSafety() {
           <div class="material-card-content">
             <h3>Local data</h3>
             <p>
-              Local browser data and cloud account data are separate.
-              A final deletion flow must state exactly which data will be removed.
+              Cloud account data and browser-only
+              settings are separate. Deleting a
+              learner account clears learner progress
+              stored in this browser but keeps
+              language, theme and visual-comfort
+              settings.
             </p>
           </div>
         </article>
       </div>
 
       <div class="hero-actions">
-        <button type="button" class="secondary-button" id="account-safety-home">
+        <button
+          type="button"
+          class="secondary-button"
+          id="account-safety-home"
+        >
           Back Home
         </button>
       </div>
@@ -4892,12 +4416,31 @@ function showAccountSafety() {
   `;
 
   document
-    .getElementById("account-safety-open-account")
-    ?.addEventListener("click", showCompassAccount);
+    .getElementById(
+      "account-safety-open-account"
+    )
+    ?.addEventListener(
+      "click",
+      showCompassAccount
+    );
 
   document
-    .getElementById("account-safety-home")
-    ?.addEventListener("click", backHome);
+    .getElementById(
+      "account-delete-button"
+    )
+    ?.addEventListener(
+      "click",
+      handleCompassDeleteAccount
+    );
+
+  document
+    .getElementById(
+      "account-safety-home"
+    )
+    ?.addEventListener(
+      "click",
+      backHome
+    );
 }
 
 function addAccountSafetyHomeCard() {
@@ -4935,7 +4478,7 @@ function getCompassMaterialKind(file) {
   const name = String(file?.name || "").toLowerCase();
   const type = String(file?.type || "").toLowerCase();
 
-  if (type.startsWith("image/") || /\.(png|jpe?g|webp|heic|heif)$/i.test(name)) {
+  if (type.startsWith("image/") || /\.(png|jpe?g|webp)$/i.test(name)) {
     return "image";
   }
   if (type === "application/pdf" || /\.pdf$/i.test(name)) {
@@ -5227,7 +4770,7 @@ function getCompassClosureStatus() {
     localization: typeof applyCompassExtraTranslations === "function" ? "CODED / FINAL REVIEW PENDING" : "CHECK",
     theme: typeof getCompassTheme === "function" ? "CODED" : "CHECK",
     teacher: "E2E TEST PENDING",
-    deletion: "NOT ENABLED",
+    deletion: typeof handleCompassDeleteAccount === "function" ? "CODED / FINAL TEST PENDING" : "CHECK",
     finalRegression: "PENDING"
   };
 }
@@ -5245,7 +4788,7 @@ function showV1ClosureBoard() {
     ["TR / EN", s.localization, "Final whole-site language review is still pending."],
     ["Light / Dark theme", s.theme, "Final visual regression is pending."],
     ["Teacher flow", s.teacher, "Teacher auth, class permissions and teacher reset must be verified end to end."],
-    ["Account deletion", s.deletion, "Not exposed as a working feature until backend deletion behavior is implemented and verified."],
+    ["Account deletion", s.deletion, "Fresh-reauth learner deletion is coded. Final end-to-end backend deletion is still required before release."],
     ["Final regression", s.finalRegression, "The final whole-site test will decide V1 release readiness."]
   ];
 
@@ -5305,189 +4848,1045 @@ window.addEventListener("load", addV1ClosureHomeCard);
 
 
 function getCompassProfileRole() {
-  const candidates = [
-    compassCloudProfile?.role,
-    compassStudentState?.profile?.role,
-    compassStudentState?.role
-  ];
-  return candidates.find((value) => value === "teacher" || value === "learner") || "learner";
+  const role =
+    compassCloudProfile?.role;
+
+  return (
+    role === "teacher" ||
+    role === "learner"
+  )
+    ? role
+    : "guest";
 }
 
 function compassIsTeacher() {
-  return Boolean(compassCloudSession?.user?.id) && getCompassProfileRole() === "teacher";
+  return Boolean(
+    compassCloudSession?.user?.id
+  ) &&
+  getCompassProfileRole() ===
+    "teacher";
+}
+
+function refreshTeacherEntryPoints() {
+  const existing =
+    document.getElementById(
+      "teacher-home-card"
+    );
+
+  if (!compassIsTeacher()) {
+    existing?.remove();
+    return;
+  }
+
+  addTeacherHomeCard();
 }
 
 async function loadCompassTeacherClasses() {
-  if (!compassIsTeacher() || !window.supabaseClient) return [];
+  if (
+    !compassIsTeacher() ||
+    !compassCloud
+  ) {
+    return [];
+  }
 
-  const { data, error } = await window.supabaseClient
-    .from("classes")
-    .select("id,name,created_at")
-    .order("created_at", { ascending: false });
+  const { data, error } =
+    await compassCloud
+      .from("classes")
+      .select(
+        "id,name,created_at"
+      )
+      .order(
+        "created_at",
+        { ascending: false }
+      );
 
-  if (error) throw error;
-  return Array.isArray(data) ? data : [];
+  if (error) {
+    throw error;
+  }
+
+  return Array.isArray(data)
+    ? data
+    : [];
 }
 
-async function loadCompassTeacherClassMembers(classId) {
-  if (!compassIsTeacher() || !window.supabaseClient || !classId) return [];
+async function loadCompassTeacherClassMembers(
+  classId
+) {
+  if (
+    !compassIsTeacher() ||
+    !compassCloud ||
+    !classId
+  ) {
+    return [];
+  }
 
-  const { data, error } = await window.supabaseClient
-    .from("class_members")
-    .select("id,class_id,learner_id,created_at")
-    .eq("class_id", classId);
+  const { data, error } =
+    await compassCloud
+      .from("class_members")
+      .select(
+        "class_id,user_id,membership_role,joined_at"
+      )
+      .eq(
+        "class_id",
+        classId
+      )
+      .order(
+        "joined_at",
+        { ascending: true }
+      );
 
-  if (error) throw error;
-  return Array.isArray(data) ? data : [];
+  if (error) {
+    throw error;
+  }
+
+  return Array.isArray(data)
+    ? data
+    : [];
+}
+
+async function loadCompassTeacherAssignments(
+  classId
+) {
+  if (
+    !compassIsTeacher() ||
+    !compassCloud ||
+    !classId
+  ) {
+    return [];
+  }
+
+  const { data, error } =
+    await compassCloud
+      .from("assignments")
+      .select(
+        "id,class_id,teacher_id,title,goal,due_at,created_at"
+      )
+      .eq(
+        "class_id",
+        classId
+      )
+      .order(
+        "created_at",
+        { ascending: false }
+      );
+
+  if (error) {
+    throw error;
+  }
+
+  return Array.isArray(data)
+    ? data
+    : [];
 }
 
 async function showTeacherDashboard() {
-  const main = document.querySelector("main");
+  const main =
+    document.querySelector("main");
 
-  if (!compassCloudSession?.user?.id) {
+  if (
+    !compassCloudSession?.user?.id
+  ) {
     main.innerHTML = `
-      <section class="material-page" aria-labelledby="teacher-title">
+      <section
+        class="material-page"
+        aria-labelledby="teacher-title"
+      >
         <div class="material-heading">
           <p class="eyebrow">Teacher</p>
-          <h2 id="teacher-title">Sign in before opening teacher tools.</h2>
-          <p class="hero-text">Teacher tools require an authenticated teacher account.</p>
+          <h2 id="teacher-title">
+            Sign in before opening teacher tools.
+          </h2>
+          <p class="hero-text">
+            Open My Account and use Teacher Sign In.
+          </p>
         </div>
         <div class="hero-actions">
-          <button type="button" class="primary-button" id="teacher-open-account">Open My Account</button>
-          <button type="button" class="secondary-button" id="teacher-home">Back Home</button>
+          <button
+            type="button"
+            class="primary-button"
+            id="teacher-open-account"
+          >
+            Open My Account
+          </button>
+          <button
+            type="button"
+            class="secondary-button"
+            id="teacher-home"
+          >
+            Back Home
+          </button>
         </div>
-      </section>`;
-    document.getElementById("teacher-open-account")?.addEventListener("click", showCompassAccount);
-    document.getElementById("teacher-home")?.addEventListener("click", backHome);
+      </section>
+    `;
+
+    document
+      .getElementById(
+        "teacher-open-account"
+      )
+      ?.addEventListener(
+        "click",
+        showCompassAccount
+      );
+
+    document
+      .getElementById(
+        "teacher-home"
+      )
+      ?.addEventListener(
+        "click",
+        backHome
+      );
+
     return;
   }
 
   if (!compassIsTeacher()) {
     main.innerHTML = `
-      <section class="material-page" aria-labelledby="teacher-title">
+      <section
+        class="material-page"
+        aria-labelledby="teacher-title"
+      >
         <div class="material-heading">
           <p class="eyebrow">Teacher</p>
-          <h2 id="teacher-title">This account does not have teacher access.</h2>
+          <h2 id="teacher-title">
+            This account does not have teacher access.
+          </h2>
           <p class="hero-text">
-            Teacher access is checked from the signed-in account role.
-            The browser does not grant teacher permissions.
+            Teacher access comes from the signed-in
+            profile role and backend Row Level Security.
+            The browser cannot grant teacher permission.
           </p>
         </div>
-        <button type="button" class="secondary-button" id="teacher-home">Back Home</button>
-      </section>`;
-    document.getElementById("teacher-home")?.addEventListener("click", backHome);
+        <button
+          type="button"
+          class="secondary-button"
+          id="teacher-home"
+        >
+          Back Home
+        </button>
+      </section>
+    `;
+
+    document
+      .getElementById(
+        "teacher-home"
+      )
+      ?.addEventListener(
+        "click",
+        backHome
+      );
+
     return;
   }
 
   main.innerHTML = `
-    <section class="material-page" aria-labelledby="teacher-title">
+    <section
+      class="material-page"
+      aria-labelledby="teacher-title"
+    >
       <div class="material-heading">
         <p class="eyebrow">Teacher</p>
-        <h2 id="teacher-title">Teacher Dashboard</h2>
-        <p class="hero-text">Loading classes allowed for this teacher account…</p>
+        <h2 id="teacher-title">
+          Teacher Dashboard
+        </h2>
+        <p class="hero-text">
+          Only classes allowed for this teacher
+          account are shown.
+        </p>
       </div>
-      <div id="teacher-dashboard-content" class="material-list" aria-live="polite"></div>
-      <button type="button" class="secondary-button" id="teacher-home">Back Home</button>
-    </section>`;
 
-  document.getElementById("teacher-home")?.addEventListener("click", backHome);
-  const content = document.getElementById("teacher-dashboard-content");
+      <div
+        id="teacher-dashboard-content"
+        class="material-list"
+        aria-live="polite"
+      >
+        <p class="path-note">
+          Loading classes…
+        </p>
+      </div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="secondary-button"
+          id="teacher-home"
+        >
+          Back Home
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "teacher-home"
+    )
+    ?.addEventListener(
+      "click",
+      backHome
+    );
+
+  const content =
+    document.getElementById(
+      "teacher-dashboard-content"
+    );
 
   try {
-    const classes = await loadCompassTeacherClasses();
+    const classes =
+      await loadCompassTeacherClasses();
+
     if (!classes.length) {
       content.innerHTML = `
-        <article class="material-card"><div class="material-card-content">
-          <h3>No classes available</h3>
-          <p>No class is currently visible to this teacher account.</p>
-        </div></article>`;
+        <article class="material-card">
+          <div class="material-card-content">
+            <h3>No classes available</h3>
+            <p>
+              No class is currently visible
+              to this teacher account.
+            </p>
+          </div>
+        </article>
+      `;
       return;
     }
 
-    content.innerHTML = classes.map((item) => `
+    content.innerHTML =
+      classes
+        .map(
+          (item) => `
+            <article class="material-card">
+              <div class="material-card-content">
+                <h3>
+                  ${escapeHtml(
+                    item.name ||
+                      "Class"
+                  )}
+                </h3>
+                <p>
+                  Class access is limited by
+                  backend Row Level Security.
+                </p>
+                <button
+                  type="button"
+                  class="small-action-button"
+                  data-teacher-class="${escapeHtml(
+                    item.id
+                  )}"
+                >
+                  Open Class
+                </button>
+              </div>
+            </article>
+          `
+        )
+        .join("");
+
+    content
+      .querySelectorAll(
+        "[data-teacher-class]"
+      )
+      .forEach(
+        (button) => {
+          button.addEventListener(
+            "click",
+            () =>
+              showTeacherClass(
+                button.dataset
+                  .teacherClass
+              )
+          );
+        }
+      );
+  } catch (error) {
+    console.error(
+      "Teacher classes could not be loaded:",
+      error
+    );
+
+    content.innerHTML = `
       <article class="material-card">
         <div class="material-card-content">
-          <h3>${escapeHtml(item.name || "Class")}</h3>
-          <p>Class data is limited by backend Row Level Security.</p>
-          <button type="button" data-teacher-class="${escapeHtml(item.id)}">Open Class</button>
+          <h3>
+            Teacher data could not be loaded.
+          </h3>
+          <p>
+            No permissions were changed.
+            Check the teacher profile and backend
+            access rules.
+          </p>
         </div>
-      </article>`).join("");
-
-    content.querySelectorAll("[data-teacher-class]").forEach((button) => {
-      button.addEventListener("click", () => showTeacherClass(button.dataset.teacherClass));
-    });
-  } catch (error) {
-    console.error(error);
-    content.innerHTML = `
-      <article class="material-card"><div class="material-card-content">
-        <h3>Teacher data could not be loaded.</h3>
-        <p>No permissions were changed. Check the account role and backend access rules.</p>
-      </div></article>`;
+      </article>
+    `;
   }
 }
 
-async function showTeacherClass(classId) {
-  const main = document.querySelector("main");
-  if (!compassIsTeacher()) return showTeacherDashboard();
+async function showTeacherClass(
+  classId
+) {
+  const main =
+    document.querySelector("main");
+
+  if (!compassIsTeacher()) {
+    showTeacherDashboard();
+    return;
+  }
+
+  if (!classId) {
+    showTeacherDashboard();
+    return;
+  }
 
   main.innerHTML = `
-    <section class="material-page" aria-labelledby="teacher-class-title">
+    <section
+      class="material-page"
+      aria-labelledby="teacher-class-title"
+    >
       <div class="material-heading">
-        <p class="eyebrow">Teacher Class</p>
-        <h2 id="teacher-class-title">Class members</h2>
-        <p class="hero-text">Only members allowed by backend access rules are shown.</p>
+        <p class="eyebrow">
+          Teacher Class
+        </p>
+        <h2 id="teacher-class-title">
+          Class tools
+        </h2>
+        <p class="hero-text">
+          Member IDs, assignments and account
+          recovery are limited by backend access rules.
+          Secret Codes are never displayed.
+        </p>
       </div>
-      <div id="teacher-class-members" class="material-list" aria-live="polite"></div>
-      <div class="hero-actions">
-        <button type="button" class="secondary-button" id="teacher-class-back">Back to Teacher Dashboard</button>
-        <button type="button" class="secondary-button" id="teacher-class-home">Back Home</button>
-      </div>
-    </section>`;
 
-  document.getElementById("teacher-class-back")?.addEventListener("click", showTeacherDashboard);
-  document.getElementById("teacher-class-home")?.addEventListener("click", backHome);
-  const content = document.getElementById("teacher-class-members");
+      <div class="account-grid">
+        <article class="home-card">
+          <h3>Class members</h3>
+          <div
+            id="teacher-class-members"
+            class="material-list"
+            aria-live="polite"
+          >
+            <p>Loading members…</p>
+          </div>
+        </article>
+
+        <article class="home-card">
+          <h3>Create assignment</h3>
+
+          <label
+            for="teacher-assignment-title"
+          >
+            <strong>Assignment title</strong>
+          </label>
+          <input
+            id="teacher-assignment-title"
+            type="text"
+            maxlength="200"
+          />
+
+          <label
+            for="teacher-assignment-goal"
+          >
+            <strong>Learning goal</strong>
+          </label>
+          <textarea
+            id="teacher-assignment-goal"
+            rows="5"
+          ></textarea>
+
+          <label
+            for="teacher-assignment-date"
+          >
+            <strong>Optional due date</strong>
+          </label>
+          <input
+            id="teacher-assignment-date"
+            type="date"
+          />
+
+          <button
+            type="button"
+            id="teacher-create-assignment"
+          >
+            Create Assignment
+          </button>
+
+          <p
+            id="teacher-assignment-status"
+            class="path-note"
+            role="status"
+            aria-live="polite"
+          ></p>
+        </article>
+
+        <article class="home-card">
+          <h3>Assignments</h3>
+          <div
+            id="teacher-assignment-list"
+            class="material-list"
+            aria-live="polite"
+          >
+            <p>Loading assignments…</p>
+          </div>
+        </article>
+
+        <article class="home-card">
+          <h3>Reset learner access</h3>
+          <p>
+            Use this only for a learner who is a
+            member of this class. The previous
+            Secret Code is never shown.
+          </p>
+
+          <label
+            for="teacher-reset-learner-code"
+          >
+            <strong>Learner Code</strong>
+          </label>
+          <input
+            id="teacher-reset-learner-code"
+            type="text"
+            placeholder="CT-XXXX-XXXX"
+            autocomplete="off"
+          />
+
+          <label
+            for="teacher-reset-new-secret"
+          >
+            <strong>New learner Secret Code</strong>
+          </label>
+          <input
+            id="teacher-reset-new-secret"
+            type="password"
+            minlength="8"
+            maxlength="72"
+            autocomplete="new-password"
+          />
+
+          <label
+            for="teacher-reset-current-password"
+          >
+            <strong>Your current teacher password</strong>
+          </label>
+          <input
+            id="teacher-reset-current-password"
+            type="password"
+            autocomplete="current-password"
+          />
+
+          <button
+            type="button"
+            id="teacher-reset-access"
+          >
+            Reset Learner Access
+          </button>
+
+          <p
+            id="teacher-reset-status"
+            class="path-note"
+            role="status"
+            aria-live="polite"
+          ></p>
+        </article>
+      </div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="secondary-button"
+          id="teacher-class-back"
+        >
+          Back to Teacher Dashboard
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="teacher-class-home"
+        >
+          Back Home
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "teacher-class-back"
+    )
+    ?.addEventListener(
+      "click",
+      showTeacherDashboard
+    );
+
+  document
+    .getElementById(
+      "teacher-class-home"
+    )
+    ?.addEventListener(
+      "click",
+      backHome
+    );
+
+  document
+    .getElementById(
+      "teacher-create-assignment"
+    )
+    ?.addEventListener(
+      "click",
+      () =>
+        handleTeacherCreateAssignment(
+          classId
+        )
+    );
+
+  document
+    .getElementById(
+      "teacher-reset-access"
+    )
+    ?.addEventListener(
+      "click",
+      () =>
+        handleTeacherResetAccess(
+          classId
+        )
+    );
+
+  await refreshTeacherClassData(
+    classId
+  );
+}
+
+async function refreshTeacherClassData(
+  classId
+) {
+  const memberContent =
+    document.getElementById(
+      "teacher-class-members"
+    );
+
+  const assignmentContent =
+    document.getElementById(
+      "teacher-assignment-list"
+    );
 
   try {
-    const members = await loadCompassTeacherClassMembers(classId);
-    content.innerHTML = members.length
-      ? members.map((member) => `
-          <article class="material-card"><div class="material-card-content">
-            <h3>Learner</h3>
-            <p>Learner ID: ${escapeHtml(member.learner_id || "")}</p>
-            <p>Secret Codes are never displayed here.</p>
-          </div></article>`).join("")
-      : `<article class="material-card"><div class="material-card-content">
-           <h3>No learners visible</h3>
-           <p>No learner membership is visible for this class.</p>
-         </div></article>`;
+    const [
+      members,
+      assignments,
+    ] = await Promise.all([
+      loadCompassTeacherClassMembers(
+        classId
+      ),
+      loadCompassTeacherAssignments(
+        classId
+      ),
+    ]);
+
+    if (memberContent) {
+      memberContent.innerHTML =
+        members.length
+          ? members
+              .map(
+                (member) => `
+                  <article class="material-card">
+                    <div class="material-card-content">
+                      <h4>
+                        ${
+                          member.membership_role ===
+                          "teacher"
+                            ? "Teacher member"
+                            : "Learner member"
+                        }
+                      </h4>
+                      <p>
+                        User ID:
+                        ${escapeHtml(
+                          member.user_id ||
+                            ""
+                        )}
+                      </p>
+                    </div>
+                  </article>
+                `
+              )
+              .join("")
+          : `
+              <p>
+                No class members are visible.
+              </p>
+            `;
+    }
+
+    if (assignmentContent) {
+      assignmentContent.innerHTML =
+        assignments.length
+          ? assignments
+              .map(
+                (assignment) => `
+                  <article class="material-card">
+                    <div class="material-card-content">
+                      <h4>
+                        ${escapeHtml(
+                          assignment.title
+                        )}
+                      </h4>
+                      <p>
+                        ${escapeHtml(
+                          assignment.goal ||
+                            "No goal added."
+                        )}
+                      </p>
+                      <p>
+                        ${
+                          assignment.due_at
+                            ? `Due: ${escapeHtml(
+                                assignment.due_at.slice(
+                                  0,
+                                  10
+                                )
+                              )}`
+                            : "No due date."
+                        }
+                      </p>
+                    </div>
+                  </article>
+                `
+              )
+              .join("")
+          : `
+              <p>
+                No assignments are visible.
+              </p>
+            `;
+    }
   } catch (error) {
-    console.error(error);
-    content.innerHTML = `<article class="material-card"><div class="material-card-content">
-      <h3>Class members could not be loaded.</h3>
-      <p>No permissions were changed.</p>
-    </div></article>`;
+    console.error(
+      "Teacher class data could not be loaded:",
+      error
+    );
+
+    if (memberContent) {
+      memberContent.innerHTML =
+        "<p>Class members could not be loaded.</p>";
+    }
+
+    if (assignmentContent) {
+      assignmentContent.innerHTML =
+        "<p>Assignments could not be loaded.</p>";
+    }
+  }
+}
+
+async function handleTeacherCreateAssignment(
+  classId
+) {
+  const status =
+    document.getElementById(
+      "teacher-assignment-status"
+    );
+
+  const title =
+    document
+      .getElementById(
+        "teacher-assignment-title"
+      )
+      ?.value
+      .trim();
+
+  const goal =
+    document
+      .getElementById(
+        "teacher-assignment-goal"
+      )
+      ?.value
+      .trim() || "";
+
+  const date =
+    document
+      .getElementById(
+        "teacher-assignment-date"
+      )
+      ?.value || "";
+
+  if (!title) {
+    if (status) {
+      status.textContent =
+        "Enter an assignment title.";
+    }
+    return;
+  }
+
+  if (
+    !compassIsTeacher() ||
+    !compassCloudSession?.user?.id
+  ) {
+    if (status) {
+      status.textContent =
+        "Teacher access is not available for this session.";
+    }
+    return;
+  }
+
+  let dueAt = null;
+
+  if (date) {
+    const parsed =
+      new Date(
+        `${date}T12:00:00`
+      );
+
+    if (
+      !Number.isNaN(
+        parsed.getTime()
+      )
+    ) {
+      dueAt =
+        parsed.toISOString();
+    }
+  }
+
+  if (status) {
+    status.textContent =
+      "Creating assignment…";
+  }
+
+  const { error } =
+    await compassCloud
+      .from("assignments")
+      .insert({
+        class_id: classId,
+        teacher_id:
+          compassCloudSession.user.id,
+        title:
+          title.slice(
+            0,
+            200
+          ),
+        goal,
+        due_at: dueAt,
+      });
+
+  if (error) {
+    console.error(
+      "Assignment creation failed:",
+      error
+    );
+
+    if (status) {
+      status.textContent =
+        "Assignment could not be created. No permissions were changed.";
+    }
+    return;
+  }
+
+  if (status) {
+    status.textContent =
+      "Assignment created.";
+  }
+
+  document.getElementById(
+    "teacher-assignment-title"
+  ).value = "";
+
+  document.getElementById(
+    "teacher-assignment-goal"
+  ).value = "";
+
+  document.getElementById(
+    "teacher-assignment-date"
+  ).value = "";
+
+  await refreshTeacherClassData(
+    classId
+  );
+}
+
+async function handleTeacherResetAccess(
+  classId
+) {
+  const status =
+    document.getElementById(
+      "teacher-reset-status"
+    );
+
+  const learnerCode =
+    normalizeLearnerCode(
+      document
+        .getElementById(
+          "teacher-reset-learner-code"
+        )
+        ?.value
+    );
+
+  const newSecretCode =
+    document
+      .getElementById(
+        "teacher-reset-new-secret"
+      )
+      ?.value || "";
+
+  const currentPassword =
+    document
+      .getElementById(
+        "teacher-reset-current-password"
+      )
+      ?.value || "";
+
+  if (
+    !/^CT-[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(
+      learnerCode
+    )
+  ) {
+    if (status) {
+      status.textContent =
+        "Enter the learner's full Learner Code.";
+    }
+    return;
+  }
+
+  if (
+    newSecretCode.length < 8 ||
+    newSecretCode.length > 72
+  ) {
+    if (status) {
+      status.textContent =
+        "New learner Secret Code needs 8–72 characters.";
+    }
+    return;
+  }
+
+  if (!currentPassword) {
+    if (status) {
+      status.textContent =
+        "Enter your current teacher password to confirm this reset.";
+    }
+    return;
+  }
+
+  const {
+    data: { session },
+    error: sessionError,
+  } =
+    await compassCloud.auth.getSession();
+
+  if (
+    sessionError ||
+    !session?.access_token
+  ) {
+    if (status) {
+      status.textContent =
+        "Please sign in again before resetting learner access.";
+    }
+    return;
+  }
+
+  if (status) {
+    status.textContent =
+      "Checking teacher access and class membership…";
+  }
+
+  try {
+    await callCompassFunction(
+      "account-recovery",
+      {
+        action:
+          "teacher_reset",
+        learnerCode,
+        classId,
+        newSecretCode,
+        currentPassword,
+      },
+      session.access_token
+    );
+
+    markCompassSensitiveReauth();
+
+    document.getElementById(
+      "teacher-reset-new-secret"
+    ).value = "";
+
+    document.getElementById(
+      "teacher-reset-current-password"
+    ).value = "";
+
+    if (status) {
+      status.textContent =
+        "Learner access reset. The previous Secret Code was not revealed.";
+    }
+  } catch (error) {
+    if (status) {
+      status.textContent =
+        error.message ||
+        "Learner access could not be reset.";
+    }
   }
 }
 
 function addTeacherHomeCard() {
-  if (document.getElementById("teacher-home-card")) return;
-  const grid=document.querySelector(".home-grid");
-  if(!grid) return;
-  const card=document.createElement("article");
-  card.id="teacher-home-card";
-  card.className="home-card";
-  card.innerHTML=`
-    <span class="card-icon" aria-hidden="true">🏫</span>
-    <h3>Teacher</h3>
-    <p>Teacher access uses the signed-in account role and backend permissions.</p>
-    <button type="button" id="open-teacher-dashboard">Open Teacher Dashboard</button>
-  `;
-  grid.appendChild(card);
-  document.getElementById("open-teacher-dashboard")?.addEventListener("click",showTeacherDashboard);
-}
-window.addEventListener("load",addTeacherHomeCard);
+  if (!compassIsTeacher()) {
+    return;
+  }
 
+  if (
+    document.getElementById(
+      "teacher-home-card"
+    )
+  ) {
+    return;
+  }
+
+  const grid =
+    document.querySelector(
+      ".home-grid"
+    );
+
+  if (!grid) {
+    return;
+  }
+
+  const card =
+    document.createElement(
+      "article"
+    );
+
+  card.id =
+    "teacher-home-card";
+  card.className =
+    "home-card";
+
+  card.innerHTML = `
+    <span
+      class="card-icon"
+      aria-hidden="true"
+    >
+      🏫
+    </span>
+    <h3>Teacher</h3>
+    <p>
+      Open classes, assignments and
+      learner-access recovery tools.
+    </p>
+    <button
+      type="button"
+      id="open-teacher-dashboard"
+    >
+      Open Teacher Dashboard
+    </button>
+  `;
+
+  grid.appendChild(card);
+
+  document
+    .getElementById(
+      "open-teacher-dashboard"
+    )
+    ?.addEventListener(
+      "click",
+      showTeacherDashboard
+    );
+
+  applyCompassExtraTranslations?.(
+    card
+  );
+}
 
 function showFinalTestReadyScreen() {
   const main = document.querySelector("main");
@@ -5532,8 +5931,8 @@ function showFinalTestReadyScreen() {
         <article class="material-card"><div class="material-card-content">
           <h3>Account deletion</h3>
           <p>
-            Account deletion remains unavailable. It must not be presented as a working V1 action
-            until backend deletion and reauthentication behavior are implemented and verified.
+            Learner account deletion is coded with a fresh Secret Code check.
+            It still requires the final end-to-end backend deletion test before release.
           </p>
         </div></article>
       </div>
@@ -5676,9 +6075,9 @@ function getV1DiagnosticRows() {
     {
       name: "Where Was I",
       result:
-        typeof showWhereWasI === "function" ? "READY" : "CHECK",
+        typeof showWhereWasI === "function" ? "CODE PRESENT" : "CHECK",
       detail:
-        "The learner can inspect the saved Journey position without changing progress."
+        "The Home summary and the Workspace summary use separate functions. Final behavior regression is still required."
     },
     {
       name: "Turkish interface coverage",
@@ -5696,9 +6095,12 @@ function getV1DiagnosticRows() {
     },
     {
       name: "Account deletion",
-      result: "NOT ENABLED",
+      result:
+        typeof handleCompassDeleteAccount === "function"
+          ? "CODE PRESENT"
+          : "CHECK",
       detail:
-        "Frontend deletion remains disabled until reauthentication and backend deletion behavior are implemented and tested."
+        "Fresh-reauth learner deletion is coded. Final end-to-end deletion and cascade verification are still required."
     },
     {
       name: "Teacher end-to-end access",
@@ -9285,6 +9687,9 @@ function previewMaterial(materialId) {
 // Scanned PDF OCR V1
 // ------------------------------------------------------------
 
+const COMPASS_SCANNED_PDF_MAX_PAGES =
+  40;
+
 async function readScannedPdfText(
   file,
   onProgress = () => {}
@@ -9308,9 +9713,13 @@ async function readScannedPdfText(
   }
 
   if (
-    !window.Tesseract ||
-    typeof window.Tesseract.recognize !==
-      "function"
+    typeof getOcrWorker !==
+      "function" &&
+    (
+      !window.Tesseract ||
+      typeof window.Tesseract.recognize !==
+        "function"
+    )
   ) {
     throw new Error(
       "Visual text reading is not available right now."
@@ -9329,6 +9738,21 @@ async function readScannedPdfText(
       })
       .promise;
 
+  if (
+    pdf.numPages >
+    COMPASS_SCANNED_PDF_MAX_PAGES
+  ) {
+    throw new Error(
+      `This scanned PDF has ${pdf.numPages} pages. Split it into files of ${COMPASS_SCANNED_PDF_MAX_PAGES} pages or fewer before visual text reading.`
+    );
+  }
+
+  const sharedWorker =
+    typeof getOcrWorker ===
+      "function"
+      ? await getOcrWorker()
+      : null;
+
   const pageResults = [];
   const combinedText = [];
 
@@ -9346,9 +9770,34 @@ async function readScannedPdfText(
         pageNumber
       );
 
+    const baseViewport =
+      page.getViewport({
+        scale: 1,
+      });
+
+    const largestBaseDimension =
+      Math.max(
+        baseViewport.width,
+        baseViewport.height
+      );
+
+    const renderScale =
+      Math.min(
+        2,
+        2200 /
+          Math.max(
+            largestBaseDimension,
+            1
+          )
+      );
+
     const viewport =
       page.getViewport({
-        scale: 2,
+        scale:
+          Math.max(
+            1,
+            renderScale
+          ),
       });
 
     const canvas =
@@ -9399,45 +9848,30 @@ async function readScannedPdfText(
       .promise;
 
     const ocr =
-      await window.Tesseract.recognize(
-        canvas,
-        "eng",
-        {
-          logger(message) {
-            if (
-              message.status ===
-                "recognizing text" &&
-              typeof message.progress ===
-                "number"
-            ) {
-              const percent =
-                Math.round(
-                  message.progress *
-                    100
-                );
-
-              onProgress(
-                `Reading scanned PDF page ${pageNumber} of ${pdf.numPages}: ${percent}%`
-              );
-            }
-          },
-        }
-      );
+      sharedWorker
+        ? await sharedWorker.recognize(
+            canvas
+          )
+        : await window.Tesseract.recognize(
+            canvas,
+            "eng+tur"
+          );
 
     const pageText =
       String(
         ocr?.data?.text || ""
       ).trim();
 
+    const confidence =
+      typeof ocr?.data?.confidence ===
+        "number"
+        ? ocr.data.confidence
+        : null;
+
     pageResults.push({
       pageNumber,
       text: pageText,
-      confidence:
-        typeof ocr?.data
-          ?.confidence ===
-        "number"
-          ? ocr.data.confidence
-          : null,
+      confidence,
     });
 
     if (pageText) {
@@ -9447,6 +9881,10 @@ async function readScannedPdfText(
           : pageText
       );
     }
+
+    onProgress(
+      `Finished scanned PDF page ${pageNumber} of ${pdf.numPages}.`
+    );
   }
 
   const text =
@@ -9462,6 +9900,8 @@ async function readScannedPdfText(
     text,
     pages:
       pageResults,
+    pageCount:
+      pdf.numPages,
     source:
       "scanned-pdf-ocr",
   };
@@ -9735,7 +10175,7 @@ function showPhotoPreparationReview(
           class="primary-button"
           id="photo-looks-good-button"
         >
-          Looks Good
+          Use This Page
         </button>
 
         <button
@@ -10436,6 +10876,43 @@ function showExtractionResult(
 
         <div class="material-preview-panel">
           ${
+            typeof result.confidence === "number"
+              ? `
+                <p>
+                  OCR confidence: ${Math.round(result.confidence)}%.
+                  This is only a rough reading signal.
+                  Check the text yourself before using it.
+                </p>
+              `
+              : ""
+          }
+
+          ${
+            Array.isArray(result.pages) &&
+            result.pages.some(
+              (page) =>
+                typeof page.confidence ===
+                "number"
+            )
+              ? `
+                <p>
+                  Page OCR confidence:
+                  ${result.pages
+                    .map(
+                      (page) =>
+                        `Page ${page.pageNumber}: ${
+                          typeof page.confidence === "number"
+                            ? `${Math.round(page.confidence)}%`
+                            : "not available"
+                        }`
+                    )
+                    .join(" · ")}
+                </p>
+              `
+              : ""
+          }
+
+          ${
             result.pageCount
               ? `
                 <p>
@@ -10471,7 +10948,7 @@ function showExtractionResult(
             class="primary-button"
             id="confirm-extracted-text"
           >
-            Looks Right
+            Use This Text
           </button>
 
           ${
@@ -12605,7 +13082,7 @@ function showJourneyWorkspace(
     .addEventListener(
       "click",
       () => {
-        showWhereWasI(
+        showWorkspaceWhereWasI(
           journey,
           safeIndex
         );
@@ -13415,7 +13892,7 @@ function showRechargeCove(
     );
 }
 
-function showWhereWasI(
+function showWorkspaceWhereWasI(
   journey,
   stepIndex
 ) {
@@ -13659,6 +14136,7 @@ const compassCloud =
   );
 
 let compassCloudSession = null;
+let compassCloudProfile = null;
 let compassCloudSyncTimer = null;
 let compassCloudSyncBusy = false;
 let compassCloudSyncQueued = false;
@@ -13754,6 +14232,7 @@ function installAccountButton() {
   button.textContent =
     compassCloudSession
       ? (
+          compassCloudProfile?.nickname ||
           compassStudentState.learnerName ||
           "My Account"
         )
@@ -13781,6 +14260,7 @@ function refreshAccountButton() {
   button.textContent =
     compassCloudSession
       ? (
+          compassCloudProfile?.nickname ||
           compassStudentState.learnerName ||
           "My Account"
         )
@@ -13791,7 +14271,7 @@ function showCompassAccount(
   notice = ""
 ) {
   // This function is also used directly as a click handler.
-  // In that case the browser passes a PointerEvent; it is not a user-facing notice.
+  // In that case the browser passes an event object.
   if (typeof notice !== "string") {
     notice = "";
   }
@@ -13803,7 +14283,9 @@ function showCompassAccount(
     main.innerHTML = `
       <section class="hero">
         <p class="eyebrow">My Account</p>
-        <h2>Cloud connection is not ready.</h2>
+        <h2>
+          Cloud connection is not ready.
+        </h2>
         <p class="hero-text">
           Your on-device work is still here.
         </p>
@@ -13813,7 +14295,9 @@ function showCompassAccount(
   }
 
   if (compassCloudSession) {
-    showSignedInAccount(notice);
+    showSignedInAccount(
+      notice
+    );
     return;
   }
 
@@ -13827,12 +14311,13 @@ function showCompassAccount(
       </p>
 
       <h2 id="account-title">
-        Sign in to continue your saved work on another device.
+        Sign in to continue saved work on another device.
       </h2>
 
       <p class="hero-text">
-        Use a Learner Code and Secret Code.
-        No email, phone number or real name is required.
+        Learners use a Learner Code and Secret Code.
+        Teacher accounts use the teacher email and password
+        created by the project administrator.
       </p>
 
       ${
@@ -13842,7 +14327,9 @@ function showCompassAccount(
               class="undo-message"
               role="status"
             >
-              ${escapeHtml(notice)}
+              ${escapeHtml(
+                notice
+              )}
             </div>
           `
           : ""
@@ -13850,11 +14337,16 @@ function showCompassAccount(
 
       <div class="account-grid">
         <article class="home-card">
-          <h3>Sign In</h3>
+          <h3>Learner Sign In</h3>
 
-          <label for="account-login-code">
-            <strong>Learner Code</strong>
+          <label
+            for="account-login-code"
+          >
+            <strong>
+              Learner Code
+            </strong>
           </label>
+
           <input
             id="account-login-code"
             type="text"
@@ -13862,9 +14354,14 @@ function showCompassAccount(
             placeholder="CT-XXXX-XXXX"
           />
 
-          <label for="account-login-secret">
-            <strong>Secret Code</strong>
+          <label
+            for="account-login-secret"
+          >
+            <strong>
+              Secret Code
+            </strong>
           </label>
+
           <input
             id="account-login-secret"
             type="password"
@@ -13880,11 +14377,18 @@ function showCompassAccount(
         </article>
 
         <article class="home-card">
-          <h3>Create Learner Account</h3>
+          <h3>
+            Create Learner Account
+          </h3>
 
-          <label for="account-register-nickname">
-            <strong>Nickname</strong>
+          <label
+            for="account-register-nickname"
+          >
+            <strong>
+              Nickname
+            </strong>
           </label>
+
           <input
             id="account-register-nickname"
             type="text"
@@ -13893,9 +14397,14 @@ function showCompassAccount(
             placeholder="Choose any nickname"
           />
 
-          <label for="account-register-secret">
-            <strong>Create a Secret Code</strong>
+          <label
+            for="account-register-secret"
+          >
+            <strong>
+              Create a Secret Code
+            </strong>
           </label>
+
           <input
             id="account-register-secret"
             type="password"
@@ -13905,9 +14414,8 @@ function showCompassAccount(
           />
 
           <p>
-            Keep your Learner Code somewhere you can
-            find again. Recovery options will be
-            available if access is lost.
+            Keep your Learner Code somewhere
+            you can find again.
           </p>
 
           <button
@@ -13915,6 +14423,50 @@ function showCompassAccount(
             id="account-register-button"
           >
             Create Account
+          </button>
+        </article>
+
+        <article class="home-card">
+          <h3>Teacher Sign In</h3>
+
+          <p>
+            Teacher accounts cannot be created
+            from the public browser interface.
+          </p>
+
+          <label
+            for="teacher-login-email"
+          >
+            <strong>
+              Teacher email
+            </strong>
+          </label>
+
+          <input
+            id="teacher-login-email"
+            type="email"
+            autocomplete="username"
+          />
+
+          <label
+            for="teacher-login-password"
+          >
+            <strong>
+              Teacher password
+            </strong>
+          </label>
+
+          <input
+            id="teacher-login-password"
+            type="password"
+            autocomplete="current-password"
+          />
+
+          <button
+            type="button"
+            id="teacher-login-button"
+          >
+            Teacher Sign In
           </button>
         </article>
       </div>
@@ -13942,7 +14494,7 @@ function showCompassAccount(
     .getElementById(
       "account-login-button"
     )
-    .addEventListener(
+    ?.addEventListener(
       "click",
       handleCompassLogin
     );
@@ -13951,18 +14503,27 @@ function showCompassAccount(
     .getElementById(
       "account-register-button"
     )
-    .addEventListener(
+    ?.addEventListener(
       "click",
       handleCompassRegister
     );
 
   document
     .getElementById(
+      "teacher-login-button"
+    )
+    ?.addEventListener(
+      "click",
+      handleCompassTeacherLogin
+    );
+
+  document
+    .getElementById(
       "account-home-button"
     )
-    .addEventListener(
+    ?.addEventListener(
       "click",
-      () => window.location.reload()
+      backHome
     );
 }
 
@@ -14038,7 +14599,16 @@ async function handleCompassRegister() {
     compassStudentState.learnerName =
       result.nickname || nickname;
 
+    compassCloudProfile = {
+      nickname:
+        result.nickname || nickname,
+      role: "learner",
+      learner_code:
+        result.learnerCode || "",
+    };
+
     saveStudentState();
+    refreshTeacherEntryPoints();
 
     showSignedInAccount(
       `Account ready. Your Learner Code is ${result.learnerCode}.`
@@ -14133,14 +14703,197 @@ async function handleCompassLogin() {
   }
 }
 
+async function handleCompassTeacherLogin() {
+  const email =
+    document
+      .getElementById(
+        "teacher-login-email"
+      )
+      ?.value
+      .trim() || "";
+
+  const password =
+    document
+      .getElementById(
+        "teacher-login-password"
+      )
+      ?.value || "";
+
+  if (
+    !email ||
+    !password
+  ) {
+    cloudStatus(
+      "Enter the teacher email and password."
+    );
+    return;
+  }
+
+  cloudStatus(
+    "Signing in teacher account…"
+  );
+
+  try {
+    const {
+      data,
+      error,
+    } =
+      await compassCloud.auth
+        .signInWithPassword({
+          email,
+          password,
+        });
+
+    if (
+      error ||
+      !data.session
+    ) {
+      throw new Error(
+        "Teacher email or password did not match."
+      );
+    }
+
+    compassCloudSession =
+      data.session;
+
+    await loadCompassCloudState();
+
+    if (!compassIsTeacher()) {
+      await compassCloud.auth.signOut({
+        scope: "local",
+      });
+
+      compassCloudSession = null;
+      compassCloudProfile = null;
+      refreshTeacherEntryPoints();
+
+      throw new Error(
+        "This account does not have teacher access."
+      );
+    }
+
+    markCompassSensitiveReauth();
+    refreshAccountButton();
+    refreshTeacherEntryPoints();
+
+    showSignedInAccount(
+      "Teacher account signed in."
+    );
+  } catch (error) {
+    cloudStatus(
+      error.message ||
+        "Teacher account could not be opened."
+    );
+  }
+}
+
 function showSignedInAccount(
   notice = ""
 ) {
   const main =
     document.querySelector("main");
 
-  const user =
-    compassCloudSession?.user;
+  const role =
+    getCompassProfileRole();
+
+  if (role === "teacher") {
+    main.innerHTML = `
+      <section
+        class="material-page"
+        aria-labelledby="signed-account-title"
+      >
+        <p class="eyebrow">
+          My Account
+        </p>
+
+        <h2 id="signed-account-title">
+          ${
+            compassCloudProfile?.nickname
+              ? `Hi, ${escapeHtml(
+                  compassCloudProfile.nickname
+                )}.`
+              : "Teacher account"
+          }
+        </h2>
+
+        <p class="hero-text">
+          Teacher permissions come from the
+          authenticated profile and backend
+          Row Level Security.
+        </p>
+
+        ${
+          notice
+            ? `
+              <div
+                class="undo-message"
+                role="status"
+              >
+                ${escapeHtml(
+                  notice
+                )}
+              </div>
+            `
+            : ""
+        }
+
+        <div class="hero-actions">
+          <button
+            type="button"
+            class="primary-button"
+            id="account-open-teacher-dashboard"
+          >
+            Open Teacher Dashboard
+          </button>
+
+          <button
+            type="button"
+            class="secondary-button"
+            id="account-sign-out-button"
+          >
+            Sign Out
+          </button>
+
+          <button
+            type="button"
+            class="secondary-button"
+            id="signed-account-home-button"
+          >
+            Back Home
+          </button>
+        </div>
+      </section>
+    `;
+
+    document
+      .getElementById(
+        "account-open-teacher-dashboard"
+      )
+      ?.addEventListener(
+        "click",
+        showTeacherDashboard
+      );
+
+    document
+      .getElementById(
+        "account-sign-out-button"
+      )
+      ?.addEventListener(
+        "click",
+        handleCompassSignOut
+      );
+
+    document
+      .getElementById(
+        "signed-account-home-button"
+      )
+      ?.addEventListener(
+        "click",
+        backHome
+      );
+
+    return;
+  }
 
   main.innerHTML = `
     <section
@@ -14162,8 +14915,8 @@ function showSignedInAccount(
       </h2>
 
       <p class="hero-text">
-        This account can carry supported Compass Trail
-        progress between devices.
+        This learner account can carry supported
+        Compass Trail progress between devices.
       </p>
 
       ${
@@ -14173,7 +14926,9 @@ function showSignedInAccount(
               class="undo-message"
               role="status"
             >
-              ${escapeHtml(notice)}
+              ${escapeHtml(
+                notice
+              )}
             </div>
           `
           : ""
@@ -14182,15 +14937,30 @@ function showSignedInAccount(
       <div class="comfort-panel">
         <div class="comfort-control">
           <strong>Cloud status</strong>
-          <p>
-            Signed in.
-          </p>
+          <p>Signed in.</p>
         </div>
 
         <div class="comfort-control">
-          <label for="account-new-secret">
+          <label
+            for="account-current-secret"
+          >
+            Current Secret Code
+          </label>
+
+          <input
+            id="account-current-secret"
+            type="password"
+            minlength="8"
+            maxlength="72"
+            autocomplete="current-password"
+          />
+
+          <label
+            for="account-new-secret"
+          >
             New Secret Code
           </label>
+
           <input
             id="account-new-secret"
             type="password"
@@ -14198,6 +14968,7 @@ function showSignedInAccount(
             maxlength="72"
             autocomplete="new-password"
           />
+
           <button
             type="button"
             class="secondary-button"
@@ -14208,11 +14979,14 @@ function showSignedInAccount(
         </div>
 
         <div class="comfort-control">
-          <strong>Recovery</strong>
+          <strong>
+            Account recovery
+          </strong>
           <p>
-            Losing a code does not mean losing the
-            learner’s progress. Teacher-assisted
-            recovery is being connected separately.
+            A verified teacher can reset access
+            only for a learner in a class that
+            teacher owns. The previous Secret Code
+            is never shown.
           </p>
         </div>
       </div>
@@ -14231,6 +15005,14 @@ function showSignedInAccount(
           id="account-sync-now-button"
         >
           Save My Trail Now
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="account-open-safety-button"
+        >
+          Account Safety
         </button>
 
         <button
@@ -14256,7 +15038,7 @@ function showSignedInAccount(
     .getElementById(
       "account-change-secret-button"
     )
-    .addEventListener(
+    ?.addEventListener(
       "click",
       handleChangeSecret
     );
@@ -14265,28 +15047,38 @@ function showSignedInAccount(
     .getElementById(
       "account-sync-now-button"
     )
-    .addEventListener(
+    ?.addEventListener(
       "click",
       async () => {
         cloudStatus(
           "Saving your trail…"
         );
+
         const ok =
           await syncCompassCloudState();
 
         cloudStatus(
           ok
             ? "Your trail is saved."
-            : "Your trail is still safe on this device. Cloud save can be tried again."
+            : "Cloud save did not finish. Your current browser copy is still available."
         );
       }
     );
 
   document
     .getElementById(
+      "account-open-safety-button"
+    )
+    ?.addEventListener(
+      "click",
+      showAccountSafety
+    );
+
+  document
+    .getElementById(
       "account-sign-out-button"
     )
-    .addEventListener(
+    ?.addEventListener(
       "click",
       handleCompassSignOut
     );
@@ -14295,20 +15087,38 @@ function showSignedInAccount(
     .getElementById(
       "signed-account-home-button"
     )
-    .addEventListener(
+    ?.addEventListener(
       "click",
-      () => window.location.reload()
+      backHome
     );
 }
 
 async function handleChangeSecret() {
-  const input =
+  const currentInput =
+    document.getElementById(
+      "account-current-secret"
+    );
+
+  const newInput =
     document.getElementById(
       "account-new-secret"
     );
 
+  const currentSecretCode =
+    currentInput?.value || "";
+
   const newSecretCode =
-    input.value;
+    newInput?.value || "";
+
+  if (
+    currentSecretCode.length < 8 ||
+    currentSecretCode.length > 72
+  ) {
+    cloudStatus(
+      "Enter your current Secret Code."
+    );
+    return;
+  }
 
   if (
     newSecretCode.length < 8 ||
@@ -14321,51 +15131,210 @@ async function handleChangeSecret() {
   }
 
   cloudStatus(
-    "Checking your session…"
+    "Checking your current Secret Code…"
   );
 
   try {
     const {
       data: { session },
       error: sessionError,
-    } = await compassCloud.auth.getSession();
+    } =
+      await compassCloud.auth
+        .getSession();
 
-    if (sessionError) {
-      throw sessionError;
-    }
-
-    if (!session?.access_token) {
+    if (
+      sessionError ||
+      !session?.access_token
+    ) {
       cloudStatus(
         "Please sign in again."
       );
       return;
     }
 
-    compassCloudSession = session;
-
-    cloudStatus(
-      "Changing Secret Code…"
-    );
+    compassCloudSession =
+      session;
 
     await callCompassFunction(
       "account-recovery",
       {
-        action: "change_secret",
+        action:
+          "change_secret",
+        currentSecretCode,
         newSecretCode,
       },
       session.access_token
     );
 
-    input.value = "";
+    currentInput.value = "";
+    newInput.value = "";
+
+    markCompassSensitiveReauth();
 
     cloudStatus(
-      "Secret Code changed. Sign out and use the new code to test it."
+      "Secret Code changed."
     );
   } catch (error) {
     cloudStatus(
       error.message ||
-        "Secret Code could not be changed right now."
+        "Secret Code could not be changed."
     );
+  }
+}
+
+function clearCompassLearnerLocalData() {
+  localStorage.removeItem(
+    compassStateKey
+  );
+
+  localStorage.removeItem(
+    COMPASS_FOCUS_STATE_KEY
+  );
+
+  localStorage.removeItem(
+    COMPASS_LOOK_KEY
+  );
+
+  localStorage.removeItem(
+    COMPASS_TOOLKIT_FAVORITES_KEY
+  );
+
+  compassStudentState.learnerName =
+    "";
+
+  compassStudentState.activeJourney =
+    null;
+
+  compassStudentState.journeys = [];
+  compassStudentState.cloudJourneyId =
+    null;
+
+  littleThings.splice(
+    0,
+    littleThings.length
+  );
+
+  ideaGardenNotes.splice(
+    0,
+    ideaGardenNotes.length
+  );
+
+  myDaysItems.splice(
+    0,
+    myDaysItems.length
+  );
+}
+
+async function handleCompassDeleteAccount() {
+  const status =
+    document.getElementById(
+      "account-delete-status"
+    );
+
+  const currentSecretCode =
+    document
+      .getElementById(
+        "account-delete-current-secret"
+      )
+      ?.value || "";
+
+  const confirmation =
+    document
+      .getElementById(
+        "account-delete-confirmation"
+      )
+      ?.value
+      .trim() || "";
+
+  if (
+    currentSecretCode.length < 8 ||
+    currentSecretCode.length > 72
+  ) {
+    if (status) {
+      status.textContent =
+        "Enter your current Secret Code.";
+    }
+    return;
+  }
+
+  if (confirmation !== "DELETE") {
+    if (status) {
+      status.textContent =
+        "Type DELETE exactly to confirm account deletion.";
+    }
+    return;
+  }
+
+  if (
+    getCompassProfileRole() !==
+      "learner"
+  ) {
+    if (status) {
+      status.textContent =
+        "Learner account deletion is not available for this account.";
+    }
+    return;
+  }
+
+  const {
+    data: { session },
+    error: sessionError,
+  } =
+    await compassCloud.auth.getSession();
+
+  if (
+    sessionError ||
+    !session?.access_token
+  ) {
+    if (status) {
+      status.textContent =
+        "Please sign in again before deleting the account.";
+    }
+    return;
+  }
+
+  if (status) {
+    status.textContent =
+      "Checking your current Secret Code and deleting the learner account…";
+  }
+
+  try {
+    await callCompassFunction(
+      "account-recovery",
+      {
+        action:
+          "delete_account",
+        currentSecretCode,
+        confirmation,
+      },
+      session.access_token
+    );
+
+    try {
+      await compassCloud.auth.signOut({
+        scope: "local",
+      });
+    } catch {
+      // The server-side account deletion may invalidate
+      // the session before local sign-out finishes.
+    }
+
+    compassCloudSession = null;
+    compassCloudProfile = null;
+
+    clearCompassLearnerLocalData();
+    refreshAccountButton();
+    refreshTeacherEntryPoints();
+
+    showCompassAccount(
+      "Learner account deleted. Learner progress stored in this browser was also cleared."
+    );
+  } catch (error) {
+    if (status) {
+      status.textContent =
+        error.message ||
+        "The learner account could not be deleted.";
+    }
   }
 }
 
@@ -14377,10 +15346,12 @@ async function handleCompassSignOut() {
   });
 
   compassCloudSession = null;
+  compassCloudProfile = null;
   refreshAccountButton();
+  refreshTeacherEntryPoints();
 
   showCompassAccount(
-    "Signed out. Your cloud progress stays with your account."
+    "Signed out. Cloud progress stays with the account."
   );
 }
 
@@ -14405,7 +15376,9 @@ function scheduleCompassCloudSync(
 async function syncCompassCloudState() {
   if (
     !compassCloud ||
-    !compassCloudSession?.user?.id
+    !compassCloudSession?.user?.id ||
+    getCompassProfileRole() !==
+      "learner"
   ) {
     return false;
   }
@@ -14754,6 +15727,7 @@ async function syncCompassCloudState() {
 
 async function loadCompassCloudState() {
   if (
+    !compassCloud ||
     !compassCloudSession?.user?.id
   ) {
     return;
@@ -14763,25 +15737,71 @@ async function loadCompassCloudState() {
     compassCloudSession.user.id;
 
   try {
+    const profileResult =
+      await compassCloud
+        .from("profiles")
+        .select(
+          "nickname,role,learner_code"
+        )
+        .eq(
+          "id",
+          ownerId
+        )
+        .single();
+
+    if (
+      profileResult.error ||
+      !profileResult.data
+    ) {
+      throw (
+        profileResult.error ||
+        new Error(
+          "Account profile could not be loaded."
+        )
+      );
+    }
+
+    compassCloudProfile = {
+      nickname:
+        profileResult.data.nickname ||
+        "",
+      role:
+        profileResult.data.role ||
+        "",
+      learner_code:
+        profileResult.data.learner_code ||
+        "",
+    };
+
+    // Teacher sessions use teacher tools only.
+    // Do not import, rewrite or upload learner-local state into a teacher account.
+    if (
+      compassCloudProfile.role !==
+        "learner"
+    ) {
+      refreshAccountButton();
+      refreshTeacherEntryPoints();
+      return;
+    }
+
+    compassStudentState.learnerName =
+      compassCloudProfile.nickname;
+
     const [
-      profileResult,
       journeyResult,
       littleResult,
       ideaResult,
       daysResult,
     ] = await Promise.all([
       compassCloud
-        .from("profiles")
-        .select("nickname")
-        .eq("id", ownerId)
-        .single(),
-
-      compassCloud
         .from("journeys")
         .select(
           "id,title,goal,task_type,current_step_index,status,updated_at"
         )
-        .eq("owner_id", ownerId)
+        .eq(
+          "owner_id",
+          ownerId
+        )
         .order(
           "updated_at",
           { ascending: false }
@@ -14792,7 +15812,10 @@ async function loadCompassCloudState() {
         .select(
           "id,text,is_completed,created_at"
         )
-        .eq("owner_id", ownerId)
+        .eq(
+          "owner_id",
+          ownerId
+        )
         .order(
           "created_at",
           { ascending: true }
@@ -14803,7 +15826,10 @@ async function loadCompassCloudState() {
         .select(
           "id,body,created_at"
         )
-        .eq("owner_id", ownerId)
+        .eq(
+          "owner_id",
+          ownerId
+        )
         .order(
           "created_at",
           { ascending: false }
@@ -14814,153 +15840,165 @@ async function loadCompassCloudState() {
         .select(
           "id,title,due_at,reminder_rule,is_completed,created_at"
         )
-        .eq("owner_id", ownerId)
+        .eq(
+          "owner_id",
+          ownerId
+        )
         .order(
           "created_at",
           { ascending: true }
         ),
     ]);
 
-    if (
-      !profileResult.error &&
-      profileResult.data
-    ) {
-      compassStudentState.learnerName =
-        profileResult.data.nickname || "";
+    if (journeyResult.error) {
+      throw journeyResult.error;
     }
 
-    if (
-      !journeyResult.error &&
-      Array.isArray(
-        journeyResult.data
-      )
+    const restoredJourneys = [];
+
+    for (
+      const cloudJourney of
+        journeyResult.data || []
     ) {
-      const restoredJourneys = [];
+      const {
+        data: steps,
+        error,
+      } =
+        await compassCloud
+          .from("journey_steps")
+          .select(
+            "position,title,description,is_completed,completed_at"
+          )
+          .eq(
+            "journey_id",
+            cloudJourney.id
+          )
+          .order(
+            "position",
+            { ascending: true }
+          );
 
-      for (
-        const cloudJourney of
-        journeyResult.data
-      ) {
-        const {
-          data: steps,
-          error,
-        } =
-          await compassCloud
-            .from("journey_steps")
-            .select(
-              "position,title,description,is_completed,completed_at"
-            )
-            .eq(
-              "journey_id",
-              cloudJourney.id
-            )
-            .order(
-              "position",
-              { ascending: true }
-            );
-
-        if (error) continue;
-
-        restoredJourneys.push({
-          localId:
-            `cloud-${cloudJourney.id}`,
-          cloudJourneyId:
-            cloudJourney.id,
-          title:
-            cloudJourney.title,
-          goal:
-            cloudJourney.goal,
-          taskType:
-            cloudJourney.task_type,
-          currentStepIndex:
-            cloudJourney.current_step_index,
-          status:
-            cloudJourney.status,
-          steps:
-            (steps || []).map(
-              (step) => ({
-                title: step.title,
-                description:
-                  step.description,
-                completed:
-                  step.is_completed,
-                completedAt:
-                  step.completed_at,
-              })
-            ),
-        });
+      if (error) {
+        throw error;
       }
 
-      if (
-        restoredJourneys.length
-      ) {
-        compassStudentState.journeys =
-          restoredJourneys;
+      restoredJourneys.push({
+        localId:
+          `cloud-${cloudJourney.id}`,
+        cloudJourneyId:
+          cloudJourney.id,
+        title:
+          cloudJourney.title,
+        goal:
+          cloudJourney.goal,
+        taskType:
+          cloudJourney.task_type,
+        currentStepIndex:
+          cloudJourney.current_step_index,
+        status:
+          cloudJourney.status,
+        steps:
+          (steps || []).map(
+            (step) => ({
+              title:
+                step.title,
+              description:
+                step.description,
+              completed:
+                step.is_completed,
+              completedAt:
+                step.completed_at,
+            })
+          ),
+      });
+    }
 
-        compassStudentState.activeJourney =
-          JSON.parse(
+    // A signed-in learner's cloud state replaces learner data from
+    // a previous account on the same browser, including an empty account.
+    compassStudentState.journeys =
+      restoredJourneys;
+
+    compassStudentState.activeJourney =
+      restoredJourneys.length
+        ? JSON.parse(
             JSON.stringify(
               restoredJourneys[0]
             )
-          );
+          )
+        : null;
 
-        compassStudentState.cloudJourneyId =
-          restoredJourneys[0]
-            .cloudJourneyId;
-      }
+    compassStudentState.cloudJourneyId =
+      restoredJourneys[0]
+        ?.cloudJourneyId || null;
+
+    if (littleResult.error) {
+      throw littleResult.error;
     }
 
-    if (!littleResult.error) {
-      littleThings.splice(
-        0,
-        littleThings.length,
-        ...(littleResult.data || []).map(
-          (item) => ({
-            id: item.id,
-            text: item.text,
-            done: item.is_completed,
-          })
-        )
-      );
+    littleThings.splice(
+      0,
+      littleThings.length,
+      ...(littleResult.data || []).map(
+        (item) => ({
+          id:
+            item.id,
+          text:
+            item.text,
+          done:
+            item.is_completed,
+        })
+      )
+    );
+
+    if (ideaResult.error) {
+      throw ideaResult.error;
     }
 
-    if (!ideaResult.error) {
-      ideaGardenNotes.splice(
-        0,
-        ideaGardenNotes.length,
-        ...(ideaResult.data || []).map(
-          (item) => ({
-            id: item.id,
-            text: item.body,
-          })
-        )
-      );
+    ideaGardenNotes.splice(
+      0,
+      ideaGardenNotes.length,
+      ...(ideaResult.data || []).map(
+        (item) => ({
+          id:
+            item.id,
+          text:
+            item.body,
+        })
+      )
+    );
+
+    if (daysResult.error) {
+      throw daysResult.error;
     }
 
-    if (!daysResult.error) {
-      myDaysItems.splice(
-        0,
-        myDaysItems.length,
-        ...(daysResult.data || []).map(
-          (item) => ({
-            id: item.id,
-            text: item.title,
-            date:
-              item.due_at
-                ? item.due_at.slice(0, 10)
-                : "No date yet",
-            reminder:
-              item.reminder_rule ||
-              "none",
-            done:
-              item.is_completed,
-          })
-        )
-      );
-    }
+    myDaysItems.splice(
+      0,
+      myDaysItems.length,
+      ...(daysResult.data || []).map(
+        (item) => ({
+          id:
+            item.id,
+          text:
+            item.title,
+          date:
+            item.due_at
+              ? item.due_at.slice(
+                  0,
+                  10
+                )
+              : "No date yet",
+          reminder:
+            item.reminder_rule ||
+            "none",
+          done:
+            item.is_completed,
+        })
+      )
+    );
 
     saveStudentState();
     refreshAccountButton();
+    refreshTeacherEntryPoints();
   } catch (error) {
     console.warn(
       "Compass Trail cloud restore could not finish.",
@@ -14974,6 +16012,7 @@ async function bootCompassCloudV1() {
     console.warn(
       "Supabase browser client was not loaded."
     );
+
     installAccountButton();
     return;
   }
@@ -14988,16 +16027,25 @@ async function bootCompassCloudV1() {
 
   if (compassCloudSession) {
     await loadCompassCloudState();
+  } else {
+    compassCloudProfile = null;
   }
 
   installAccountButton();
   refreshAccountButton();
+  refreshTeacherEntryPoints();
 
   compassCloud.auth.onAuthStateChange(
     (_event, sessionNow) => {
       compassCloudSession =
         sessionNow || null;
+
+      if (!sessionNow) {
+        compassCloudProfile = null;
+      }
+
       refreshAccountButton();
+      refreshTeacherEntryPoints();
     }
   );
 
@@ -15005,25 +16053,31 @@ async function bootCompassCloudV1() {
   // Cloud sync is debounced rather than firing on every click instantly.
   document.addEventListener(
     "click",
-    () => scheduleCompassCloudSync()
+    () =>
+      scheduleCompassCloudSync()
   );
 
   document.addEventListener(
     "change",
-    () => scheduleCompassCloudSync()
+    () =>
+      scheduleCompassCloudSync()
   );
 
-  // A normal debounced save remains the main path.
-  // beforeunload is not treated as a guaranteed network-save event.
   window.addEventListener(
     "online",
-    () => scheduleCompassCloudSync(100)
+    () =>
+      scheduleCompassCloudSync(
+        100
+      )
   );
 
   document.addEventListener(
     "visibilitychange",
     () => {
-      if (document.visibilityState === "hidden") {
+      if (
+        document.visibilityState ===
+          "hidden"
+      ) {
         syncCompassCloudState();
       }
     }
