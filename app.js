@@ -4807,6 +4807,123 @@ applyCompassTheme(getCompassTheme());
 window.addEventListener("DOMContentLoaded", ensureCompassThemeToggle);
 window.addEventListener("load", ensureCompassThemeToggle);
 
+
+const COMPASS_REAUTH_WINDOW_MS = 10 * 60 * 1000;
+let compassLastSensitiveReauthAt = 0;
+
+function markCompassSensitiveReauth() {
+  compassLastSensitiveReauthAt = Date.now();
+}
+
+function compassSensitiveReauthIsFresh() {
+  return (
+    compassLastSensitiveReauthAt > 0 &&
+    Date.now() - compassLastSensitiveReauthAt < COMPASS_REAUTH_WINDOW_MS
+  );
+}
+
+function showAccountSafety() {
+  const main = document.querySelector("main");
+  const signedIn = Boolean(compassCloudSession?.user?.id);
+
+  main.innerHTML = `
+    <section class="material-page" aria-labelledby="account-safety-title">
+      <div class="material-heading">
+        <p class="eyebrow">Account Safety</p>
+        <h2 id="account-safety-title">Account and data controls</h2>
+        <p class="hero-text">
+          These controls explain what happens before a sensitive account action.
+          Compass Trail does not silently delete learning data.
+        </p>
+      </div>
+
+      <div class="material-list">
+        <article class="material-card">
+          <div class="material-card-content">
+            <h3>Signed-in status</h3>
+            <p>${signedIn ? "You are signed in." : "You are signed out."}</p>
+          </div>
+        </article>
+
+        <article class="material-card">
+          <div class="material-card-content">
+            <h3>Change Secret Code</h3>
+            <p>
+              Changing your Secret Code does not remove your Journeys or learning data.
+              The existing account recovery function handles the change.
+            </p>
+            <button type="button" id="account-safety-open-account">
+              Open My Account
+            </button>
+          </div>
+        </article>
+
+        <article class="material-card">
+          <div class="material-card-content">
+            <h3>Delete account</h3>
+            <p>
+              Account deletion is not enabled yet.
+              It will require a fresh identity check, a clear confirmation,
+              and backend deletion rules before it can be used.
+            </p>
+            <button type="button" disabled aria-disabled="true">
+              Delete Account — Not Available Yet
+            </button>
+          </div>
+        </article>
+
+        <article class="material-card">
+          <div class="material-card-content">
+            <h3>Local data</h3>
+            <p>
+              Local browser data and cloud account data are separate.
+              A final deletion flow must state exactly which data will be removed.
+            </p>
+          </div>
+        </article>
+      </div>
+
+      <div class="hero-actions">
+        <button type="button" class="secondary-button" id="account-safety-home">
+          Back Home
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById("account-safety-open-account")
+    ?.addEventListener("click", showCompassAccount);
+
+  document
+    .getElementById("account-safety-home")
+    ?.addEventListener("click", backHome);
+}
+
+function addAccountSafetyHomeCard() {
+  if (document.getElementById("account-safety-home-card")) return;
+  const grid = document.querySelector(".home-grid");
+  if (!grid) return;
+
+  const card = document.createElement("article");
+  card.id = "account-safety-home-card";
+  card.className = "home-card";
+  card.innerHTML = `
+    <span class="card-icon" aria-hidden="true">🔐</span>
+    <h3>Account Safety</h3>
+    <p>See account, Secret Code and data-control information.</p>
+    <button type="button" id="open-account-safety-button">
+      Open Account Safety
+    </button>
+  `;
+  grid.appendChild(card);
+  document
+    .getElementById("open-account-safety-button")
+    ?.addEventListener("click", showAccountSafety);
+}
+
+window.addEventListener("load", addAccountSafetyHomeCard);
+
 function addV1DiagnosticsHomeCard() {
   if (document.getElementById("v1-diagnostics-home-card")) return;
 
@@ -4896,6 +5013,18 @@ function getV1DiagnosticRows() {
           : "CHECK",
       detail:
         "A selectable-text PDF regression is still required. It must not be routed to scanned-PDF OCR."
+    },
+    {
+      name: "Account deletion",
+      result: "NOT ENABLED",
+      detail:
+        "Frontend deletion remains disabled until reauthentication and backend deletion behavior are implemented and tested."
+    },
+    {
+      name: "Teacher end-to-end access",
+      result: "TEST PENDING",
+      detail:
+        "Teacher role, class permissions and teacher reset require a real end-to-end test before V1 can be closed."
     },
     {
       name: "Theme setting",
