@@ -13636,9 +13636,20 @@ async function bootCompassCloudV1() {
     () => scheduleCompassCloudSync()
   );
 
+  // A normal debounced save remains the main path.
+  // beforeunload is not treated as a guaranteed network-save event.
   window.addEventListener(
-    "beforeunload",
-    () => scheduleCompassCloudSync(0)
+    "online",
+    () => scheduleCompassCloudSync(100)
+  );
+
+  document.addEventListener(
+    "visibilitychange",
+    () => {
+      if (document.visibilityState === "hidden") {
+        syncCompassCloudState();
+      }
+    }
   );
 }
 
