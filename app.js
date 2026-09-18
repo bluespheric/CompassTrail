@@ -1411,10 +1411,9 @@ function showThisDeviceProfile() {
       </h2>
 
       <p class="hero-text">
-        For this V1, progress is saved
-        only in this browser on this device.
-        No email, phone number or real name
-        is required.
+        Progress can stay on this device.
+        When you sign in, supported V1 learning data can also sync to your Compass Trail account.
+        No real name is required.
       </p>
 
       <label for="learner-name-input">
@@ -4740,6 +4739,189 @@ window.addEventListener(
   "load",
   ensureCompassStatusRegion
 );
+
+
+function addV1DiagnosticsHomeCard() {
+  if (document.getElementById("v1-diagnostics-home-card")) return;
+
+  const grid = document.querySelector(".home-grid");
+  if (!grid) return;
+
+  const card = document.createElement("article");
+  card.id = "v1-diagnostics-home-card";
+  card.className = "home-card";
+  card.innerHTML = `
+    <span class="card-icon" aria-hidden="true">🧪</span>
+    <h3>V1 Check</h3>
+    <p>
+      Check several important V1 systems in one place.
+      This screen does not change your learning progress.
+    </p>
+    <button type="button" id="open-v1-diagnostics-button">
+      Open V1 Check
+    </button>
+  `;
+
+  grid.appendChild(card);
+
+  document
+    .getElementById("open-v1-diagnostics-button")
+    ?.addEventListener("click", showV1Diagnostics);
+}
+
+window.addEventListener("load", addV1DiagnosticsHomeCard);
+
+function getV1DiagnosticRows() {
+  const journeys = Array.isArray(compassStudentState.journeys)
+    ? compassStudentState.journeys
+    : [];
+
+  const signedIn = Boolean(compassCloudSession?.user?.id);
+
+  return [
+    {
+      name: "Local Journey list",
+      result: journeys.length > 0 ? "READY" : "NO DATA YET",
+      detail: journeys.length
+        ? `${journeys.length} Journey${journeys.length === 1 ? "" : "s"} saved on this device.`
+        : "Create or restore a Journey to test this."
+    },
+    {
+      name: "Multi-Journey state",
+      result: Array.isArray(compassStudentState.journeys) ? "READY" : "CHECK",
+      detail: "Journeys use a list instead of a single-only local state."
+    },
+    {
+      name: "Cloud account",
+      result: signedIn ? "SIGNED IN" : "SIGNED OUT",
+      detail: signedIn
+        ? "Cloud save and restore can be tested with this fake account."
+        : "Sign in to test cloud save and cross-browser restore."
+    },
+    {
+      name: "Cloud Journey IDs",
+      result:
+        journeys.length &&
+        journeys.every((journey) => journey.cloudJourneyId)
+          ? "SYNCED IDS"
+          : "NOT ALL SYNCED",
+      detail:
+        journeys.filter((journey) => journey.cloudJourneyId).length +
+        " of " +
+        journeys.length +
+        " local Journeys currently have a cloud Journey ID."
+    },
+    {
+      name: "Scanned PDF OCR",
+      result:
+        typeof readScannedPdfText === "function" &&
+        typeof runScannedPdfOcr === "function"
+          ? "CODE PRESENT"
+          : "CHECK",
+      detail:
+        "A real scanned PDF is still required to mark OCR behavior as tested."
+    },
+    {
+      name: "Selectable PDF extraction",
+      result:
+        typeof readPdfText === "function" ||
+        typeof extractPdfText === "function"
+          ? "CODE PRESENT"
+          : "CHECK",
+      detail:
+        "A selectable-text PDF regression is still required. It must not be routed to scanned-PDF OCR."
+    },
+    {
+      name: "Language setting",
+      result:
+        typeof getCompassLanguage === "function"
+          ? String(getCompassLanguage()).toUpperCase()
+          : "CHECK",
+      detail:
+        "The current interface language setting is shown here. Full translation coverage is still audited separately."
+    },
+    {
+      name: "Global status announcements",
+      result:
+        typeof announceCompassStatus === "function"
+          ? "READY"
+          : "CHECK",
+      detail:
+        "Shared polite ARIA status support for screen-reader announcements."
+    }
+  ];
+}
+
+function showV1Diagnostics() {
+  const main = document.querySelector("main");
+  const rows = getV1DiagnosticRows();
+
+  main.innerHTML = `
+    <section class="material-page" aria-labelledby="v1-check-title">
+      <div class="material-heading">
+        <p class="eyebrow">V1 Check</p>
+        <h2 id="v1-check-title">Important systems in one screen.</h2>
+        <p class="hero-text">
+          READY or CODE PRESENT means the required code was found.
+          It does not replace a real behavior test.
+        </p>
+      </div>
+
+      <div class="material-list">
+        ${rows.map((row) => `
+          <article class="material-card">
+            <div class="material-card-content">
+              <h3>${escapeHtml(row.name)}</h3>
+              <p><strong>${escapeHtml(row.result)}</strong></p>
+              <p>${escapeHtml(row.detail)}</p>
+            </div>
+          </article>
+        `).join("")}
+      </div>
+
+      <div class="hero-actions">
+        <button type="button" class="primary-button" id="run-cloud-sync-now">
+          Save to Cloud Now
+        </button>
+        <button type="button" class="secondary-button" id="refresh-v1-check">
+          Refresh Check
+        </button>
+        <button type="button" class="secondary-button" id="v1-check-home">
+          Back Home
+        </button>
+      </div>
+
+      <div id="v1-check-status" class="path-note" role="status">
+        No manual cloud save requested on this screen yet.
+      </div>
+    </section>
+  `;
+
+  document.getElementById("run-cloud-sync-now")?.addEventListener("click", async () => {
+    const status = document.getElementById("v1-check-status");
+
+    if (!compassCloudSession?.user?.id) {
+      status.textContent = "Sign in before testing cloud save.";
+      return;
+    }
+
+    status.textContent = "Saving to cloud…";
+
+    try {
+      await syncCompassCloudState();
+      status.textContent =
+        "Cloud save request finished. Refresh the check to inspect Journey cloud IDs.";
+      announceCompassStatus?.("Cloud save request finished.");
+    } catch (error) {
+      console.error(error);
+      status.textContent =
+        "Cloud save did not finish. No local Journey was removed.";
+    }
+  });
+
+  document.getElementById("refresh-v1-check")?.addEventListener("click", showV1Diagnostics);
+  document.getElementById("v1-check-home")?.addEventListener("click", backHome);
+}
 
 function backHome() {
   window.location.reload();
