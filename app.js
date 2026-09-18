@@ -4623,39 +4623,109 @@ function showStartingSparks() {
     <section class="hero" aria-labelledby="sparks-title">
       <p class="eyebrow">Starting Sparks</p>
       <h2 id="sparks-title">Choose one clear way to begin.</h2>
-      <p class="hero-text">Write the task. Compass Trail will give you several concrete first moves.</p>
-      <label for="sparks-task"><strong>What are you trying to start?</strong></label>
-      <textarea id="sparks-task" rows="4" maxlength="500" placeholder="For example: write the introduction to my history essay."></textarea>
+      <p class="hero-text">
+        Write the task. Compass Trail will give you several concrete first moves.
+        Choose the one that feels easiest to start.
+      </p>
+
+      <label for="sparks-task">
+        <strong>What are you trying to start?</strong>
+      </label>
+      <textarea
+        id="sparks-task"
+        rows="4"
+        maxlength="500"
+        placeholder="For example: write the introduction to my history presentation."
+      ></textarea>
+
       <div class="hero-actions">
-        <button type="button" class="primary-button" id="make-sparks-button">Show Starting Options</button>
+        <button type="button" class="primary-button" id="make-sparks-button">
+          Show Starting Options
+        </button>
         ${toolkitBackButton()}
       </div>
+
       <div id="sparks-result" aria-live="polite"></div>
     </section>
   `;
+
   wireToolkitBack();
+
   document.getElementById("make-sparks-button").addEventListener("click", () => {
     const task = document.getElementById("sparks-task").value.trim();
     const result = document.getElementById("sparks-result");
+
     if (!task) {
       result.innerHTML = `<p class="path-note">Write the task first. A few words are enough.</p>`;
       return;
     }
+
     const options = [
-      `Open what you need for “${task}”. Do not work on it yet.`,
-      `Write one sentence about what “${task}” needs when it is finished.`,
-      `Work on the smallest visible part for two minutes, then decide what to do next.`,
-      `Write one question you need answered before you continue.`,
+      {
+        title: "Set up only",
+        text: `Open what you need for “${task}”. Stop there if that is enough for now.`
+      },
+      {
+        title: "Define the finish point",
+        text: `Write one sentence that says what “${task}” needs when this part is finished.`
+      },
+      {
+        title: "Do two minutes",
+        text: `Work on the smallest visible part of “${task}” for two minutes. Then choose whether to continue.`
+      },
+      {
+        title: "Find one missing answer",
+        text: `Write one question you need answered before you can continue with “${task}”.`
+      }
     ];
+
     result.innerHTML = `
-      <div class="suggested-path">
-        ${options.map((item, i) => pathStep(i + 1, `Option ${i + 1}`, escapeHtml(item))).join("")}
+      <fieldset class="journey-planning-fieldset">
+        <legend><strong>Pick one starting move</strong></legend>
+        <p class="hero-text">Selecting one does not remove the others. You can change your choice.</p>
+
+        <div class="material-list">
+          ${options.map((option, index) => `
+            <article class="material-card">
+              <div>
+                <h3>${escapeHtml(option.title)}</h3>
+                <p>${escapeHtml(option.text)}</p>
+              </div>
+              <div class="material-card-actions">
+                <button
+                  type="button"
+                  class="small-action-button spark-choice-button"
+                  data-spark-index="${index}"
+                  aria-pressed="false"
+                >
+                  Choose This
+                </button>
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      </fieldset>
+
+      <div id="spark-choice-status" class="path-note" role="status">
+        No starting move selected yet.
       </div>
-      <p class="path-note">Choose one option. You do not need to use all of them.</p>
     `;
+
+    result.querySelectorAll(".spark-choice-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        const index = Number(button.dataset.sparkIndex);
+        result.querySelectorAll(".spark-choice-button").forEach((other) => {
+          other.setAttribute("aria-pressed", "false");
+          other.textContent = "Choose This";
+        });
+        button.setAttribute("aria-pressed", "true");
+        button.textContent = "Selected";
+        document.getElementById("spark-choice-status").innerHTML =
+          `<strong>Your starting move:</strong> ${escapeHtml(options[index].text)} <br>You only need to do this move now.`;
+      });
+    });
   });
 }
-
 function showStandaloneMakeSmaller() {
   const main = document.querySelector("main");
   main.innerHTML = `
@@ -4791,34 +4861,135 @@ function showMemoryTools() {
 }
 
 function showChunkingTool() {
-  const main=document.querySelector("main");
-  main.innerHTML=`
+  const main = document.querySelector("main");
+
+  main.innerHTML = `
     <section class="hero" aria-labelledby="chunking-title">
       <p class="eyebrow">Memory Tools · Chunking</p>
       <h2 id="chunking-title">Split a list into smaller groups.</h2>
-      <p class="hero-text">Put one item on each line, or separate items with commas.</p>
-      <label for="chunking-text"><strong>Items to remember</strong></label>
-      <textarea id="chunking-text" rows="8" maxlength="5000"></textarea>
-      <label for="chunk-size"><strong>Items in each group</strong></label>
-      <select id="chunk-size"><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
+      <p class="hero-text">
+        Add the items first. Then choose whether you want a specific number of groups
+        or a specific number of items in each group.
+      </p>
+
+      <label for="chunking-text">
+        <strong>Items to remember</strong>
+      </label>
+      <textarea
+        id="chunking-text"
+        rows="7"
+        maxlength="5000"
+        placeholder="apple, banana, orange, grape, lemon, peach"
+      ></textarea>
+
+      <fieldset class="journey-planning-fieldset">
+        <legend><strong>How should Compass Trail split them?</strong></legend>
+
+        <label>
+          <input type="radio" name="chunk-mode" value="groups" checked>
+          Number of groups
+        </label>
+        <select id="chunk-group-count" aria-label="Number of groups">
+          <option value="2">2 groups</option>
+          <option value="3" selected>3 groups</option>
+          <option value="4">4 groups</option>
+          <option value="5">5 groups</option>
+          <option value="6">6 groups</option>
+        </select>
+
+        <label>
+          <input type="radio" name="chunk-mode" value="size">
+          Items in each group
+        </label>
+        <select id="chunk-size" aria-label="Items in each group">
+          <option value="2">2 items</option>
+          <option value="3" selected>3 items</option>
+          <option value="4">4 items</option>
+          <option value="5">5 items</option>
+        </select>
+      </fieldset>
+
       <div class="hero-actions">
-        <button type="button" class="primary-button" id="make-chunks-button">Make Groups</button>
-        <button type="button" class="secondary-button" id="memory-back-button">Back to Memory Tools</button>
+        <button type="button" class="primary-button" id="make-chunks-button">
+          Make Groups
+        </button>
+        <button type="button" class="secondary-button" id="memory-back-button">
+          Back to Memory Tools
+        </button>
       </div>
+
       <div id="chunking-result" aria-live="polite"></div>
-    </section>`;
-  document.getElementById("memory-back-button").addEventListener("click",showMemoryTools);
-  document.getElementById("make-chunks-button").addEventListener("click",()=>{
-    const items=document.getElementById("chunking-text").value.split(/[\n,;]+/).map(v=>v.trim()).filter(Boolean);
-    const size=Number(document.getElementById("chunk-size").value)||3;
-    const result=document.getElementById("chunking-result");
-    if(items.length<2){result.innerHTML=`<p class="path-note">Add at least two items to make groups.</p>`;return;}
-    const chunks=[];
-    for(let i=0;i<items.length;i+=size) chunks.push(items.slice(i,i+size));
-    result.innerHTML=`<div class="suggested-path">${chunks.map((chunk,i)=>pathStep(i + 1, `Group ${i + 1}`, escapeHtml(chunk.join(" · ")))).join("")}</div>`;
+    </section>
+  `;
+
+  document.getElementById("memory-back-button").addEventListener("click", showMemoryTools);
+
+  document.getElementById("make-chunks-button").addEventListener("click", () => {
+    const items = document.getElementById("chunking-text").value
+      .split(/[\n,;]+/)
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    const result = document.getElementById("chunking-result");
+
+    if (items.length < 2) {
+      result.innerHTML = `<p class="path-note">Add at least two items to make groups.</p>`;
+      return;
+    }
+
+    const mode = document.querySelector('input[name="chunk-mode"]:checked')?.value || "groups";
+    let chunks = [];
+
+    if (mode === "groups") {
+      const requested = Math.max(2, Number(document.getElementById("chunk-group-count").value) || 3);
+      const groupCount = Math.min(requested, items.length);
+
+      // Distribute in order as evenly as possible across the requested number of groups.
+      let cursor = 0;
+      for (let groupIndex = 0; groupIndex < groupCount; groupIndex += 1) {
+        const remainingItems = items.length - cursor;
+        const remainingGroups = groupCount - groupIndex;
+        const take = Math.ceil(remainingItems / remainingGroups);
+        chunks.push(items.slice(cursor, cursor + take));
+        cursor += take;
+      }
+    } else {
+      const size = Math.max(2, Number(document.getElementById("chunk-size").value) || 3);
+      for (let i = 0; i < items.length; i += size) {
+        chunks.push(items.slice(i, i + size));
+      }
+    }
+
+    result.innerHTML = `
+      <div class="material-heading">
+        <h3>Your groups</h3>
+        <p class="hero-text">
+          There are ${chunks.length} groups. You can edit the text inside any group.
+        </p>
+      </div>
+
+      <div class="material-list">
+        ${chunks.map((group, index) => `
+          <article class="material-card">
+            <label for="chunk-group-${index}">
+              <strong>Group ${index + 1}</strong>
+            </label>
+            <textarea
+              id="chunk-group-${index}"
+              class="chunk-edit-field"
+              rows="3"
+              data-chunk-index="${index}"
+            >${escapeHtml(group.join("\n"))}</textarea>
+          </article>
+        `).join("")}
+      </div>
+
+      <p class="path-note">
+        These groups are a suggestion. Editing a group does not change your original list.
+      </p>
+    `;
   });
 }
-
 function showMnemonicTool() {
   const main=document.querySelector("main");
   main.innerHTML=`
