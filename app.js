@@ -4924,6 +4924,123 @@ function addAccountSafetyHomeCard() {
 
 window.addEventListener("load", addAccountSafetyHomeCard);
 
+
+const COMPASS_UPLOAD_LIMITS = {
+  image: 15 * 1024 * 1024,
+  pdf: 30 * 1024 * 1024,
+  document: 15 * 1024 * 1024
+};
+
+function getCompassMaterialKind(file) {
+  const name = String(file?.name || "").toLowerCase();
+  const type = String(file?.type || "").toLowerCase();
+
+  if (type.startsWith("image/") || /\.(png|jpe?g|webp|heic|heif)$/i.test(name)) {
+    return "image";
+  }
+  if (type === "application/pdf" || /\.pdf$/i.test(name)) {
+    return "pdf";
+  }
+  if (
+    type === "text/plain" ||
+    type.includes("wordprocessingml") ||
+    /\.(txt|docx)$/i.test(name)
+  ) {
+    return "document";
+  }
+  return "unsupported";
+}
+
+function validateCompassMaterialFile(file) {
+  if (!file) {
+    return { ok: false, message: "No file was selected." };
+  }
+
+  const kind = getCompassMaterialKind(file);
+  if (kind === "unsupported") {
+    return {
+      ok: false,
+      message: "This file type is not supported. Use an image, PDF, TXT or DOCX file."
+    };
+  }
+
+  const max = COMPASS_UPLOAD_LIMITS[kind];
+  if (Number(file.size || 0) > max) {
+    const mb = Math.round(max / 1024 / 1024);
+    return {
+      ok: false,
+      message: `This ${kind} file is too large. Use a file smaller than ${mb} MB.`
+    };
+  }
+
+  return { ok: true, kind };
+}
+
+function installCompassUploadValidation() {
+  document.addEventListener(
+    "change",
+    (event) => {
+      const input = event.target;
+      if (!(input instanceof HTMLInputElement) || input.type !== "file") return;
+
+      const files = Array.from(input.files || []);
+      if (!files.length) return;
+
+      const invalid = files
+        .map((file) => ({ file, result: validateCompassMaterialFile(file) }))
+        .filter((entry) => !entry.result.ok);
+
+      if (!invalid.length) return;
+
+      const message = invalid
+        .map((entry) => `${entry.file.name}: ${entry.result.message}`)
+        .join(" ");
+
+      input.value = "";
+      announceCompassStatus?.(message);
+
+      const existing = document.getElementById("compass-upload-validation-message");
+      existing?.remove();
+
+      const note = document.createElement("p");
+      note.id = "compass-upload-validation-message";
+      note.className = "path-note";
+      note.setAttribute("role", "status");
+      note.textContent = message;
+      input.insertAdjacentElement("afterend", note);
+    },
+    true
+  );
+}
+
+window.addEventListener("DOMContentLoaded", installCompassUploadValidation);
+
+function focusCompassScreenHeading() {
+  requestAnimationFrame(() => {
+    const main = document.querySelector("main");
+    const heading = main?.querySelector("h1, h2");
+    if (!heading) return;
+    if (!heading.hasAttribute("tabindex")) heading.setAttribute("tabindex", "-1");
+    heading.focus({ preventScroll: false });
+  });
+}
+
+function installCompassScreenFocusManagement() {
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest?.("button, a");
+    if (!button) return;
+    setTimeout(() => {
+      const main = document.querySelector("main");
+      if (!main) return;
+      const active = document.activeElement;
+      if (active && document.contains(active) && active !== document.body) return;
+      focusCompassScreenHeading();
+    }, 0);
+  });
+}
+
+window.addEventListener("DOMContentLoaded", installCompassScreenFocusManagement);
+
 function addV1DiagnosticsHomeCard() {
   if (document.getElementById("v1-diagnostics-home-card")) return;
 
@@ -5013,6 +5130,13 @@ function getV1DiagnosticRows() {
           : "CHECK",
       detail:
         "A selectable-text PDF regression is still required. It must not be routed to scanned-PDF OCR."
+    },
+    {
+      name: "Material upload validation",
+      result:
+        typeof validateCompassMaterialFile === "function" ? "READY" : "CHECK",
+      detail:
+        "Images, PDFs, TXT and DOCX files have explicit browser-side type and size checks. Server-side checks are still required for future cloud material storage."
     },
     {
       name: "Account deletion",
