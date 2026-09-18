@@ -3781,6 +3781,410 @@ window.addEventListener(
   addCompassToolkitHomeCard
 );
 
+// BIG V1 Completion Pack 2:
+// Goal Look + Photo Studio / Lookbook + learner-owned visual character.
+// These are optional creative supports. They do not affect progress or completion.
+const COMPASS_LOOK_KEY = "compassTrailGoalLookV1";
+
+function loadCompassLook() {
+  try {
+    return JSON.parse(
+      localStorage.getItem(
+        COMPASS_LOOK_KEY
+      ) || "{}"
+    );
+  } catch (_) {
+    return {};
+  }
+}
+
+function saveCompassLook(state) {
+  try {
+    localStorage.setItem(
+      COMPASS_LOOK_KEY,
+      JSON.stringify(state)
+    );
+  } catch (_) {}
+}
+
+function addCompassGoalLookHomeCard() {
+  if (
+    document.getElementById(
+      "compass-goal-look-home-card"
+    )
+  ) return;
+
+  const grid =
+    document.querySelector(
+      ".home-grid"
+    );
+
+  if (!grid) return;
+
+  const card =
+    document.createElement(
+      "article"
+    );
+
+  card.id =
+    "compass-goal-look-home-card";
+  card.className = "home-card";
+  card.innerHTML = `
+    <span class="card-icon" aria-hidden="true">✨</span>
+    <h3>Goal Look &amp; Lookbook</h3>
+    <p>
+      Make an optional visual for a goal,
+      character or future moment. This does
+      not change your learning progress.
+    </p>
+    <button type="button" id="open-goal-look-button">
+      Open Goal Look
+    </button>
+  `;
+
+  grid.appendChild(card);
+
+  document
+    .getElementById(
+      "open-goal-look-button"
+    )
+    ?.addEventListener(
+      "click",
+      showGoalLookStudio
+    );
+}
+
+window.addEventListener(
+  "load",
+  addCompassGoalLookHomeCard
+);
+
+function showGoalLookStudio(
+  notice = ""
+) {
+  if (typeof notice !== "string") {
+    notice = "";
+  }
+
+  const state =
+    loadCompassLook();
+
+  const main =
+    document.querySelector("main");
+
+  main.innerHTML = `
+    <section class="material-page" aria-labelledby="goal-look-title">
+      <div class="material-heading">
+        <p class="eyebrow">Goal Look &amp; Lookbook</p>
+        <h2 id="goal-look-title">
+          Make a visual reminder that belongs to you.
+        </h2>
+        <p class="hero-text">
+          This is optional. It is for expression and remembering a goal.
+          It does not score, grade or change your Journey.
+        </p>
+      </div>
+
+      ${
+        notice
+          ? `<div class="undo-message" role="status"><span>${escapeHtml(notice)}</span></div>`
+          : ""
+      }
+
+      <div class="home-grid">
+        ${toolkitActionCard(
+          "🎯",
+          "Goal Look",
+          "Save a goal and choose a simple visual symbol for it.",
+          "open-goal-look-editor"
+        )}
+        ${toolkitActionCard(
+          "🙂",
+          "My Character",
+          "Choose a simple character symbol and name. No photo is required.",
+          "open-character-editor"
+        )}
+        ${toolkitActionCard(
+          "📷",
+          "Photo Studio",
+          "Add an optional photo preview to your Lookbook. The photo stays on this device in this V1.",
+          "open-photo-studio"
+        )}
+        ${toolkitActionCard(
+          "📚",
+          "My Lookbook",
+          "See the goal, character and photo you chose.",
+          "open-lookbook"
+        )}
+      </div>
+
+      <div class="hero-actions">
+        <button type="button" class="secondary-button" id="goal-look-home">
+          Back Home
+        </button>
+      </div>
+    </section>
+  `;
+
+  document.getElementById("open-goal-look-editor")?.addEventListener("click", showGoalLookEditor);
+  document.getElementById("open-character-editor")?.addEventListener("click", showCharacterEditor);
+  document.getElementById("open-photo-studio")?.addEventListener("click", showPhotoStudio);
+  document.getElementById("open-lookbook")?.addEventListener("click", showLookbook);
+  document.getElementById("goal-look-home")?.addEventListener("click", backHome);
+}
+
+function showGoalLookEditor() {
+  const state = loadCompassLook();
+  const main = document.querySelector("main");
+
+  main.innerHTML = `
+    <section class="hero" aria-labelledby="goal-look-editor-title">
+      <p class="eyebrow">Goal Look</p>
+      <h2 id="goal-look-editor-title">Choose what you want this visual to remind you about.</h2>
+
+      <label for="goal-look-text"><strong>Goal or reminder</strong></label>
+      <textarea id="goal-look-text" rows="4" maxlength="400"
+        placeholder="For example: Finish my science presentation.">${escapeHtml(state.goal || "")}</textarea>
+
+      <fieldset class="journey-planning-fieldset">
+        <legend><strong>Choose a symbol</strong></legend>
+        <div class="hero-actions">
+          ${["🎯","🌱","⭐","🧭","📚","🏁"].map((symbol) => `
+            <button
+              type="button"
+              class="secondary-button goal-symbol-choice"
+              data-symbol="${symbol}"
+              aria-pressed="${state.goalSymbol === symbol ? "true" : "false"}"
+            >${symbol}</button>
+          `).join("")}
+        </div>
+      </fieldset>
+
+      <div class="hero-actions">
+        <button type="button" class="primary-button" id="save-goal-look">Save Goal Look</button>
+        <button type="button" class="secondary-button" id="goal-look-editor-back">Back</button>
+      </div>
+      <div id="goal-look-editor-status" class="path-note" role="status"></div>
+    </section>
+  `;
+
+  let selected =
+    state.goalSymbol || "🎯";
+
+  document.querySelectorAll(".goal-symbol-choice").forEach((button) => {
+    button.addEventListener("click", () => {
+      selected = button.dataset.symbol;
+      document.querySelectorAll(".goal-symbol-choice").forEach((other) => {
+        other.setAttribute("aria-pressed", String(other === button));
+      });
+    });
+  });
+
+  document.getElementById("save-goal-look").addEventListener("click", () => {
+    const goal = document.getElementById("goal-look-text").value.trim();
+    if (!goal) {
+      document.getElementById("goal-look-editor-status").textContent =
+        "Write a goal or reminder first.";
+      return;
+    }
+
+    saveCompassLook({
+      ...state,
+      goal,
+      goalSymbol: selected
+    });
+    showGoalLookStudio("Goal Look saved on this device.");
+  });
+
+  document.getElementById("goal-look-editor-back").addEventListener("click", showGoalLookStudio);
+}
+
+function showCharacterEditor() {
+  const state = loadCompassLook();
+  const main = document.querySelector("main");
+
+  main.innerHTML = `
+    <section class="hero" aria-labelledby="character-title">
+      <p class="eyebrow">My Character</p>
+      <h2 id="character-title">Choose a simple character for your space.</h2>
+      <p class="hero-text">
+        This is optional. It does not represent a diagnosis, score or learning level.
+      </p>
+
+      <label for="character-name"><strong>Character name</strong></label>
+      <input id="character-name" type="text" maxlength="40"
+        value="${escapeHtml(state.characterName || "")}"
+        placeholder="Choose any name" />
+
+      <fieldset class="journey-planning-fieldset">
+        <legend><strong>Character symbol</strong></legend>
+        <div class="hero-actions">
+          ${["🦊","🐢","🐙","🦉","🐳","🤖"].map((symbol) => `
+            <button
+              type="button"
+              class="secondary-button character-choice"
+              data-symbol="${symbol}"
+              aria-pressed="${state.characterSymbol === symbol ? "true" : "false"}"
+            >${symbol}</button>
+          `).join("")}
+        </div>
+      </fieldset>
+
+      <div class="hero-actions">
+        <button type="button" class="primary-button" id="save-character">Save Character</button>
+        <button type="button" class="secondary-button" id="character-back">Back</button>
+      </div>
+      <div id="character-status" class="path-note" role="status"></div>
+    </section>
+  `;
+
+  let selected =
+    state.characterSymbol || "🦊";
+
+  document.querySelectorAll(".character-choice").forEach((button) => {
+    button.addEventListener("click", () => {
+      selected = button.dataset.symbol;
+      document.querySelectorAll(".character-choice").forEach((other) => {
+        other.setAttribute("aria-pressed", String(other === button));
+      });
+    });
+  });
+
+  document.getElementById("save-character").addEventListener("click", () => {
+    const name = document.getElementById("character-name").value.trim();
+    saveCompassLook({
+      ...state,
+      characterName: name || "My Character",
+      characterSymbol: selected
+    });
+    showGoalLookStudio("Character saved on this device.");
+  });
+
+  document.getElementById("character-back").addEventListener("click", showGoalLookStudio);
+}
+
+function showPhotoStudio() {
+  const state = loadCompassLook();
+  const main = document.querySelector("main");
+
+  main.innerHTML = `
+    <section class="hero" aria-labelledby="photo-studio-title">
+      <p class="eyebrow">Photo Studio</p>
+      <h2 id="photo-studio-title">Add an optional photo to this Lookbook.</h2>
+      <p class="hero-text">
+        No photo is required. In this V1, the selected photo is previewed only for this browser session.
+      </p>
+
+      <input
+        type="file"
+        id="look-photo-input"
+        accept="image/jpeg,image/png,image/webp"
+      />
+
+      <div id="look-photo-preview" class="material-preview-panel">
+        <p>No photo selected.</p>
+      </div>
+
+      <div class="hero-actions">
+        <button type="button" class="primary-button" id="keep-look-photo" disabled>
+          Keep This Preview
+        </button>
+        <button type="button" class="secondary-button" id="remove-look-photo">
+          Remove Photo
+        </button>
+        <button type="button" class="secondary-button" id="photo-studio-back">
+          Back
+        </button>
+      </div>
+      <div id="photo-studio-status" class="path-note" role="status"></div>
+    </section>
+  `;
+
+  let previewUrl = null;
+  const input = document.getElementById("look-photo-input");
+  const preview = document.getElementById("look-photo-preview");
+  const keep = document.getElementById("keep-look-photo");
+
+  input.addEventListener("change", () => {
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl = URL.createObjectURL(file);
+
+    preview.innerHTML = `
+      <img
+        src="${previewUrl}"
+        alt="Your selected Lookbook preview"
+        class="material-preview-image"
+      />
+    `;
+    keep.disabled = false;
+  });
+
+  keep.addEventListener("click", () => {
+    if (!previewUrl) return;
+    window.compassLookPhotoPreview = previewUrl;
+    document.getElementById("photo-studio-status").textContent =
+      "Photo preview kept for this browser session.";
+  });
+
+  document.getElementById("remove-look-photo").addEventListener("click", () => {
+    window.compassLookPhotoPreview = null;
+    preview.innerHTML = "<p>No photo selected.</p>";
+    keep.disabled = true;
+    document.getElementById("photo-studio-status").textContent =
+      "Photo removed from this Lookbook preview.";
+  });
+
+  document.getElementById("photo-studio-back").addEventListener("click", showGoalLookStudio);
+}
+
+function showLookbook() {
+  const state = loadCompassLook();
+  const main = document.querySelector("main");
+  const photo = window.compassLookPhotoPreview || "";
+
+  main.innerHTML = `
+    <section class="material-page" aria-labelledby="lookbook-title">
+      <div class="material-heading">
+        <p class="eyebrow">My Lookbook</p>
+        <h2 id="lookbook-title">Your saved visual choices.</h2>
+      </div>
+
+      <div class="home-grid">
+        <article class="home-card">
+          <span class="card-icon" aria-hidden="true">${state.goalSymbol || "🎯"}</span>
+          <h3>Goal Look</h3>
+          <p>${escapeHtml(state.goal || "No goal saved yet.")}</p>
+        </article>
+
+        <article class="home-card">
+          <span class="card-icon" aria-hidden="true">${state.characterSymbol || "🙂"}</span>
+          <h3>${escapeHtml(state.characterName || "My Character")}</h3>
+          <p>Your optional character.</p>
+        </article>
+
+        <article class="home-card">
+          <span class="card-icon" aria-hidden="true">📷</span>
+          <h3>Photo</h3>
+          ${
+            photo
+              ? `<img src="${photo}" alt="Your Lookbook photo preview" class="material-preview-image" />`
+              : `<p>No photo preview kept in this browser session.</p>`
+          }
+        </article>
+      </div>
+
+      <div class="hero-actions">
+        <button type="button" class="secondary-button" id="lookbook-back">Back to Goal Look</button>
+      </div>
+    </section>
+  `;
+
+  document.getElementById("lookbook-back").addEventListener("click", showGoalLookStudio);
+}
+
 
 function backHome() {
   window.location.reload();
