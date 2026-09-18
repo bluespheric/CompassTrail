@@ -3688,6 +3688,100 @@ window.addEventListener(
 );
 
 
+// My Toolkit needs a direct, visible Home entry.
+// The Toolkit already exists; this adds the missing Home card.
+function addCompassToolkitHomeCard() {
+  if (
+    document.getElementById(
+      "compass-toolkit-home-card"
+    )
+  ) {
+    return;
+  }
+
+  const grid =
+    document.querySelector(
+      ".home-grid"
+    );
+
+  if (!grid) return;
+
+  const card =
+    document.createElement(
+      "article"
+    );
+
+  card.id =
+    "compass-toolkit-home-card";
+
+  card.className =
+    "home-card";
+
+  card.innerHTML = `
+    <span
+      class="card-icon"
+      aria-hidden="true"
+    >
+      🧰
+    </span>
+
+    <h3>
+      My Toolkit
+    </h3>
+
+    <p>
+      Open learning supports such as
+      Starting Sparks, Read With Me,
+      Make It Smaller and Memory Tools.
+    </p>
+
+    <button
+      type="button"
+      id="open-compass-toolkit-button"
+    >
+      Open My Toolkit
+    </button>
+  `;
+
+  const makeItMineButton =
+    findButtonByLabel(
+      "Personalise My Space"
+    );
+
+  const makeItMineCard =
+    makeItMineButton?.closest(
+      ".home-card"
+    );
+
+  if (
+    makeItMineCard &&
+    makeItMineCard.parentElement ===
+      grid
+  ) {
+    makeItMineCard.insertAdjacentElement(
+      "afterend",
+      card
+    );
+  } else {
+    grid.appendChild(card);
+  }
+
+  document
+    .getElementById(
+      "open-compass-toolkit-button"
+    )
+    ?.addEventListener(
+      "click",
+      showToolkitHub
+    );
+}
+
+window.addEventListener(
+  "load",
+  addCompassToolkitHomeCard
+);
+
+
 function backHome() {
   window.location.reload();
 }
