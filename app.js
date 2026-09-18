@@ -4451,131 +4451,309 @@ function renderMyDays() {
 }
 
 function showToolkitHub() {
-  const main =
-    document.querySelector("main");
+  const main = document.querySelector("main");
 
   main.innerHTML = `
-    <section
-      class="material-page"
-      aria-labelledby="toolkit-title"
-    >
+    <section class="material-page" aria-labelledby="toolkit-title">
       <div class="material-heading">
-        <p class="eyebrow">
-          My Toolkit
-        </p>
-
-        <h2 id="toolkit-title">
-          Pick the support that helps now.
-        </h2>
-
+        <p class="eyebrow">My Toolkit</p>
+        <h2 id="toolkit-title">Pick the support that helps now.</h2>
         <p class="hero-text">
-          Support is a tool, not a penalty.
-          You do not need a reason to use one.
+          Support is a tool, not a penalty. You do not need a reason to use one.
         </p>
       </div>
 
       <div class="home-grid">
-        ${toolkitCard(
-          "🧩",
-          "Make It Smaller",
-          "Turn something big into a few tiny moves."
-        )}
-
-        ${toolkitCard(
-          "🌱",
-          "Starting Sparks",
-          "Find a softer first move when starting feels sticky."
-        )}
-
-        ${toolkitCard(
-          "🅿️",
-          "Park It",
-          "Put an unrelated thought somewhere safe for later."
-        )}
-
-        ${toolkitCard(
-          "🌿",
-          "Recharge Cove",
-          "Take a pause without losing your place."
-        )}
-
-        ${toolkitCard(
-          "📖",
-          "Read With Me",
-          "A home for read-aloud and reading supports as we build them."
-        )}
-
-        ${toolkitCard(
-          "🧠",
-          "Memory Tools",
-          "Chunking, mind maps and memory supports are coming into this toolkit."
-        )}
+        ${toolkitActionCard("🧩","Make It Smaller","Turn one task into a few concrete moves.","toolkit-smaller")}
+        ${toolkitActionCard("🌱","Starting Sparks","Get several clear ways to begin.","toolkit-sparks")}
+        ${toolkitActionCard("🅿️","Park It","Put an unrelated thought somewhere safe for later.","toolkit-park")}
+        ${toolkitActionCard("🌿","Recharge Cove","Take a pause without losing your place.","toolkit-recharge")}
+        ${toolkitActionCard("📖","Read With Me","Read pasted learning text aloud and control the voice pace.","toolkit-read")}
+        ${toolkitActionCard("🧠","Memory Tools","Use chunking or build a mnemonic from what you need to remember.","toolkit-memory")}
       </div>
 
       <div class="hero-actions">
-        <button
-          type="button"
-          class="primary-button"
-          id="toolkit-recharge-button"
-        >
-          Open Recharge Cove
-        </button>
-
-        <button
-          type="button"
-          class="secondary-button"
-          id="toolkit-home-button"
-        >
-          Back Home
-        </button>
+        <button type="button" class="secondary-button" id="toolkit-home-button">Back Home</button>
       </div>
     </section>
   `;
 
-  document
-    .getElementById(
-      "toolkit-recharge-button"
-    )
-    .addEventListener(
-      "click",
-      showHomeRechargeCove
-    );
+  const actions = {
+    "toolkit-smaller": showStandaloneMakeSmaller,
+    "toolkit-sparks": showStartingSparks,
+    "toolkit-park": () => showStandaloneParkIt(),
+    "toolkit-recharge": showHomeRechargeCove,
+    "toolkit-read": showReadWithMe,
+    "toolkit-memory": showMemoryTools,
+  };
 
-  document
-    .getElementById(
-      "toolkit-home-button"
-    )
-    .addEventListener(
-      "click",
-      backHome
-    );
+  Object.entries(actions).forEach(([id, action]) => {
+    document.getElementById(id)?.addEventListener("click", action);
+  });
+
+  document.getElementById("toolkit-home-button")?.addEventListener("click", backHome);
 }
 
-function toolkitCard(
-  icon,
-  title,
-  description
-) {
+function toolkitActionCard(icon, title, description, id) {
   return `
     <article class="home-card">
-      <span
-        class="card-icon"
-        aria-hidden="true"
-      >
-        ${icon}
-      </span>
-
-      <h3>
-        ${title}
-      </h3>
-
-      <p>
-        ${description}
-      </p>
+      <span class="card-icon" aria-hidden="true">${icon}</span>
+      <h3>${escapeHtml(title)}</h3>
+      <p>${escapeHtml(description)}</p>
+      <button type="button" class="secondary-button" id="${id}">Open ${escapeHtml(title)}</button>
     </article>
   `;
 }
 
+function toolkitCard(icon, title, description) {
+  return `
+    <article class="home-card">
+      <span class="card-icon" aria-hidden="true">${icon}</span>
+      <h3>${title}</h3>
+      <p>${description}</p>
+    </article>
+  `;
+}
+
+function toolkitBackButton() {
+  return `<button type="button" class="secondary-button" id="toolkit-back-button">Back to My Toolkit</button>`;
+}
+
+function wireToolkitBack() {
+  document.getElementById("toolkit-back-button")?.addEventListener("click", showToolkitHub);
+}
+
+function showStartingSparks() {
+  const main = document.querySelector("main");
+  main.innerHTML = `
+    <section class="hero" aria-labelledby="sparks-title">
+      <p class="eyebrow">Starting Sparks</p>
+      <h2 id="sparks-title">Choose one clear way to begin.</h2>
+      <p class="hero-text">Write the task. Compass Trail will give you several concrete first moves.</p>
+      <label for="sparks-task"><strong>What are you trying to start?</strong></label>
+      <textarea id="sparks-task" rows="4" maxlength="500" placeholder="For example: write the introduction to my history essay."></textarea>
+      <div class="hero-actions">
+        <button type="button" class="primary-button" id="make-sparks-button">Show Starting Options</button>
+        ${toolkitBackButton()}
+      </div>
+      <div id="sparks-result" aria-live="polite"></div>
+    </section>
+  `;
+  wireToolkitBack();
+  document.getElementById("make-sparks-button").addEventListener("click", () => {
+    const task = document.getElementById("sparks-task").value.trim();
+    const result = document.getElementById("sparks-result");
+    if (!task) {
+      result.innerHTML = `<p class="path-note">Write the task first. A few words are enough.</p>`;
+      return;
+    }
+    const options = [
+      `Open what you need for “${task}”. Do not work on it yet.`,
+      `Write one sentence about what “${task}” needs when it is finished.`,
+      `Work on the smallest visible part for two minutes, then decide what to do next.`,
+      `Write one question you need answered before you continue.`,
+    ];
+    result.innerHTML = `
+      <div class="suggested-path">
+        ${options.map((item, i) => pathStep({title:`Option ${i+1}`,description:item}, i)).join("")}
+      </div>
+      <p class="path-note">Choose one option. You do not need to use all of them.</p>
+    `;
+  });
+}
+
+function showStandaloneMakeSmaller() {
+  const main = document.querySelector("main");
+  main.innerHTML = `
+    <section class="hero" aria-labelledby="standalone-smaller-title">
+      <p class="eyebrow">Make It Smaller</p>
+      <h2 id="standalone-smaller-title">Turn one task into smaller moves.</h2>
+      <label for="smaller-task"><strong>What needs to be done?</strong></label>
+      <textarea id="smaller-task" rows="4" maxlength="500"></textarea>
+      <div class="hero-actions">
+        <button type="button" class="primary-button" id="split-task-button">Make Smaller Moves</button>
+        ${toolkitBackButton()}
+      </div>
+      <div id="smaller-result" aria-live="polite"></div>
+    </section>`;
+  wireToolkitBack();
+  document.getElementById("split-task-button").addEventListener("click", () => {
+    const task=document.getElementById("smaller-task").value.trim();
+    const result=document.getElementById("smaller-result");
+    if(!task){result.innerHTML=`<p class="path-note">Write the task first.</p>`;return;}
+    const moves=[
+      "Get the material or tool you need.",
+      "Identify one part you can work on now.",
+      "Work only on that part.",
+      "Check what changed and choose the next small part."
+    ];
+    result.innerHTML=`<div class="suggested-path">${moves.map((d,i)=>pathStep({title:`Move ${i+1}`,description:d},i)).join("")}</div>`;
+  });
+}
+
+function showStandaloneParkIt() {
+  const main=document.querySelector("main");
+  main.innerHTML=`
+    <section class="hero" aria-labelledby="standalone-park-title">
+      <p class="eyebrow">Park It</p>
+      <h2 id="standalone-park-title">Save a thought so you do not need to hold it in mind.</h2>
+      <label for="park-thought"><strong>Thought to save</strong></label>
+      <textarea id="park-thought" rows="4" maxlength="500"></textarea>
+      <div class="hero-actions">
+        <button type="button" class="primary-button" id="save-park-thought">Save This Thought</button>
+        ${toolkitBackButton()}
+      </div>
+      <div id="park-result" aria-live="polite"></div>
+    </section>`;
+  wireToolkitBack();
+  document.getElementById("save-park-thought").addEventListener("click",()=>{
+    const value=document.getElementById("park-thought").value.trim();
+    const result=document.getElementById("park-result");
+    if(!value){result.innerHTML=`<p class="path-note">Write the thought first.</p>`;return;}
+    try {
+      const key="compassTrailStandaloneParkedThoughts";
+      const saved=JSON.parse(localStorage.getItem(key)||"[]");
+      saved.push({id:crypto.randomUUID(),text:value,createdAt:new Date().toISOString()});
+      localStorage.setItem(key,JSON.stringify(saved));
+    } catch (_) {}
+    document.getElementById("park-thought").value="";
+    result.innerHTML=`<p class="path-note">Saved. You can return to the task without keeping this thought in mind.</p>`;
+  });
+}
+
+let compassReadWithMeUtterance = null;
+
+function stopReadWithMe() {
+  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  compassReadWithMeUtterance = null;
+}
+
+function showReadWithMe() {
+  stopReadWithMe();
+  const materialText = getJourneySourceText().trim();
+  const main=document.querySelector("main");
+  main.innerHTML=`
+    <section class="hero" aria-labelledby="read-with-me-title">
+      <p class="eyebrow">Read With Me</p>
+      <h2 id="read-with-me-title">Listen to learning text at your pace.</h2>
+      <p class="hero-text">Paste text below, or use confirmed text from your Material Basket.</p>
+      <label for="read-with-me-text"><strong>Text to read</strong></label>
+      <textarea id="read-with-me-text" rows="10" maxlength="12000">${escapeHtml(materialText)}</textarea>
+      <label for="read-with-me-rate"><strong>Reading speed</strong></label>
+      <select id="read-with-me-rate">
+        <option value="0.7">0.7×</option>
+        <option value="0.85">0.85×</option>
+        <option value="1" selected>1×</option>
+        <option value="1.2">1.2×</option>
+        <option value="1.5">1.5×</option>
+      </select>
+      <div class="hero-actions">
+        <button type="button" class="primary-button" id="read-start-button">Read Aloud</button>
+        <button type="button" class="secondary-button" id="read-pause-button">Pause</button>
+        <button type="button" class="secondary-button" id="read-resume-button">Resume</button>
+        <button type="button" class="secondary-button" id="read-stop-button">Stop</button>
+        ${toolkitBackButton()}
+      </div>
+      <div id="read-status" class="path-note" role="status">Not reading.</div>
+    </section>`;
+  wireToolkitBack();
+  const status=document.getElementById("read-status");
+  document.getElementById("read-start-button").addEventListener("click",()=>{
+    const value=document.getElementById("read-with-me-text").value.trim();
+    if(!value){status.textContent="Add text before choosing Read Aloud.";return;}
+    if(!("speechSynthesis" in window)){status.textContent="Read aloud is not available in this browser.";return;}
+    stopReadWithMe();
+    const utterance=new SpeechSynthesisUtterance(value);
+    utterance.rate=Number(document.getElementById("read-with-me-rate").value)||1;
+    const lang=(document.documentElement.lang||navigator.language||"en").toLowerCase();
+    utterance.lang=lang.startsWith("tr")?"tr-TR":"en-US";
+    utterance.onend=()=>{status.textContent="Reading finished.";compassReadWithMeUtterance=null;};
+    utterance.onerror=()=>{status.textContent="Reading stopped. You can start it again.";compassReadWithMeUtterance=null;};
+    compassReadWithMeUtterance=utterance;
+    window.speechSynthesis.speak(utterance);
+    status.textContent="Reading aloud.";
+  });
+  document.getElementById("read-pause-button").addEventListener("click",()=>{if(window.speechSynthesis?.speaking){window.speechSynthesis.pause();status.textContent="Reading paused.";}});
+  document.getElementById("read-resume-button").addEventListener("click",()=>{if(window.speechSynthesis?.paused){window.speechSynthesis.resume();status.textContent="Reading aloud.";}});
+  document.getElementById("read-stop-button").addEventListener("click",()=>{stopReadWithMe();status.textContent="Reading stopped.";});
+}
+
+function showMemoryTools() {
+  const main=document.querySelector("main");
+  main.innerHTML=`
+    <section class="hero" aria-labelledby="memory-tools-title">
+      <p class="eyebrow">Memory Tools</p>
+      <h2 id="memory-tools-title">Choose how to organise what you need to remember.</h2>
+      <p class="hero-text">These tools organise your text. They do not decide what is important for you.</p>
+      <div class="hero-actions">
+        <button type="button" class="primary-button" id="open-chunking-button">Chunking</button>
+        <button type="button" class="secondary-button" id="open-mnemonic-button">Mnemonic Builder</button>
+        ${toolkitBackButton()}
+      </div>
+    </section>`;
+  wireToolkitBack();
+  document.getElementById("open-chunking-button").addEventListener("click",showChunkingTool);
+  document.getElementById("open-mnemonic-button").addEventListener("click",showMnemonicTool);
+}
+
+function showChunkingTool() {
+  const main=document.querySelector("main");
+  main.innerHTML=`
+    <section class="hero" aria-labelledby="chunking-title">
+      <p class="eyebrow">Memory Tools · Chunking</p>
+      <h2 id="chunking-title">Split a list into smaller groups.</h2>
+      <p class="hero-text">Put one item on each line, or separate items with commas.</p>
+      <label for="chunking-text"><strong>Items to remember</strong></label>
+      <textarea id="chunking-text" rows="8" maxlength="5000"></textarea>
+      <label for="chunk-size"><strong>Items in each group</strong></label>
+      <select id="chunk-size"><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
+      <div class="hero-actions">
+        <button type="button" class="primary-button" id="make-chunks-button">Make Groups</button>
+        <button type="button" class="secondary-button" id="memory-back-button">Back to Memory Tools</button>
+      </div>
+      <div id="chunking-result" aria-live="polite"></div>
+    </section>`;
+  document.getElementById("memory-back-button").addEventListener("click",showMemoryTools);
+  document.getElementById("make-chunks-button").addEventListener("click",()=>{
+    const items=document.getElementById("chunking-text").value.split(/[\n,;]+/).map(v=>v.trim()).filter(Boolean);
+    const size=Number(document.getElementById("chunk-size").value)||3;
+    const result=document.getElementById("chunking-result");
+    if(items.length<2){result.innerHTML=`<p class="path-note">Add at least two items to make groups.</p>`;return;}
+    const chunks=[];
+    for(let i=0;i<items.length;i+=size) chunks.push(items.slice(i,i+size));
+    result.innerHTML=`<div class="suggested-path">${chunks.map((chunk,i)=>pathStep({title:`Group ${i+1}`,description:chunk.join(" · ")},i)).join("")}</div>`;
+  });
+}
+
+function showMnemonicTool() {
+  const main=document.querySelector("main");
+  main.innerHTML=`
+    <section class="hero" aria-labelledby="mnemonic-title">
+      <p class="eyebrow">Memory Tools · Mnemonic Builder</p>
+      <h2 id="mnemonic-title">Build a first-letter memory cue.</h2>
+      <p class="hero-text">Enter the items in the order you need to remember them. Compass Trail will show the first-letter cue and a sentence frame you can edit yourself.</p>
+      <label for="mnemonic-text"><strong>Items to remember</strong></label>
+      <textarea id="mnemonic-text" rows="8" maxlength="5000" placeholder="Mercury, Venus, Earth, Mars"></textarea>
+      <div class="hero-actions">
+        <button type="button" class="primary-button" id="make-mnemonic-button">Build My Cue</button>
+        <button type="button" class="secondary-button" id="mnemonic-back-button">Back to Memory Tools</button>
+      </div>
+      <div id="mnemonic-result" aria-live="polite"></div>
+    </section>`;
+  document.getElementById("mnemonic-back-button").addEventListener("click",showMemoryTools);
+  document.getElementById("make-mnemonic-button").addEventListener("click",()=>{
+    const items=document.getElementById("mnemonic-text").value.split(/[\n,;]+/).map(v=>v.trim()).filter(Boolean);
+    const result=document.getElementById("mnemonic-result");
+    if(items.length<2){result.innerHTML=`<p class="path-note">Add at least two items first.</p>`;return;}
+    const initials=items.map(v=>Array.from(v.trim())[0]?.toUpperCase()||"").join("");
+    result.innerHTML=`
+      <div class="suggested-path">
+        ${pathStep({title:"First-letter cue",description:initials},0)}
+        ${pathStep({title:"Sentence frame",description:`Write a sentence with ${items.length} words. Start the words with: ${initials.split("").join(" · ")}.`},1)}
+      </div>
+      <p class="path-note">The sentence is yours to create. It can be ordinary, funny or very literal — use what is easiest to remember.</p>`;
+  });
+}
 function showHomeRechargeCove() {
   const main =
     document.querySelector("main");
