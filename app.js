@@ -4185,6 +4185,195 @@ function showLookbook() {
 }
 
 
+
+const COMPASS_LANGUAGE_KEY =
+  "compassTrailLanguageV1";
+
+function getCompassLanguage() {
+  return (
+    localStorage.getItem(
+      COMPASS_LANGUAGE_KEY
+    ) || "en"
+  );
+}
+
+function setCompassLanguage(
+  language
+) {
+  const safeLanguage =
+    language === "tr"
+      ? "tr"
+      : "en";
+
+  localStorage.setItem(
+    COMPASS_LANGUAGE_KEY,
+    safeLanguage
+  );
+
+  document.documentElement.lang =
+    safeLanguage;
+
+  window.location.reload();
+}
+
+function compassText(
+  english,
+  turkish
+) {
+  return getCompassLanguage() === "tr"
+    ? turkish
+    : english;
+}
+
+function applyCompassLanguageBasics() {
+  const language =
+    getCompassLanguage();
+
+  document.documentElement.lang =
+    language;
+
+  const replacements =
+    language === "tr"
+      ? [
+          ["Bring Material", "Materyal Getir"],
+          ["My Journey", "Yolculuğum"],
+          ["Little Things", "Küçük Şeyler"],
+          ["Idea Garden", "Fikir Bahçesi"],
+          ["My Days", "Günlerim"],
+          ["My Toolkit", "Araçlarım"],
+          ["Make It Mine", "Kendime Göre Ayarla"],
+          ["Back Home", "Ana Sayfaya Dön"],
+          ["Open My Toolkit", "Araçlarımı Aç"],
+          ["Open Check-in", "Check-in'i Aç"],
+          ["Goal Look & Lookbook", "Hedef Görünümü ve Albüm"],
+          ["Open Goal Look", "Hedef Görünümünü Aç"]
+        ]
+      : [];
+
+  if (!replacements.length) {
+    return;
+  }
+
+  const walker =
+    document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT
+    );
+
+  const nodes = [];
+
+  while (walker.nextNode()) {
+    nodes.push(
+      walker.currentNode
+    );
+  }
+
+  nodes.forEach((node) => {
+    if (
+      node.parentElement?.closest(
+        "script, style, textarea"
+      )
+    ) {
+      return;
+    }
+
+    let value =
+      node.nodeValue;
+
+    replacements.forEach(
+      ([english, turkish]) => {
+        value =
+          value.replaceAll(
+            english,
+            turkish
+          );
+      }
+    );
+
+    node.nodeValue = value;
+  });
+}
+
+function addCompassLanguageHomeCard() {
+  if (
+    document.getElementById(
+      "compass-language-home-card"
+    )
+  ) return;
+
+  const grid =
+    document.querySelector(
+      ".home-grid"
+    );
+
+  if (!grid) return;
+
+  const current =
+    getCompassLanguage();
+
+  const card =
+    document.createElement(
+      "article"
+    );
+
+  card.id =
+    "compass-language-home-card";
+  card.className =
+    "home-card";
+
+  card.innerHTML = `
+    <span class="card-icon" aria-hidden="true">🌐</span>
+    <h3>${compassText("Language","Dil")}</h3>
+    <p>
+      ${compassText(
+        "Choose the interface language. Turkish coverage is being completed across V1.",
+        "Arayüz dilini seç. Türkçe kapsamı V1 boyunca tamamlanıyor."
+      )}
+    </p>
+
+    <label for="compass-language-select">
+      <strong>${compassText("Interface language","Arayüz dili")}</strong>
+    </label>
+
+    <select id="compass-language-select">
+      <option value="en" ${current === "en" ? "selected" : ""}>English</option>
+      <option value="tr" ${current === "tr" ? "selected" : ""}>Türkçe</option>
+    </select>
+
+    <div class="hero-actions">
+      <button type="button" id="save-compass-language">
+        ${compassText("Use This Language","Bu Dili Kullan")}
+      </button>
+    </div>
+  `;
+
+  grid.appendChild(card);
+
+  document
+    .getElementById(
+      "save-compass-language"
+    )
+    ?.addEventListener(
+      "click",
+      () => {
+        setCompassLanguage(
+          document.getElementById(
+            "compass-language-select"
+          ).value
+        );
+      }
+    );
+}
+
+window.addEventListener(
+  "load",
+  () => {
+    applyCompassLanguageBasics();
+    addCompassLanguageHomeCard();
+    applyCompassLanguageBasics();
+  }
+);
+
 function backHome() {
   window.location.reload();
 }
