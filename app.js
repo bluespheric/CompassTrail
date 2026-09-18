@@ -5303,6 +5303,191 @@ function addV1ClosureHomeCard() {
 
 window.addEventListener("load", addV1ClosureHomeCard);
 
+
+function getCompassProfileRole() {
+  const candidates = [
+    compassCloudProfile?.role,
+    compassStudentState?.profile?.role,
+    compassStudentState?.role
+  ];
+  return candidates.find((value) => value === "teacher" || value === "learner") || "learner";
+}
+
+function compassIsTeacher() {
+  return Boolean(compassCloudSession?.user?.id) && getCompassProfileRole() === "teacher";
+}
+
+async function loadCompassTeacherClasses() {
+  if (!compassIsTeacher() || !window.supabaseClient) return [];
+
+  const { data, error } = await window.supabaseClient
+    .from("classes")
+    .select("id,name,created_at")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return Array.isArray(data) ? data : [];
+}
+
+async function loadCompassTeacherClassMembers(classId) {
+  if (!compassIsTeacher() || !window.supabaseClient || !classId) return [];
+
+  const { data, error } = await window.supabaseClient
+    .from("class_members")
+    .select("id,class_id,learner_id,created_at")
+    .eq("class_id", classId);
+
+  if (error) throw error;
+  return Array.isArray(data) ? data : [];
+}
+
+async function showTeacherDashboard() {
+  const main = document.querySelector("main");
+
+  if (!compassCloudSession?.user?.id) {
+    main.innerHTML = `
+      <section class="material-page" aria-labelledby="teacher-title">
+        <div class="material-heading">
+          <p class="eyebrow">Teacher</p>
+          <h2 id="teacher-title">Sign in before opening teacher tools.</h2>
+          <p class="hero-text">Teacher tools require an authenticated teacher account.</p>
+        </div>
+        <div class="hero-actions">
+          <button type="button" class="primary-button" id="teacher-open-account">Open My Account</button>
+          <button type="button" class="secondary-button" id="teacher-home">Back Home</button>
+        </div>
+      </section>`;
+    document.getElementById("teacher-open-account")?.addEventListener("click", showCompassAccount);
+    document.getElementById("teacher-home")?.addEventListener("click", backHome);
+    return;
+  }
+
+  if (!compassIsTeacher()) {
+    main.innerHTML = `
+      <section class="material-page" aria-labelledby="teacher-title">
+        <div class="material-heading">
+          <p class="eyebrow">Teacher</p>
+          <h2 id="teacher-title">This account does not have teacher access.</h2>
+          <p class="hero-text">
+            Teacher access is checked from the signed-in account role.
+            The browser does not grant teacher permissions.
+          </p>
+        </div>
+        <button type="button" class="secondary-button" id="teacher-home">Back Home</button>
+      </section>`;
+    document.getElementById("teacher-home")?.addEventListener("click", backHome);
+    return;
+  }
+
+  main.innerHTML = `
+    <section class="material-page" aria-labelledby="teacher-title">
+      <div class="material-heading">
+        <p class="eyebrow">Teacher</p>
+        <h2 id="teacher-title">Teacher Dashboard</h2>
+        <p class="hero-text">Loading classes allowed for this teacher account…</p>
+      </div>
+      <div id="teacher-dashboard-content" class="material-list" aria-live="polite"></div>
+      <button type="button" class="secondary-button" id="teacher-home">Back Home</button>
+    </section>`;
+
+  document.getElementById("teacher-home")?.addEventListener("click", backHome);
+  const content = document.getElementById("teacher-dashboard-content");
+
+  try {
+    const classes = await loadCompassTeacherClasses();
+    if (!classes.length) {
+      content.innerHTML = `
+        <article class="material-card"><div class="material-card-content">
+          <h3>No classes available</h3>
+          <p>No class is currently visible to this teacher account.</p>
+        </div></article>`;
+      return;
+    }
+
+    content.innerHTML = classes.map((item) => `
+      <article class="material-card">
+        <div class="material-card-content">
+          <h3>${escapeHtml(item.name || "Class")}</h3>
+          <p>Class data is limited by backend Row Level Security.</p>
+          <button type="button" data-teacher-class="${escapeHtml(item.id)}">Open Class</button>
+        </div>
+      </article>`).join("");
+
+    content.querySelectorAll("[data-teacher-class]").forEach((button) => {
+      button.addEventListener("click", () => showTeacherClass(button.dataset.teacherClass));
+    });
+  } catch (error) {
+    console.error(error);
+    content.innerHTML = `
+      <article class="material-card"><div class="material-card-content">
+        <h3>Teacher data could not be loaded.</h3>
+        <p>No permissions were changed. Check the account role and backend access rules.</p>
+      </div></article>`;
+  }
+}
+
+async function showTeacherClass(classId) {
+  const main = document.querySelector("main");
+  if (!compassIsTeacher()) return showTeacherDashboard();
+
+  main.innerHTML = `
+    <section class="material-page" aria-labelledby="teacher-class-title">
+      <div class="material-heading">
+        <p class="eyebrow">Teacher Class</p>
+        <h2 id="teacher-class-title">Class members</h2>
+        <p class="hero-text">Only members allowed by backend access rules are shown.</p>
+      </div>
+      <div id="teacher-class-members" class="material-list" aria-live="polite"></div>
+      <div class="hero-actions">
+        <button type="button" class="secondary-button" id="teacher-class-back">Back to Teacher Dashboard</button>
+        <button type="button" class="secondary-button" id="teacher-class-home">Back Home</button>
+      </div>
+    </section>`;
+
+  document.getElementById("teacher-class-back")?.addEventListener("click", showTeacherDashboard);
+  document.getElementById("teacher-class-home")?.addEventListener("click", backHome);
+  const content = document.getElementById("teacher-class-members");
+
+  try {
+    const members = await loadCompassTeacherClassMembers(classId);
+    content.innerHTML = members.length
+      ? members.map((member) => `
+          <article class="material-card"><div class="material-card-content">
+            <h3>Learner</h3>
+            <p>Learner ID: ${escapeHtml(member.learner_id || "")}</p>
+            <p>Secret Codes are never displayed here.</p>
+          </div></article>`).join("")
+      : `<article class="material-card"><div class="material-card-content">
+           <h3>No learners visible</h3>
+           <p>No learner membership is visible for this class.</p>
+         </div></article>`;
+  } catch (error) {
+    console.error(error);
+    content.innerHTML = `<article class="material-card"><div class="material-card-content">
+      <h3>Class members could not be loaded.</h3>
+      <p>No permissions were changed.</p>
+    </div></article>`;
+  }
+}
+
+function addTeacherHomeCard() {
+  if (document.getElementById("teacher-home-card")) return;
+  const grid=document.querySelector(".home-grid");
+  if(!grid) return;
+  const card=document.createElement("article");
+  card.id="teacher-home-card";
+  card.className="home-card";
+  card.innerHTML=`
+    <span class="card-icon" aria-hidden="true">🏫</span>
+    <h3>Teacher</h3>
+    <p>Teacher access uses the signed-in account role and backend permissions.</p>
+    <button type="button" id="open-teacher-dashboard">Open Teacher Dashboard</button>
+  `;
+  grid.appendChild(card);
+  document.getElementById("open-teacher-dashboard")?.addEventListener("click",showTeacherDashboard);
+}
+window.addEventListener("load",addTeacherHomeCard);
+
 function addV1DiagnosticsHomeCard() {
   if (document.getElementById("v1-diagnostics-home-card")) return;
 
@@ -5392,6 +5577,13 @@ function getV1DiagnosticRows() {
           : "CHECK",
       detail:
         "A selectable-text PDF regression is still required. It must not be routed to scanned-PDF OCR."
+    },
+    {
+      name: "Teacher dashboard shell",
+      result:
+        typeof showTeacherDashboard === "function" ? "CODE PRESENT" : "CHECK",
+      detail:
+        "The browser checks the signed-in role and queries teacher/class data through Supabase. Real teacher authentication, RLS behavior and teacher reset remain end-to-end test requirements."
     },
     {
       name: "V1 closure board",
