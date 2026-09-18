@@ -5216,6 +5216,93 @@ function addWhereWasIHomeCard() {
 }
 window.addEventListener("load",addWhereWasIHomeCard);
 
+
+function getCompassClosureStatus() {
+  return {
+    studentCore: "CODED",
+    multiJourney: Array.isArray(compassStudentState?.journeys) ? "CODED" : "CHECK",
+    cloud: typeof syncCompassCloudState === "function" ? "CODED" : "CHECK",
+    materials: typeof validateCompassMaterialFile === "function" ? "CODED" : "CHECK",
+    scannedPdf: typeof runScannedPdfOcr === "function" ? "CODED" : "CHECK",
+    localization: typeof applyCompassExtraTranslations === "function" ? "CODED / FINAL REVIEW PENDING" : "CHECK",
+    theme: typeof getCompassTheme === "function" ? "CODED" : "CHECK",
+    teacher: "E2E TEST PENDING",
+    deletion: "NOT ENABLED",
+    finalRegression: "PENDING"
+  };
+}
+
+function showV1ClosureBoard() {
+  const main = document.querySelector("main");
+  const s = getCompassClosureStatus();
+
+  const rows = [
+    ["Student core experience", s.studentCore, "Journey, Workspace, planning and student support surfaces are present."],
+    ["Multi-Journey", s.multiJourney, "Final cloud restore behavior still needs the end-to-end regression."],
+    ["Cloud sync", s.cloud, "Final cross-browser restore is still pending."],
+    ["Materials", s.materials, "File validation is present; final material regression is pending."],
+    ["Scanned PDF OCR", s.scannedPdf, "A real scanned PDF behavior test is still pending."],
+    ["TR / EN", s.localization, "Final whole-site language review is still pending."],
+    ["Light / Dark theme", s.theme, "Final visual regression is pending."],
+    ["Teacher flow", s.teacher, "Teacher auth, class permissions and teacher reset must be verified end to end."],
+    ["Account deletion", s.deletion, "Not exposed as a working feature until backend deletion behavior is implemented and verified."],
+    ["Final regression", s.finalRegression, "The final whole-site test will decide V1 release readiness."]
+  ];
+
+  main.innerHTML = `
+    <section class="material-page" aria-labelledby="closure-board-title">
+      <div class="material-heading">
+        <p class="eyebrow">V1 Closure</p>
+        <h2 id="closure-board-title">What is still open before the final test?</h2>
+        <p class="hero-text">
+          This board separates code presence from real behavior testing.
+          It does not mark an untested feature as complete.
+        </p>
+      </div>
+
+      <div class="material-list">
+        ${rows.map(([name,status,detail]) => `
+          <article class="material-card">
+            <div class="material-card-content">
+              <h3>${escapeHtml(name)}</h3>
+              <p><strong>${escapeHtml(status)}</strong></p>
+              <p>${escapeHtml(detail)}</p>
+            </div>
+          </article>
+        `).join("")}
+      </div>
+
+      <div class="hero-actions">
+        <button type="button" class="secondary-button" id="closure-board-home">Back Home</button>
+      </div>
+    </section>
+  `;
+
+  document.getElementById("closure-board-home")?.addEventListener("click", backHome);
+  applyCompassExtraTranslations?.(main);
+}
+
+function addV1ClosureHomeCard() {
+  if (document.getElementById("v1-closure-home-card")) return;
+  const grid = document.querySelector(".home-grid");
+  if (!grid) return;
+
+  const card = document.createElement("article");
+  card.id = "v1-closure-home-card";
+  card.className = "home-card";
+  card.innerHTML = `
+    <span class="card-icon" aria-hidden="true">✓</span>
+    <h3>V1 Closure</h3>
+    <p>See what is coded and what still needs the final test.</p>
+    <button type="button" id="open-v1-closure">Open V1 Closure</button>
+  `;
+  grid.appendChild(card);
+  document.getElementById("open-v1-closure")?.addEventListener("click", showV1ClosureBoard);
+  applyCompassExtraTranslations?.(card);
+}
+
+window.addEventListener("load", addV1ClosureHomeCard);
+
 function addV1DiagnosticsHomeCard() {
   if (document.getElementById("v1-diagnostics-home-card")) return;
 
@@ -5305,6 +5392,13 @@ function getV1DiagnosticRows() {
           : "CHECK",
       detail:
         "A selectable-text PDF regression is still required. It must not be routed to scanned-PDF OCR."
+    },
+    {
+      name: "V1 closure board",
+      result:
+        typeof showV1ClosureBoard === "function" ? "READY" : "CHECK",
+      detail:
+        "Release blockers are shown separately from code-presence checks."
     },
     {
       name: "Where Was I",
