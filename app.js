@@ -878,6 +878,7 @@ const compassStateKey =
 const compassStudentState = {
   learnerName: "",
   activeJourney: null,
+  journeys: [],
   cloudJourneyId: null,
   lastSavedAt: null,
 };
@@ -894,6 +895,8 @@ function saveStudentState() {
           compassStudentState.learnerName,
         activeJourney:
           compassStudentState.activeJourney,
+        journeys:
+          compassStudentState.journeys,
         cloudJourneyId:
           compassStudentState.cloudJourneyId,
         littleThings,
@@ -937,6 +940,33 @@ function loadStudentState() {
 
       compassStudentState.activeJourney =
         saved.activeJourney || null;
+
+      compassStudentState.journeys =
+        Array.isArray(saved.journeys)
+          ? saved.journeys
+          : [];
+
+      if (
+        compassStudentState.activeJourney &&
+        compassStudentState.journeys.length === 0
+      ) {
+        const migrated =
+          JSON.parse(
+            JSON.stringify(
+              compassStudentState.activeJourney
+            )
+          );
+
+        migrated.localId =
+          migrated.localId ||
+          `journey-${Date.now()}`;
+
+        compassStudentState.activeJourney =
+          migrated;
+        compassStudentState.journeys = [
+          migrated
+        ];
+      }
 
       compassStudentState.cloudJourneyId =
         typeof saved.cloudJourneyId === "string"
@@ -990,18 +1020,241 @@ function loadStudentState() {
   }
 }
 
+function ensureJourneyLocalId(journey) {
+  if (!journey) return null;
+
+  journey.localId =
+    journey.localId ||
+    `journey-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 8)}`;
+
+  return journey.localId;
+}
+
 function rememberJourney(journey) {
   if (!journey) {
     return;
   }
+
+  const copy =
+    JSON.parse(
+      JSON.stringify(journey)
+    );
+
+  const localId =
+    ensureJourneyLocalId(copy);
+
+  const existingIndex =
+    compassStudentState.journeys
+      .findIndex(
+        (item) =>
+          item.localId === localId
+      );
+
+  if (existingIndex >= 0) {
+    compassStudentState.journeys[
+      existingIndex
+    ] = copy;
+  } else {
+    compassStudentState.journeys.push(
+      copy
+    );
+  }
+
+  compassStudentState.activeJourney =
+    copy;
+
+  compassStudentState.cloudJourneyId =
+    copy.cloudJourneyId ||
+    compassStudentState.cloudJourneyId ||
+    null;
+
+  saveStudentState();
+}
+
+function selectSavedJourney(localId) {
+  const journey =
+    compassStudentState.journeys.find(
+      (item) =>
+        item.localId === localId
+    );
+
+  if (!journey) return;
 
   compassStudentState.activeJourney =
     JSON.parse(
       JSON.stringify(journey)
     );
 
+  compassStudentState.cloudJourneyId =
+    journey.cloudJourneyId || null;
+
   saveStudentState();
+
+  showJourneyWorkspace(
+    JSON.parse(
+      JSON.stringify(journey)
+    ),
+    journey.currentStepIndex || 0,
+    "Journey opened. Your saved step is shown."
+  );
 }
+
+function showMyJourneys() {
+  const main =
+    document.querySelector("main");
+
+  const journeys =
+    Array.isArray(
+      compassStudentState.journeys
+    )
+      ? compassStudentState.journeys
+      : [];
+
+  main.innerHTML = `
+    <section class="material-page" aria-labelledby="my-journeys-title">
+      <div class="material-heading">
+        <p class="eyebrow">My Journeys</p>
+        <h2 id="my-journeys-title">Choose a Journey to continue.</h2>
+        <p class="hero-text">
+          Each Journey keeps its own steps and current position.
+        </p>
+      </div>
+
+      ${
+        journeys.length
+          ? `<div class="material-list">
+              ${journeys.map((journey, index) => {
+                const stepCount =
+                  Array.isArray(journey.steps)
+                    ? journey.steps.length
+                    : 0;
+                const current =
+                  stepCount
+                    ? Math.min(
+                        Math.max(
+                          Number(
+                            journey.currentStepIndex
+                          ) || 0,
+                          0
+                        ),
+                        stepCount - 1
+                      )
+                    : 0;
+
+                return `
+                  <article class="material-card">
+                    <div class="material-card-content">
+                      <p class="material-position">Journey ${index + 1}</p>
+                      <h3>${escapeHtml(journey.title || "My Journey")}</h3>
+                      <p>
+                        ${
+                          stepCount
+                            ? `Step ${current + 1} of ${stepCount}: ${escapeHtml(journey.steps[current]?.title || "")}`
+                            : "No steps saved."
+                        }
+                      </p>
+                    </div>
+                    <div class="material-card-actions">
+                      <button
+                        type="button"
+                        class="small-action-button open-saved-journey"
+                        data-local-id="${escapeHtml(journey.localId || "")}"
+                      >
+                        Open Journey
+                      </button>
+                    </div>
+                  </article>
+                `;
+              }).join("")}
+            </div>`
+          : `<p class="path-note">No saved Journeys yet.</p>`
+      }
+
+      <div class="hero-actions">
+        <button type="button" class="secondary-button" id="my-journeys-home">
+          Back Home
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .querySelectorAll(
+      ".open-saved-journey"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () =>
+          selectSavedJourney(
+            button.dataset.localId
+          )
+      );
+    });
+
+  document
+    .getElementById(
+      "my-journeys-home"
+    )
+    ?.addEventListener(
+      "click",
+      backHome
+    );
+}
+
+function addMyJourneysHomeCard() {
+  if (
+    document.getElementById(
+      "my-journeys-home-card"
+    )
+  ) return;
+
+  const grid =
+    document.querySelector(
+      ".home-grid"
+    );
+
+  if (!grid) return;
+
+  const card =
+    document.createElement(
+      "article"
+    );
+
+  card.id =
+    "my-journeys-home-card";
+  card.className =
+    "home-card";
+
+  card.innerHTML = `
+    <span class="card-icon" aria-hidden="true">🗺️</span>
+    <h3>My Journeys</h3>
+    <p>
+      Open any saved Journey without replacing the others.
+    </p>
+    <button type="button" id="open-my-journeys-button">
+      Open My Journeys
+    </button>
+  `;
+
+  grid.prepend(card);
+
+  document
+    .getElementById(
+      "open-my-journeys-button"
+    )
+    ?.addEventListener(
+      "click",
+      showMyJourneys
+    );
+}
+
+window.addEventListener(
+  "load",
+  addMyJourneysHomeCard
+);
 
 function installPersistenceObserver() {
   document.addEventListener(
@@ -13118,11 +13371,29 @@ async function syncCompassCloudState() {
       }
     }
 
-    // One active Journey is synced in V1.
-    const journey =
-      compassStudentState.activeJourney;
+    // Sync every locally saved Journey. Legacy activeJourney is included
+    // automatically when an older local state is migrated.
+    const localJourneys =
+      Array.isArray(
+        compassStudentState.journeys
+      ) &&
+      compassStudentState.journeys.length
+        ? compassStudentState.journeys
+        : (
+            compassStudentState.activeJourney
+              ? [
+                  compassStudentState.activeJourney
+                ]
+              : []
+          );
 
-    if (journey) {
+    for (
+      const journey of localJourneys
+    ) {
+      ensureJourneyLocalId(
+        journey
+      );
+
       const journeyPayload = {
         owner_id: ownerId,
         title:
@@ -13152,7 +13423,15 @@ async function syncCompassCloudState() {
       };
 
       let journeyId =
-        compassStudentState.cloudJourneyId;
+        journey.cloudJourneyId ||
+        (
+          compassStudentState
+            .activeJourney?.localId ===
+          journey.localId
+            ? compassStudentState
+                .cloudJourneyId
+            : null
+        );
 
       if (journeyId) {
         const { error } =
@@ -13162,28 +13441,34 @@ async function syncCompassCloudState() {
             .eq("id", journeyId)
             .eq("owner_id", ownerId);
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
       } else {
-        const {
-          data,
-          error,
-        } =
+        const { data, error } =
           await compassCloud
             .from("journeys")
             .insert(journeyPayload)
             .select("id")
             .single();
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
         journeyId = data.id;
-        compassStudentState.cloudJourneyId =
+        journey.cloudJourneyId =
           journeyId;
-        saveStudentState();
+      }
+
+      if (
+        compassStudentState
+          .activeJourney?.localId ===
+        journey.localId
+      ) {
+        compassStudentState
+          .cloudJourneyId =
+          journeyId;
+
+        compassStudentState
+          .activeJourney.cloudJourneyId =
+          journeyId;
       }
 
       const { error: clearStepsError } =
@@ -13243,12 +13528,11 @@ async function syncCompassCloudState() {
             .from("journey_steps")
             .insert(rows);
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
       }
     }
 
+    saveStudentState();
     // Small student tools are replaced as a snapshot.
     const { error: littleClear } =
       await compassCloud
@@ -13432,13 +13716,10 @@ async function loadCompassCloudState() {
           "id,title,goal,task_type,current_step_index,status,updated_at"
         )
         .eq("owner_id", ownerId)
-        .eq("status", "active")
         .order(
           "updated_at",
           { ascending: false }
-        )
-        .limit(1)
-        .maybeSingle(),
+        ),
 
       compassCloud
         .from("little_things")
@@ -13484,33 +13765,45 @@ async function loadCompassCloudState() {
 
     if (
       !journeyResult.error &&
-      journeyResult.data
+      Array.isArray(
+        journeyResult.data
+      )
     ) {
-      const cloudJourney =
-        journeyResult.data;
+      const restoredJourneys = [];
 
-      const { data: steps, error } =
-        await compassCloud
-          .from("journey_steps")
-          .select(
-            "position,title,description,is_completed,completed_at"
-          )
-          .eq(
-            "journey_id",
-            cloudJourney.id
-          )
-          .order(
-            "position",
-            { ascending: true }
-          );
+      for (
+        const cloudJourney of
+        journeyResult.data
+      ) {
+        const {
+          data: steps,
+          error,
+        } =
+          await compassCloud
+            .from("journey_steps")
+            .select(
+              "position,title,description,is_completed,completed_at"
+            )
+            .eq(
+              "journey_id",
+              cloudJourney.id
+            )
+            .order(
+              "position",
+              { ascending: true }
+            );
 
-      if (!error) {
-        compassStudentState.cloudJourneyId =
-          cloudJourney.id;
+        if (error) continue;
 
-        compassStudentState.activeJourney = {
-          title: cloudJourney.title,
-          goal: cloudJourney.goal,
+        restoredJourneys.push({
+          localId:
+            `cloud-${cloudJourney.id}`,
+          cloudJourneyId:
+            cloudJourney.id,
+          title:
+            cloudJourney.title,
+          goal:
+            cloudJourney.goal,
           taskType:
             cloudJourney.task_type,
           currentStepIndex:
@@ -13529,7 +13822,25 @@ async function loadCompassCloudState() {
                   step.completed_at,
               })
             ),
-        };
+        });
+      }
+
+      if (
+        restoredJourneys.length
+      ) {
+        compassStudentState.journeys =
+          restoredJourneys;
+
+        compassStudentState.activeJourney =
+          JSON.parse(
+            JSON.stringify(
+              restoredJourneys[0]
+            )
+          );
+
+        compassStudentState.cloudJourneyId =
+          restoredJourneys[0]
+            .cloudJourneyId;
       }
     }
 
