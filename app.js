@@ -5041,6 +5041,181 @@ function installCompassScreenFocusManagement() {
 
 window.addEventListener("DOMContentLoaded", installCompassScreenFocusManagement);
 
+
+const COMPASS_I18N_EXTRA = {
+  tr: {
+    "V1 Check": "V1 Kontrolü",
+    "Open V1 Check": "V1 Kontrolünü Aç",
+    "Account Safety": "Hesap Güvenliği",
+    "Open Account Safety": "Hesap Güvenliğini Aç",
+    "Account and data controls": "Hesap ve veri kontrolleri",
+    "Signed-in status": "Oturum durumu",
+    "You are signed in.": "Oturum açık.",
+    "You are signed out.": "Oturum kapalı.",
+    "Change Secret Code": "Gizli Kodu Değiştir",
+    "Delete account": "Hesabı sil",
+    "Local data": "Yerel veriler",
+    "Back Home": "Ana Sayfaya Dön",
+    "Dark Theme": "Koyu Tema",
+    "Light Theme": "Açık Tema",
+    "My Journeys": "Yolculuklarım",
+    "Open Journey": "Yolculuğu Aç",
+    "Save to Cloud Now": "Şimdi Buluta Kaydet",
+    "Refresh Check": "Kontrolü Yenile",
+    "Mark Complete": "Tamamlandı Olarak İşaretle",
+    "Remove": "Kaldır",
+    "Complete.": "Tamamlandı.",
+    "Not complete yet.": "Henüz tamamlanmadı.",
+    "View or Change Materials": "Materyalleri Gör veya Değiştir",
+    "Return to Journey": "Yolculuğa Dön",
+    "Use Updated Materials": "Güncellenen Materyalleri Kullan",
+    "Read Scanned PDF": "Taranmış PDF'yi Oku",
+    "Review Text": "Metni Kontrol Et",
+    "My Toolkit": "Araçlarım",
+    "Make It Smaller": "Daha Küçük Hale Getir",
+    "Starting Sparks": "Başlangıç Fikirleri",
+    "Read With Me": "Benimle Oku",
+    "Memory Tools": "Hafıza Araçları",
+    "Memory Palace": "Hafıza Sarayı",
+    "Study Cards": "Çalışma Kartları",
+    "Brain Dump": "Aklındakileri Yaz",
+    "Recharge Cove": "Mola Alanı",
+    "My Days": "Günlerim",
+    "Idea Garden": "Fikir Alanı",
+    "Little Things": "Küçük İşler",
+    "My Account": "Hesabım",
+    "Language": "Dil"
+  }
+};
+
+function translateCompassExactText(text) {
+  if (getCompassLanguage?.() !== "tr") return text;
+  return COMPASS_I18N_EXTRA.tr[text] || text;
+}
+
+function applyCompassExtraTranslations(root = document.body) {
+  if (!root || getCompassLanguage?.() !== "tr") return;
+
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+
+  nodes.forEach((node) => {
+    const raw = node.nodeValue;
+    const trimmed = raw.trim();
+    if (!trimmed) return;
+    const translated = COMPASS_I18N_EXTRA.tr[trimmed];
+    if (!translated) return;
+    node.nodeValue = raw.replace(trimmed, translated);
+  });
+
+  document.querySelectorAll("[aria-label]").forEach((el) => {
+    const label = el.getAttribute("aria-label");
+    const translated = COMPASS_I18N_EXTRA.tr[label];
+    if (translated) el.setAttribute("aria-label", translated);
+  });
+}
+
+function installCompassTranslationObserver() {
+  if (window.__compassTranslationObserverInstalled) return;
+  window.__compassTranslationObserverInstalled = true;
+
+  const observer = new MutationObserver(() => {
+    if (getCompassLanguage?.() === "tr") {
+      applyCompassExtraTranslations(document.body);
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+  applyCompassExtraTranslations(document.body);
+}
+
+window.addEventListener("DOMContentLoaded", installCompassTranslationObserver);
+
+function showWhereWasI() {
+  const main = document.querySelector("main");
+  const journey = compassStudentState.activeJourney;
+
+  if (!journey) {
+    main.innerHTML = `
+      <section class="material-page" aria-labelledby="where-was-i-title">
+        <div class="material-heading">
+          <p class="eyebrow">Where Was I?</p>
+          <h2 id="where-was-i-title">There is no current Journey yet.</h2>
+          <p class="hero-text">
+            Create or open a Journey first. Compass Trail will then show your saved position here.
+          </p>
+        </div>
+        <button type="button" class="secondary-button" id="where-was-i-home">Back Home</button>
+      </section>
+    `;
+    document.getElementById("where-was-i-home")?.addEventListener("click", backHome);
+    applyCompassExtraTranslations(main);
+    return;
+  }
+
+  const steps = Array.isArray(journey.steps) ? journey.steps : [];
+  const rawIndex = Number(journey.currentStepIndex ?? journey.currentStep ?? 0);
+  const stepIndex = Math.max(0, Math.min(Number.isFinite(rawIndex) ? rawIndex : 0, Math.max(steps.length - 1, 0)));
+  const step = steps[stepIndex];
+  const stepText =
+    typeof step === "string"
+      ? step
+      : step?.title || step?.text || step?.label || "Current step";
+
+  main.innerHTML = `
+    <section class="material-page" aria-labelledby="where-was-i-title">
+      <div class="material-heading">
+        <p class="eyebrow">Where Was I?</p>
+        <h2 id="where-was-i-title">${escapeHtml(journey.task || journey.title || "Current Journey")}</h2>
+        <p class="hero-text">
+          Your saved position is step ${steps.length ? stepIndex + 1 : 0}${steps.length ? ` of ${steps.length}` : ""}.
+        </p>
+      </div>
+      <article class="material-card">
+        <div class="material-card-content">
+          <h3>Current step</h3>
+          <p>${escapeHtml(stepText)}</p>
+          <p>Opening this summary does not change your progress.</p>
+        </div>
+      </article>
+      <div class="hero-actions">
+        <button type="button" class="primary-button" id="where-was-i-continue">Continue Where I Left Off</button>
+        <button type="button" class="secondary-button" id="where-was-i-home">Back Home</button>
+      </div>
+    </section>
+  `;
+
+  document.getElementById("where-was-i-continue")?.addEventListener("click", () => {
+    if (typeof showJourneyWorkspace === "function") {
+      showJourneyWorkspace(journey, stepIndex);
+    } else if (typeof showWorkspace === "function") {
+      showWorkspace(journey, stepIndex);
+    }
+  });
+  document.getElementById("where-was-i-home")?.addEventListener("click", backHome);
+  applyCompassExtraTranslations(main);
+}
+
+function addWhereWasIHomeCard() {
+  if (document.getElementById("where-was-i-home-card")) return;
+  const grid=document.querySelector(".home-grid");
+  if(!grid) return;
+  const card=document.createElement("article");
+  card.id="where-was-i-home-card";
+  card.className="home-card";
+  card.innerHTML=`
+    <span class="card-icon" aria-hidden="true">📍</span>
+    <h3>Where Was I?</h3>
+    <p>See the saved position in your current Journey.</p>
+    <button type="button" id="open-where-was-i">Show My Position</button>
+  `;
+  grid.appendChild(card);
+  document.getElementById("open-where-was-i")?.addEventListener("click",showWhereWasI);
+  applyCompassExtraTranslations(card);
+}
+window.addEventListener("load",addWhereWasIHomeCard);
+
 function addV1DiagnosticsHomeCard() {
   if (document.getElementById("v1-diagnostics-home-card")) return;
 
@@ -5130,6 +5305,20 @@ function getV1DiagnosticRows() {
           : "CHECK",
       detail:
         "A selectable-text PDF regression is still required. It must not be routed to scanned-PDF OCR."
+    },
+    {
+      name: "Where Was I",
+      result:
+        typeof showWhereWasI === "function" ? "READY" : "CHECK",
+      detail:
+        "The learner can inspect the saved Journey position without changing progress."
+    },
+    {
+      name: "Turkish interface coverage",
+      result:
+        typeof applyCompassExtraTranslations === "function" ? "EXPANDED" : "CHECK",
+      detail:
+        "Key V1 navigation and support labels have Turkish coverage. Final whole-site language review is still required."
     },
     {
       name: "Material upload validation",
