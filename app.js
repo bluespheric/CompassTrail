@@ -4649,7 +4649,7 @@ function showStartingSparks() {
     ];
     result.innerHTML = `
       <div class="suggested-path">
-        ${options.map((item, i) => pathStep({title:`Option ${i+1}`,description:item}, i)).join("")}
+        ${options.map((item, i) => pathStep(i + 1, `Option ${i + 1}`, escapeHtml(item))).join("")}
       </div>
       <p class="path-note">Choose one option. You do not need to use all of them.</p>
     `;
@@ -4681,7 +4681,7 @@ function showStandaloneMakeSmaller() {
       "Work only on that part.",
       "Check what changed and choose the next small part."
     ];
-    result.innerHTML=`<div class="suggested-path">${moves.map((d,i)=>pathStep({title:`Move ${i+1}`,description:d},i)).join("")}</div>`;
+    result.innerHTML=`<div class="suggested-path">${moves.map((d,i)=>pathStep(i + 1, `Move ${i + 1}`, escapeHtml(d))).join("")}</div>`;
   });
 }
 
@@ -4815,7 +4815,7 @@ function showChunkingTool() {
     if(items.length<2){result.innerHTML=`<p class="path-note">Add at least two items to make groups.</p>`;return;}
     const chunks=[];
     for(let i=0;i<items.length;i+=size) chunks.push(items.slice(i,i+size));
-    result.innerHTML=`<div class="suggested-path">${chunks.map((chunk,i)=>pathStep({title:`Group ${i+1}`,description:chunk.join(" · ")},i)).join("")}</div>`;
+    result.innerHTML=`<div class="suggested-path">${chunks.map((chunk,i)=>pathStep(i + 1, `Group ${i + 1}`, escapeHtml(chunk.join(" · ")))).join("")}</div>`;
   });
 }
 
@@ -4842,8 +4842,8 @@ function showMnemonicTool() {
     const initials=items.map(v=>Array.from(v.trim())[0]?.toUpperCase()||"").join("");
     result.innerHTML=`
       <div class="suggested-path">
-        ${pathStep({title:"First-letter cue",description:initials},0)}
-        ${pathStep({title:"Sentence frame",description:`Write a sentence with ${items.length} words. Start the words with: ${initials.split("").join(" · ")}.`},1)}
+        ${pathStep(1, "First-letter cue", escapeHtml(initials))}
+        ${pathStep(2, "Sentence frame", escapeHtml(`Write a sentence with ${items.length} words. Start the words with: ${initials.split("").join(" · ")}.`))}
       </div>
       <p class="path-note">The sentence is yours to create. It can be ordinary, funny or very literal — use what is easiest to remember.</p>`;
   });
