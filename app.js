@@ -4564,6 +4564,9 @@ function showToolkitHub() {
         ${toolkitActionCard("🌿","Recharge Cove","Take a pause without losing your place.","toolkit-recharge")}
         ${toolkitActionCard("📖","Read With Me","Read pasted learning text aloud and control the voice pace.","toolkit-read")}
         ${toolkitActionCard("🧠","Memory Tools","Use chunking or build a mnemonic from what you need to remember.","toolkit-memory")}
+        ${toolkitActionCard("🧮","Calculator","Use a simple calculator without leaving your learning space.","toolkit-calculator")}
+        ${toolkitActionCard("🗺️","Idea Map","Turn a topic into connected branches you can edit.","toolkit-idea-map")}
+        ${toolkitActionCard("🧱","Jigsaw Planner","Split a topic into parts, work on each part, then put them back together.","toolkit-jigsaw")}
       </div>
 
       <div class="hero-actions">
@@ -4579,6 +4582,9 @@ function showToolkitHub() {
     "toolkit-recharge": showHomeRechargeCove,
     "toolkit-read": showReadWithMe,
     "toolkit-memory": showMemoryTools,
+    "toolkit-calculator": showToolkitCalculator,
+    "toolkit-idea-map": showIdeaMap,
+    "toolkit-jigsaw": showJigsawPlanner,
   };
 
   Object.entries(actions).forEach(([id, action]) => {
@@ -4615,6 +4621,337 @@ function toolkitBackButton() {
 
 function wireToolkitBack() {
   document.getElementById("toolkit-back-button")?.addEventListener("click", showToolkitHub);
+}
+
+
+function safeCalculate(expression) {
+  const cleaned = String(expression || "")
+    .replace(/×/g, "*")
+    .replace(/÷/g, "/")
+    .replace(/−/g, "-")
+    .replace(/\s+/g, "");
+
+  if (!cleaned) {
+    return { ok: false, message: "Enter a calculation first." };
+  }
+
+  if (!/^[0-9+\-*/().%]+$/.test(cleaned)) {
+    return {
+      ok: false,
+      message: "Use numbers, parentheses, +, −, ×, ÷ or % only."
+    };
+  }
+
+  let index = 0;
+
+  function peek() {
+    return cleaned[index] || "";
+  }
+
+  function consume(char) {
+    if (peek() === char) {
+      index += 1;
+      return true;
+    }
+    return false;
+  }
+
+  function number() {
+    const start = index;
+    let dots = 0;
+
+    while (/[0-9.]/.test(peek())) {
+      if (peek() === ".") dots += 1;
+      index += 1;
+    }
+
+    if (start === index || dots > 1) {
+      throw new Error("number");
+    }
+
+    const value = Number(cleaned.slice(start, index));
+    if (!Number.isFinite(value)) throw new Error("number");
+    return value;
+  }
+
+  function primary() {
+    if (consume("+")) return primary();
+    if (consume("-")) return -primary();
+
+    if (consume("(")) {
+      const value = expressionLevel();
+      if (!consume(")")) throw new Error("parenthesis");
+      return value;
+    }
+
+    return number();
+  }
+
+  function percent() {
+    let value = primary();
+    while (consume("%")) value /= 100;
+    return value;
+  }
+
+  function term() {
+    let value = percent();
+
+    while (true) {
+      if (consume("*")) {
+        value *= percent();
+      } else if (consume("/")) {
+        const divisor = percent();
+        if (divisor === 0) throw new Error("zero");
+        value /= divisor;
+      } else {
+        break;
+      }
+    }
+
+    return value;
+  }
+
+  function expressionLevel() {
+    let value = term();
+
+    while (true) {
+      if (consume("+")) {
+        value += term();
+      } else if (consume("-")) {
+        value -= term();
+      } else {
+        break;
+      }
+    }
+
+    return value;
+  }
+
+  try {
+    const value = expressionLevel();
+
+    if (index !== cleaned.length || !Number.isFinite(value)) {
+      throw new Error("syntax");
+    }
+
+    return {
+      ok: true,
+      value: Math.abs(value) < 1e-12 ? 0 : Number(value.toPrecision(12))
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message:
+        error.message === "zero"
+          ? "Division by zero does not have a finite result."
+          : "Check the calculation. Use complete numbers and matching parentheses."
+    };
+  }
+}
+
+function showToolkitCalculator() {
+  const main = document.querySelector("main");
+
+  main.innerHTML = `
+    <section class="hero" aria-labelledby="calculator-title">
+      <p class="eyebrow">Calculator</p>
+      <h2 id="calculator-title">Calculate one expression.</h2>
+      <p class="hero-text">
+        This calculator accepts numbers, parentheses, +, −, ×, ÷ and %.
+      </p>
+
+      <label for="calculator-input">
+        <strong>Calculation</strong>
+      </label>
+
+      <input
+        id="calculator-input"
+        type="text"
+        inputmode="decimal"
+        autocomplete="off"
+        placeholder="For example: (24 + 6) ÷ 3"
+      />
+
+      <div class="hero-actions">
+        <button type="button" class="primary-button" id="calculate-button">
+          Calculate
+        </button>
+        <button type="button" class="secondary-button" id="calculator-clear-button">
+          Clear
+        </button>
+        ${toolkitBackButton()}
+      </div>
+
+      <div id="calculator-result" class="path-note" role="status">
+        No calculation yet.
+      </div>
+    </section>
+  `;
+
+  wireToolkitBack();
+
+  const input = document.getElementById("calculator-input");
+  const result = document.getElementById("calculator-result");
+
+  const calculate = () => {
+    const answer = safeCalculate(input.value);
+    result.textContent = answer.ok
+      ? `Result: ${answer.value}`
+      : answer.message;
+  };
+
+  document.getElementById("calculate-button").addEventListener("click", calculate);
+  document.getElementById("calculator-clear-button").addEventListener("click", () => {
+    input.value = "";
+    result.textContent = "No calculation yet.";
+    input.focus();
+  });
+
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") calculate();
+  });
+}
+
+function showIdeaMap() {
+  const main = document.querySelector("main");
+
+  main.innerHTML = `
+    <section class="hero" aria-labelledby="idea-map-title">
+      <p class="eyebrow">Idea Map</p>
+      <h2 id="idea-map-title">Put one topic in the centre and add connected branches.</h2>
+
+      <label for="idea-map-topic"><strong>Central topic</strong></label>
+      <input id="idea-map-topic" type="text" maxlength="120" />
+
+      <label for="idea-map-branches"><strong>Branches — one per line</strong></label>
+      <textarea
+        id="idea-map-branches"
+        rows="7"
+        maxlength="1500"
+        placeholder="Main idea 1&#10;Main idea 2&#10;Main idea 3"
+      ></textarea>
+
+      <div class="hero-actions">
+        <button type="button" class="primary-button" id="build-idea-map-button">
+          Build Idea Map
+        </button>
+        ${toolkitBackButton()}
+      </div>
+
+      <div id="idea-map-result" aria-live="polite"></div>
+    </section>
+  `;
+
+  wireToolkitBack();
+
+  document.getElementById("build-idea-map-button").addEventListener("click", () => {
+    const topic = document.getElementById("idea-map-topic").value.trim();
+    const branches = document.getElementById("idea-map-branches").value
+      .split("\n")
+      .map((value) => value.trim())
+      .filter(Boolean)
+      .slice(0, 12);
+    const result = document.getElementById("idea-map-result");
+
+    if (!topic || !branches.length) {
+      result.innerHTML = `<p class="path-note">Add a central topic and at least one branch.</p>`;
+      return;
+    }
+
+    result.innerHTML = `
+      <section class="basket-section" aria-label="Editable idea map">
+        <h3>${escapeHtml(topic)}</h3>
+        <p class="hero-text">Each branch is editable. Change the wording whenever you need.</p>
+        <div class="material-list">
+          ${branches.map((branch, index) => `
+            <label>
+              <strong>Branch ${index + 1}</strong>
+              <textarea class="chunk-edit-field" rows="2">${escapeHtml(branch)}</textarea>
+            </label>
+          `).join("")}
+        </div>
+      </section>
+    `;
+  });
+}
+
+function showJigsawPlanner() {
+  const main = document.querySelector("main");
+
+  main.innerHTML = `
+    <section class="hero" aria-labelledby="jigsaw-title">
+      <p class="eyebrow">Jigsaw Planner</p>
+      <h2 id="jigsaw-title">Split one topic into parts, then reconnect the parts.</h2>
+      <p class="hero-text">
+        This is a planning scaffold. It does not grade your answers.
+      </p>
+
+      <label for="jigsaw-topic"><strong>Topic or task</strong></label>
+      <input id="jigsaw-topic" type="text" maxlength="160" />
+
+      <label for="jigsaw-parts"><strong>How many parts?</strong></label>
+      <select id="jigsaw-parts">
+        <option value="2">2 parts</option>
+        <option value="3" selected>3 parts</option>
+        <option value="4">4 parts</option>
+        <option value="5">5 parts</option>
+        <option value="6">6 parts</option>
+      </select>
+
+      <div class="hero-actions">
+        <button type="button" class="primary-button" id="build-jigsaw-button">
+          Make the Parts
+        </button>
+        ${toolkitBackButton()}
+      </div>
+
+      <div id="jigsaw-result" aria-live="polite"></div>
+    </section>
+  `;
+
+  wireToolkitBack();
+
+  document.getElementById("build-jigsaw-button").addEventListener("click", () => {
+    const topic = document.getElementById("jigsaw-topic").value.trim();
+    const count = Number(document.getElementById("jigsaw-parts").value);
+    const result = document.getElementById("jigsaw-result");
+
+    if (!topic) {
+      result.innerHTML = `<p class="path-note">Write the topic or task first.</p>`;
+      return;
+    }
+
+    result.innerHTML = `
+      <section class="basket-section">
+        <h3>${escapeHtml(topic)}</h3>
+        <p class="hero-text">
+          Give each part one clear focus. At the end, write what the parts show together.
+        </p>
+
+        <div class="material-list">
+          ${Array.from({ length: count }, (_, index) => `
+            <label>
+              <strong>Part ${index + 1}</strong>
+              <textarea
+                class="chunk-edit-field"
+                rows="3"
+                placeholder="What belongs in this part?"
+              ></textarea>
+            </label>
+          `).join("")}
+        </div>
+
+        <label for="jigsaw-reconnect">
+          <strong>Put the parts back together</strong>
+        </label>
+        <textarea
+          id="jigsaw-reconnect"
+          rows="4"
+          placeholder="What do these parts show when you look at them together?"
+        ></textarea>
+      </section>
+    `;
+  });
 }
 
 function showStartingSparks() {
@@ -5147,7 +5484,6 @@ const materialBasket = [];
 let lastRemovedMaterial = null;
 let lastRemovedIndex = null;
 let materialBasketReturnContext = null;
-let materialReplacementId = null;
 
 
 function showJourneyStartScreen() {
@@ -9902,7 +10238,7 @@ function showJourneyWorkspace(
         showJourneyWorkspace(
           journey,
           safeIndex + 1,
-          "That step is behind you. Here’s the next part of your trail."
+          "That step is marked complete. Here is the next step."
         );
       }
     );
