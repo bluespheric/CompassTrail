@@ -5488,6 +5488,87 @@ function addTeacherHomeCard() {
 }
 window.addEventListener("load",addTeacherHomeCard);
 
+
+function showFinalTestReadyScreen() {
+  const main = document.querySelector("main");
+  main.innerHTML = `
+    <section class="material-page" aria-labelledby="final-test-ready-title">
+      <div class="material-heading">
+        <p class="eyebrow">V1 Final Test</p>
+        <h2 id="final-test-ready-title">Build phase is ready to pause.</h2>
+        <p class="hero-text">
+          The next phase is one complete end-to-end regression.
+          A feature is not release-ready only because its code is present.
+        </p>
+      </div>
+
+      <div class="material-list">
+        <article class="material-card"><div class="material-card-content">
+          <h3>Already verified</h3>
+          <p>
+            Learner register/login, cloud save, session restore, Secret Code change,
+            cross-browser learner restore, profile access rules, recovery-table denial,
+            and Journey/step cross-user isolation have passed earlier tests.
+          </p>
+        </div></article>
+
+        <article class="material-card"><div class="material-card-content">
+          <h3>Teacher fixture</h3>
+          <p>
+            The rollback fixture created three temporary identities successfully.
+            Teacher class/member permissions and teacher reset still require final end-to-end verification.
+          </p>
+        </div></article>
+
+        <article class="material-card"><div class="material-card-content">
+          <h3>Final behavior checks</h3>
+          <p>
+            Multi-Journey cloud restore, scanned/selectable PDF regression,
+            whole-site Turkish/English, dark/light theme, keyboard/mobile,
+            and the newer Toolkit/support surfaces remain in the final regression.
+          </p>
+        </div></article>
+
+        <article class="material-card"><div class="material-card-content">
+          <h3>Account deletion</h3>
+          <p>
+            Account deletion remains unavailable. It must not be presented as a working V1 action
+            until backend deletion and reauthentication behavior are implemented and verified.
+          </p>
+        </div></article>
+      </div>
+
+      <div class="hero-actions">
+        <button type="button" class="primary-button" id="final-test-open-check">Open V1 Check</button>
+        <button type="button" class="secondary-button" id="final-test-home">Back Home</button>
+      </div>
+    </section>
+  `;
+
+  document.getElementById("final-test-open-check")?.addEventListener("click", showV1Diagnostics);
+  document.getElementById("final-test-home")?.addEventListener("click", backHome);
+  applyCompassExtraTranslations?.(main);
+}
+
+function addFinalTestHomeCard() {
+  if (document.getElementById("final-test-home-card")) return;
+  const grid = document.querySelector(".home-grid");
+  if (!grid) return;
+  const card = document.createElement("article");
+  card.id = "final-test-home-card";
+  card.className = "home-card";
+  card.innerHTML = `
+    <span class="card-icon" aria-hidden="true">🧭</span>
+    <h3>V1 Final Test</h3>
+    <p>Open the release-test starting point when the build phase is finished.</p>
+    <button type="button" id="open-final-test-ready">Open Final Test</button>
+  `;
+  grid.appendChild(card);
+  document.getElementById("open-final-test-ready")?.addEventListener("click", showFinalTestReadyScreen);
+  applyCompassExtraTranslations?.(card);
+}
+window.addEventListener("load", addFinalTestHomeCard);
+
 function addV1DiagnosticsHomeCard() {
   if (document.getElementById("v1-diagnostics-home-card")) return;
 
