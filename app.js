@@ -3017,8 +3017,7 @@ function showCompassFocusSpace(
           </strong>
           <p>
             The timer is a tool. When it ends,
-            your work is not marked wrong,
-            late, or incomplete.
+            the timer does not change your completion status.
           </p>
 
           <label for="focus-timer-minutes">
@@ -4971,6 +4970,7 @@ function showToolkitHub() {
         ${toolkitActionCard("🧮","Calculator","Use a simple calculator without leaving your learning space.","toolkit-calculator")}
         ${toolkitActionCard("🗺️","Idea Map","Turn a topic into connected branches you can edit.","toolkit-idea-map")}
         ${toolkitActionCard("🧱","Jigsaw Planner","Split a topic into parts, work on each part, then put them back together.","toolkit-jigsaw")}
+        ${toolkitActionCard("🏠","Memory Palace","Place things to remember in familiar locations, in a fixed order.","toolkit-palace")}
       </div>
 
       <div class="hero-actions">
@@ -4989,6 +4989,7 @@ function showToolkitHub() {
     "toolkit-calculator": showToolkitCalculator,
     "toolkit-idea-map": showIdeaMap,
     "toolkit-jigsaw": showJigsawPlanner,
+    "toolkit-palace": showMemoryPalace,
   };
 
   Object.entries(actions).forEach(([id, action]) => {
@@ -5353,6 +5354,81 @@ function showJigsawPlanner() {
           rows="4"
           placeholder="What do these parts show when you look at them together?"
         ></textarea>
+      </section>
+    `;
+  });
+}
+
+
+function showMemoryPalace() {
+  const main = document.querySelector("main");
+
+  main.innerHTML = `
+    <section class="hero" aria-labelledby="memory-palace-title">
+      <p class="eyebrow">Memory Palace</p>
+      <h2 id="memory-palace-title">Connect items to familiar places in a fixed order.</h2>
+      <p class="hero-text">
+        Choose a familiar place, then enter the things you want to remember.
+        Compass Trail will pair each item with one location.
+      </p>
+
+      <label for="palace-place"><strong>Familiar place</strong></label>
+      <select id="palace-place">
+        <option value="home">Home</option>
+        <option value="classroom">Classroom</option>
+        <option value="route">A familiar route</option>
+      </select>
+
+      <label for="palace-items"><strong>Things to remember — one per line</strong></label>
+      <textarea id="palace-items" rows="8" maxlength="1600"
+        placeholder="Item 1&#10;Item 2&#10;Item 3"></textarea>
+
+      <div class="hero-actions">
+        <button type="button" class="primary-button" id="build-palace-button">Build Memory Route</button>
+        ${toolkitBackButton()}
+      </div>
+
+      <div id="palace-result" aria-live="polite"></div>
+    </section>
+  `;
+
+  wireToolkitBack();
+
+  const locations = {
+    home: ["Front door", "Hallway", "Sofa", "Table", "Kitchen sink", "Bed", "Window", "Desk"],
+    classroom: ["Door", "Teacher desk", "Board", "First desk", "Bookshelf", "Window", "Clock", "Back wall"],
+    route: ["Starting point", "First turn", "Crossing", "Landmark", "Middle point", "Second turn", "Last landmark", "Destination"]
+  };
+
+  document.getElementById("build-palace-button").addEventListener("click", () => {
+    const place = document.getElementById("palace-place").value;
+    const items = document.getElementById("palace-items").value
+      .split("\\n")
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .slice(0, 8);
+    const result = document.getElementById("palace-result");
+
+    if (!items.length) {
+      result.innerHTML = `<p class="path-note">Add at least one thing to remember.</p>`;
+      return;
+    }
+
+    result.innerHTML = `
+      <section class="basket-section">
+        <h3>Your memory route</h3>
+        <p class="hero-text">
+          Follow these locations in order. Imagine each item clearly at its paired location.
+        </p>
+        <div class="suggested-path">
+          ${items.map((item, index) =>
+            pathStep(
+              index + 1,
+              locations[place][index],
+              escapeHtml(item)
+            )
+          ).join("")}
+        </div>
       </section>
     `;
   });
@@ -10642,7 +10718,7 @@ function showJourneyWorkspace(
         showJourneyWorkspace(
           journey,
           safeIndex + 1,
-          "That step is marked complete. Here is the next step."
+          "Step marked complete. Here is the next step."
         );
       }
     );
