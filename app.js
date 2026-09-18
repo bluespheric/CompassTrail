@@ -5146,6 +5146,9 @@ const materialBasket = [];
 
 let lastRemovedMaterial = null;
 let lastRemovedIndex = null;
+let materialBasketReturnContext = null;
+let materialReplacementId = null;
+
 
 function showJourneyStartScreen() {
   const main = document.querySelector("main");
@@ -5282,8 +5285,19 @@ function showMaterialBasket(
 
         <p class="hero-text">
           Add one thing or mix different materials together.
-          You can change your basket later.
+          You can add, replace, review or remove materials later without changing your current Journey step.
         </p>
+
+        ${
+          materialBasketReturnContext?.journey
+            ? `
+              <div class="path-note" role="status">
+                You are editing materials for your current Journey.
+                Your current step is saved.
+              </div>
+            `
+            : ""
+        }
       </div>
 
       <section
@@ -5400,7 +5414,11 @@ function showMaterialBasket(
           class="secondary-button"
           id="back-choice-button"
         >
-          Back
+          ${
+            materialBasketReturnContext?.journey
+              ? "Return to Journey"
+              : "Back"
+          }
         </button>
 
         <button
@@ -5408,7 +5426,11 @@ function showMaterialBasket(
           class="primary-button"
           id="build-path-button"
         >
-          Build My Path
+          ${
+            materialBasketReturnContext?.journey
+              ? "Use Updated Materials"
+              : "Build My Path"
+          }
         </button>
       </div>
     </section>
@@ -5548,14 +5570,32 @@ function connectMaterialBasketEvents() {
     .getElementById("back-choice-button")
     .addEventListener(
       "click",
-      showJourneyStartScreen
+      () => {
+        if (materialBasketReturnContext?.journey) {
+          returnToJourneyFromMaterials(
+            "Your Journey step is unchanged."
+          );
+          return;
+        }
+
+        showJourneyStartScreen();
+      }
     );
 
   document
     .getElementById("build-path-button")
     .addEventListener(
       "click",
-      showPathPreview
+      () => {
+        if (materialBasketReturnContext?.journey) {
+          returnToJourneyFromMaterials(
+            "Your materials were updated. Your Journey step is unchanged."
+          );
+          return;
+        }
+
+        showPathPreview();
+      }
     );
 }
 
@@ -5835,6 +5875,14 @@ function renderMaterialBasket() {
 
                   <button
                     type="button"
+                    class="small-action-button replace-material-button"
+                    data-material-id="${material.id}"
+                  >
+                    Replace
+                  </button>
+
+                  <button
+                    type="button"
                     class="small-action-button move-up-button"
                     data-material-id="${material.id}"
                     ${
@@ -5927,6 +5975,21 @@ function connectMaterialCardEvents() {
 
   document
     .querySelectorAll(
+      ".replace-material-button"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          replaceMaterial(
+            button.dataset.materialId
+          );
+        }
+      );
+    });
+
+  document
+    .querySelectorAll(
       ".move-up-button"
     )
     .forEach((button) => {
@@ -5971,6 +6034,231 @@ function connectMaterialCardEvents() {
         }
       );
     });
+}
+
+function replaceMaterial(materialId) {
+  const material =
+    materialBasket.find(
+      (item) =>
+        item.id === materialId
+    );
+
+  if (!material) return;
+
+  if (material.type === "text") {
+    showReplaceTextMaterial(
+      material
+    );
+    return;
+  }
+
+  const input =
+    document.createElement(
+      "input"
+    );
+
+  input.type = "file";
+
+  if (material.type === "photo") {
+    input.accept =
+      "image/jpeg,image/png,image/webp";
+  } else if (
+    material.type === "pdf"
+  ) {
+    input.accept =
+      "application/pdf";
+  } else {
+    input.accept =
+      ".docx,.txt,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain";
+  }
+
+  input.addEventListener(
+    "change",
+    () => {
+      const file =
+        input.files?.[0];
+
+      if (!file) return;
+
+      if (
+        material.previewUrl &&
+        material.type === "photo"
+      ) {
+        try {
+          URL.revokeObjectURL(
+            material.previewUrl
+          );
+        } catch (_) {}
+      }
+
+      material.name = file.name;
+      material.size = file.size;
+      material.file = file;
+      material.text = "";
+      material.extractedText = "";
+      material.extractionStatus =
+        "not-reviewed";
+      material.photoResult = null;
+      material.pdfOcrResult = null;
+      material.previewUrl =
+        material.type === "photo"
+          ? URL.createObjectURL(file)
+          : null;
+
+      renderMaterialBasket();
+    },
+    { once: true }
+  );
+
+  input.click();
+}
+
+function showReplaceTextMaterial(
+  material
+) {
+  const main =
+    document.querySelector("main");
+
+  main.innerHTML = `
+    <section
+      class="hero"
+      aria-labelledby="replace-text-title"
+    >
+      <p class="eyebrow">
+        Replace Material
+      </p>
+
+      <h2 id="replace-text-title">
+        Replace this text material.
+      </h2>
+
+      <p class="hero-text">
+        The old text stays unchanged until you choose Save Replacement.
+      </p>
+
+      <label for="replacement-text">
+        <strong>Replacement text</strong>
+      </label>
+
+      <textarea
+        id="replacement-text"
+        rows="10"
+        maxlength="12000"
+      >${escapeHtml(
+        material.text ||
+        material.extractedText ||
+        ""
+      )}</textarea>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="primary-button"
+          id="save-text-replacement"
+        >
+          Save Replacement
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="cancel-text-replacement"
+        >
+          Cancel
+        </button>
+      </div>
+    </section>
+  `;
+
+  document
+    .getElementById(
+      "save-text-replacement"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        const value =
+          document
+            .getElementById(
+              "replacement-text"
+            )
+            .value
+            .trim();
+
+        if (!value) {
+          document
+            .getElementById(
+              "replacement-text"
+            )
+            .focus();
+
+          return;
+        }
+
+        material.text = value;
+        material.extractedText =
+          value;
+        material.extractionStatus =
+          "not-reviewed";
+        material.name =
+          createTextMaterialName(
+            value
+          );
+
+        showMaterialBasket();
+      }
+    );
+
+  document
+    .getElementById(
+      "cancel-text-replacement"
+    )
+    .addEventListener(
+      "click",
+      () => showMaterialBasket()
+    );
+}
+
+function openJourneyMaterials(
+  journey,
+  stepIndex
+) {
+  materialBasketReturnContext = {
+    journey,
+    stepIndex,
+  };
+
+  showMaterialBasket(
+    "mixed"
+  );
+}
+
+function returnToJourneyFromMaterials(
+  notice = ""
+) {
+  const context =
+    materialBasketReturnContext;
+
+  materialBasketReturnContext =
+    null;
+
+  if (!context?.journey) {
+    showJourneyStartScreen();
+    return;
+  }
+
+  context.journey.sourceText =
+    getJourneySourceText();
+
+  rememberJourney(
+    context.journey
+  );
+
+  showJourneyWorkspace(
+    context.journey,
+    context.stepIndex,
+    notice
+  );
 }
 
 function renameMaterial(materialId) {
@@ -9485,6 +9773,14 @@ function showJourneyWorkspace(
         <button
           type="button"
           class="secondary-button"
+          id="journey-materials-button"
+        >
+          View or Change Materials
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
           id="change-path-button"
         >
           Change My Path
@@ -9627,6 +9923,20 @@ function showJourneyWorkspace(
       }
     );
   }
+
+  document
+    .getElementById(
+      "journey-materials-button"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        openJourneyMaterials(
+          journey,
+          safeIndex
+        );
+      }
+    );
 
   document
     .getElementById(
