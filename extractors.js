@@ -1,3 +1,7 @@
+// Compass Trail — material text extractors
+// Local/browser-side extraction only.
+// Learners always review/edit extracted text before it is used.
+
 async function extractTextFromMaterial(material) {
   if (!material) {
     throw new Error("Material is missing.");
@@ -6,7 +10,9 @@ async function extractTextFromMaterial(material) {
   // Pasted text
   if (material.type === "text") {
     return {
-      status: "ready",
+      status: (material.text || "").trim()
+        ? "ready"
+        : "empty",
       text: material.text || "",
       method: "pasted-text",
     };
@@ -53,7 +59,8 @@ async function extractTextFromMaterial(material) {
     }
   }
 
-  // PDF
+  // PDF text layer. Image-only/scanned PDFs return needs-ocr
+  // so app.js can offer the explicit scanned-PDF OCR path.
   if (
     material.type === "pdf" &&
     material.file
@@ -63,9 +70,7 @@ async function extractTextFromMaterial(material) {
     );
   }
 
-  // PHOTO
-  // This now sends the photo to image-reader.js
-  // instead of returning "needs-ocr".
+  // Photo OCR + perspective preparation.
   if (
     material.type === "photo" &&
     material.file
@@ -161,7 +166,11 @@ async function extractDocxText(file) {
 }
 
 async function extractPdfText(file) {
-  if (!window.pdfjsLib) {
+  if (
+    !window.pdfjsLib ||
+    typeof window.pdfjsLib.getDocument !==
+      "function"
+  ) {
     throw new Error(
       "PDF reader is not available."
     );
@@ -173,14 +182,16 @@ async function extractPdfText(file) {
 
     const loadingTask =
       window.pdfjsLib.getDocument({
-        data: arrayBuffer,
+        data:
+          new Uint8Array(
+            arrayBuffer
+          ),
       });
 
     const pdf =
       await loadingTask.promise;
 
     const pages = [];
-
     let totalCharacters = 0;
 
     for (
@@ -214,21 +225,18 @@ async function extractPdfText(file) {
 
     const combinedText =
       pages
-        .map((page) => {
-          return [
+        .map(
+          (page) => [
             `--- Page ${page.pageNumber} ---`,
             page.text,
-          ].join("\n");
-        })
+          ].join("\n")
+        )
         .join("\n\n")
         .trim();
 
-    // Scanned PDFs still use the future
-    // PDF OCR path.
-    if (
-      !combinedText ||
-      totalCharacters < 20
-    ) {
+    // A scanned PDF can contain a few stray text-layer characters.
+    // Very small totals are therefore treated as image-only.
+    if (totalCharacters < 12) {
       return {
         status: "needs-ocr",
         text: combinedText,
@@ -266,14 +274,14 @@ function buildPageText(items) {
   }
 
   const lines = [];
-
   let currentLine = [];
   let lastY = null;
 
   for (const item of items) {
     if (
       !item ||
-      typeof item.str !== "string"
+      typeof item.str !==
+        "string"
     ) {
       continue;
     }
