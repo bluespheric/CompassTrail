@@ -107,6 +107,12 @@ async function readPhotoText(file, options = {}) {
       detectedCorners:
         prepared.detectedCorners,
 
+      confidence:
+        typeof result.data.confidence ===
+          "number"
+          ? result.data.confidence
+          : null,
+
       originalWidth:
         image.naturalWidth,
 
@@ -465,30 +471,54 @@ function detectDocumentCorners(
 }
 
 function orderPoints(points) {
-  const sorted =
+  if (
+    !Array.isArray(points) ||
+    points.length !== 4
+  ) {
+    return points;
+  }
+
+  // Return: top-left, top-right,
+  // bottom-right, bottom-left.
+  // Sum/difference ordering is more stable than
+  // splitting only by Y when a page is strongly skewed.
+  const bySum =
     [...points].sort(
-      (a, b) => a.y - b.y
+      (a, b) =>
+        (a.x + a.y) -
+        (b.x + b.y)
     );
 
-  const top =
-    sorted
-      .slice(0, 2)
-      .sort(
-        (a, b) => a.x - b.x
-      );
+  const topLeft =
+    bySum[0];
 
-  const bottom =
-    sorted
-      .slice(2, 4)
-      .sort(
-        (a, b) => a.x - b.x
-      );
+  const bottomRight =
+    bySum[bySum.length - 1];
+
+  const remaining =
+    points.filter(
+      (point) =>
+        point !== topLeft &&
+        point !== bottomRight
+    );
+
+  remaining.sort(
+    (a, b) =>
+      (a.y - a.x) -
+      (b.y - b.x)
+  );
+
+  const topRight =
+    remaining[0];
+
+  const bottomLeft =
+    remaining[1];
 
   return [
-    top[0],
-    top[1],
-    bottom[1],
-    bottom[0],
+    topLeft,
+    topRight,
+    bottomRight,
+    bottomLeft,
   ];
 }
 
@@ -714,3 +744,22 @@ function distance(a, b) {
     b.y - a.y
   );
 }
+
+window.addEventListener(
+  "pagehide",
+  () => {
+    if (ocrWorker) {
+      try {
+        ocrWorker.terminate();
+      } catch (error) {
+        console.warn(
+          "OCR worker could not be closed cleanly.",
+          error
+        );
+      }
+
+      ocrWorker = null;
+    }
+  }
+);
+
