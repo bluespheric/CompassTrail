@@ -4971,6 +4971,8 @@ function showToolkitHub() {
         ${toolkitActionCard("🗺️","Idea Map","Turn a topic into connected branches you can edit.","toolkit-idea-map")}
         ${toolkitActionCard("🧱","Jigsaw Planner","Split a topic into parts, work on each part, then put them back together.","toolkit-jigsaw")}
         ${toolkitActionCard("🏠","Memory Palace","Place things to remember in familiar locations, in a fixed order.","toolkit-palace")}
+        ${toolkitActionCard("🃏","Study Cards","Make simple question-and-answer cards and reveal answers when you choose.","toolkit-study-cards")}
+        ${toolkitActionCard("🧺","Brain Dump","Write everything down first, then sort it into Now, Later or Not Needed.","toolkit-brain-dump")}
       </div>
 
       <div class="hero-actions">
@@ -4990,6 +4992,8 @@ function showToolkitHub() {
     "toolkit-idea-map": showIdeaMap,
     "toolkit-jigsaw": showJigsawPlanner,
     "toolkit-palace": showMemoryPalace,
+    "toolkit-study-cards": showStudyCards,
+    "toolkit-brain-dump": showBrainDump,
   };
 
   Object.entries(actions).forEach(([id, action]) => {
@@ -5431,6 +5435,164 @@ function showMemoryPalace() {
         </div>
       </section>
     `;
+  });
+}
+
+
+function showStudyCards() {
+  const main = document.querySelector("main");
+
+  main.innerHTML = `
+    <section class="hero" aria-labelledby="study-cards-title">
+      <p class="eyebrow">Study Cards</p>
+      <h2 id="study-cards-title">Make question-and-answer cards.</h2>
+      <p class="hero-text">
+        Enter one card per line using a vertical bar between the question and answer.
+      </p>
+
+      <label for="study-card-input"><strong>Cards</strong></label>
+      <textarea id="study-card-input" rows="9" maxlength="3000"
+        placeholder="What is photosynthesis? | A process plants use to convert light into chemical energy.&#10;What is H2O? | Water"></textarea>
+
+      <div class="hero-actions">
+        <button type="button" class="primary-button" id="build-study-cards">Make Cards</button>
+        ${toolkitBackButton()}
+      </div>
+
+      <div id="study-card-result" aria-live="polite"></div>
+    </section>
+  `;
+
+  wireToolkitBack();
+
+  document.getElementById("build-study-cards").addEventListener("click", () => {
+    const rows = document.getElementById("study-card-input").value
+      .split("\n")
+      .map((row) => row.trim())
+      .filter(Boolean)
+      .slice(0, 20);
+
+    const cards = rows
+      .map((row) => {
+        const splitAt = row.indexOf("|");
+        if (splitAt < 1) return null;
+        return {
+          question: row.slice(0, splitAt).trim(),
+          answer: row.slice(splitAt + 1).trim()
+        };
+      })
+      .filter((card) => card?.question && card?.answer);
+
+    const result = document.getElementById("study-card-result");
+
+    if (!cards.length) {
+      result.innerHTML = `<p class="path-note">Add at least one complete card using: question | answer</p>`;
+      return;
+    }
+
+    result.innerHTML = `
+      <div class="material-list">
+        ${cards.map((card, index) => `
+          <article class="material-card">
+            <div class="material-card-content">
+              <p class="material-position">Card ${index + 1}</p>
+              <h3>${escapeHtml(card.question)}</h3>
+              <div id="study-answer-${index}" hidden>
+                <p><strong>Answer:</strong> ${escapeHtml(card.answer)}</p>
+              </div>
+              <button
+                type="button"
+                class="small-action-button reveal-study-answer"
+                data-index="${index}"
+                aria-expanded="false"
+                aria-controls="study-answer-${index}"
+              >Show Answer</button>
+            </div>
+          </article>
+        `).join("")}
+      </div>
+    `;
+
+    result.querySelectorAll(".reveal-study-answer").forEach((button) => {
+      button.addEventListener("click", () => {
+        const answer = document.getElementById(`study-answer-${button.dataset.index}`);
+        const willShow = answer.hidden;
+        answer.hidden = !willShow;
+        button.setAttribute("aria-expanded", String(willShow));
+        button.textContent = willShow ? "Hide Answer" : "Show Answer";
+      });
+    });
+  });
+}
+
+function showBrainDump() {
+  const main = document.querySelector("main");
+
+  main.innerHTML = `
+    <section class="hero" aria-labelledby="brain-dump-title">
+      <p class="eyebrow">Brain Dump</p>
+      <h2 id="brain-dump-title">Write things down before deciding what to do with them.</h2>
+      <p class="hero-text">
+        Enter one thought or task per line. Nothing is marked complete automatically.
+      </p>
+
+      <label for="brain-dump-input"><strong>Thoughts or tasks — one per line</strong></label>
+      <textarea id="brain-dump-input" rows="9" maxlength="3000"></textarea>
+
+      <div class="hero-actions">
+        <button type="button" class="primary-button" id="sort-brain-dump">Make Sorting Cards</button>
+        ${toolkitBackButton()}
+      </div>
+
+      <div id="brain-dump-result" aria-live="polite"></div>
+    </section>
+  `;
+
+  wireToolkitBack();
+
+  document.getElementById("sort-brain-dump").addEventListener("click", () => {
+    const items = document.getElementById("brain-dump-input").value
+      .split("\n")
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .slice(0, 30);
+    const result = document.getElementById("brain-dump-result");
+
+    if (!items.length) {
+      result.innerHTML = `<p class="path-note">Write at least one thought or task first.</p>`;
+      return;
+    }
+
+    result.innerHTML = `
+      <div class="material-list">
+        ${items.map((item, index) => `
+          <article class="material-card">
+            <div class="material-card-content">
+              <h3>${escapeHtml(item)}</h3>
+              <label for="brain-choice-${index}"><strong>Where should this go?</strong></label>
+              <select id="brain-choice-${index}">
+                <option value="">Choose</option>
+                <option value="Now">Now</option>
+                <option value="Later">Later</option>
+                <option value="Not Needed">Not Needed</option>
+              </select>
+              <p class="path-note brain-choice-status" data-index="${index}">
+                No category selected.
+              </p>
+            </div>
+          </article>
+        `).join("")}
+      </div>
+    `;
+
+    items.forEach((_, index) => {
+      document.getElementById(`brain-choice-${index}`).addEventListener("change", (event) => {
+        result.querySelector(`.brain-choice-status[data-index="${index}"]`).textContent =
+          event.target.value
+            ? `Category: ${event.target.value}`
+            : "No category selected.";
+      });
+    });
   });
 }
 
