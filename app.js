@@ -4246,7 +4246,55 @@ function applyCompassLanguageBasics() {
           ["Open My Toolkit", "Araçlarımı Aç"],
           ["Open Check-in", "Check-in'i Aç"],
           ["Goal Look & Lookbook", "Hedef Görünümü ve Albüm"],
-          ["Open Goal Look", "Hedef Görünümünü Aç"]
+          ["Open Goal Look", "Hedef Görünümünü Aç"],
+          ["Pick the support that helps now.", "Şu anda yardımcı olacak desteği seç."],
+          ["Support is a tool, not a penalty.", "Destek bir araçtır, ceza değildir."],
+          ["Add Favorite", "Favorilere Ekle"],
+          ["Remove Favorite", "Favorilerden Çıkar"],
+          ["Calculator", "Hesap Makinesi"],
+          ["Idea Map", "Fikir Haritası"],
+          ["Jigsaw Planner", "Parçalara Ayırma Planı"],
+          ["Memory Palace", "Hafıza Sarayı"],
+          ["Study Cards", "Çalışma Kartları"],
+          ["Brain Dump", "Zihin Boşaltma"],
+          ["Starting Sparks", "Başlangıç Fikirleri"],
+          ["Make It Smaller", "Daha Küçük Adımlara Böl"],
+          ["Read With Me", "Benimle Oku"],
+          ["Memory Tools", "Hafıza Araçları"],
+          ["Recharge Cove", "Mola Alanı"],
+          ["Mark Complete", "Tamamlandı Olarak İşaretle"],
+          ["Not complete yet.", "Henüz tamamlanmadı."],
+          ["Complete.", "Tamamlandı."],
+          ["Remove", "Kaldır"],
+          ["Save", "Kaydet"],
+          ["Cancel", "İptal"],
+          ["Back", "Geri"],
+          ["Continue", "Devam Et"],
+          ["Use Updated Materials", "Güncellenmiş Materyalleri Kullan"],
+          ["View or Change Materials", "Materyalleri Görüntüle veya Değiştir"],
+          ["Return to Journey", "Yolculuğa Dön"],
+          ["Review Text", "Metni Kontrol Et"],
+          ["Read Scanned PDF", "Taranmış PDF'yi Oku"],
+          ["Show Answer", "Cevabı Göster"],
+          ["Hide Answer", "Cevabı Gizle"],
+          ["Calculate", "Hesapla"],
+          ["Clear", "Temizle"],
+          ["No calculation yet.", "Henüz hesaplama yapılmadı."],
+          ["Result:", "Sonuç:"],
+          ["Goal Look", "Hedef Görünümü"],
+          ["My Character", "Karakterim"],
+          ["Photo Studio", "Fotoğraf Stüdyosu"],
+          ["My Lookbook", "Albümüm"],
+          ["Back to Goal Look", "Hedef Görünümüne Dön"],
+          ["Save Goal Look", "Hedef Görünümünü Kaydet"],
+          ["Save Character", "Karakteri Kaydet"],
+          ["No photo selected.", "Fotoğraf seçilmedi."],
+          ["Remove Photo", "Fotoğrafı Kaldır"],
+          ["Check-in & My Pace", "Check-in ve Kendi Hızım"],
+          ["Take a Break", "Mola Ver"],
+          ["Pause", "Duraklat"],
+          ["Resume", "Devam Ettir"],
+          ["Stop", "Durdur"]
         ]
       : [];
 
@@ -4372,6 +4420,72 @@ window.addEventListener(
     addCompassLanguageHomeCard();
     applyCompassLanguageBasics();
   }
+);
+
+
+function ensureCompassStatusRegion() {
+  if (
+    document.getElementById(
+      "compass-global-status"
+    )
+  ) return;
+
+  const region =
+    document.createElement("div");
+
+  region.id =
+    "compass-global-status";
+  region.setAttribute(
+    "role",
+    "status"
+  );
+  region.setAttribute(
+    "aria-live",
+    "polite"
+  );
+  region.setAttribute(
+    "aria-atomic",
+    "true"
+  );
+  region.style.position =
+    "absolute";
+  region.style.width =
+    "1px";
+  region.style.height =
+    "1px";
+  region.style.overflow =
+    "hidden";
+  region.style.clip =
+    "rect(0 0 0 0)";
+  region.style.whiteSpace =
+    "nowrap";
+
+  document.body.appendChild(
+    region
+  );
+}
+
+function announceCompassStatus(
+  message
+) {
+  ensureCompassStatusRegion();
+  const region =
+    document.getElementById(
+      "compass-global-status"
+    );
+  region.textContent = "";
+  window.setTimeout(
+    () => {
+      region.textContent =
+        String(message || "");
+    },
+    20
+  );
+}
+
+window.addEventListener(
+  "load",
+  ensureCompassStatusRegion
 );
 
 function backHome() {
