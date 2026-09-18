@@ -3992,7 +3992,7 @@ function showGoalLookEditor() {
       goal,
       goalSymbol: selected
     });
-    showGoalLookStudio("Goal Look saved on this device.");
+    showGoalLookStudio("Goal Look saved on this device. It is not synced to the cloud in this V1.");
   });
 
   document.getElementById("goal-look-editor-back").addEventListener("click", showGoalLookStudio);
@@ -4056,7 +4056,7 @@ function showCharacterEditor() {
       characterName: name || "My Character",
       characterSymbol: selected
     });
-    showGoalLookStudio("Character saved on this device.");
+    showGoalLookStudio("Character saved on this device. It is not synced to the cloud in this V1.");
   });
 
   document.getElementById("character-back").addEventListener("click", showGoalLookStudio);
@@ -4947,8 +4947,94 @@ function renderMyDays() {
     .join("");
 }
 
-function showToolkitHub() {
-  const main = document.querySelector("main");
+
+const COMPASS_TOOLKIT_FAVORITES_KEY =
+  "compassTrailToolkitFavoritesV1";
+
+function loadToolkitFavorites() {
+  try {
+    const value = JSON.parse(
+      localStorage.getItem(
+        COMPASS_TOOLKIT_FAVORITES_KEY
+      ) || "[]"
+    );
+
+    return Array.isArray(value)
+      ? value
+      : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function saveToolkitFavorites(
+  favorites
+) {
+  try {
+    localStorage.setItem(
+      COMPASS_TOOLKIT_FAVORITES_KEY,
+      JSON.stringify(favorites)
+    );
+  } catch (_) {}
+}
+
+function toggleToolkitFavorite(
+  toolId
+) {
+  const favorites =
+    loadToolkitFavorites();
+
+  const next =
+    favorites.includes(toolId)
+      ? favorites.filter(
+          (id) => id !== toolId
+        )
+      : [...favorites, toolId];
+
+  saveToolkitFavorites(next);
+  showToolkitHub(
+    "Toolkit favorites updated."
+  );
+}
+
+function showToolkitHub(
+  notice = ""
+) {
+  if (typeof notice !== "string") {
+    notice = "";
+  }
+
+  const main =
+    document.querySelector("main");
+
+  const favorites =
+    loadToolkitFavorites();
+
+  const tools = [
+    ["🧩","Make It Smaller","Turn one task into a few concrete moves.","toolkit-smaller",showStandaloneMakeSmaller],
+    ["🌱","Starting Sparks","Get several clear ways to begin.","toolkit-sparks",showStartingSparks],
+    ["🅿️","Park It","Put an unrelated thought somewhere safe for later.","toolkit-park",() => showStandaloneParkIt()],
+    ["🌿","Recharge Cove","Take a pause without losing your place.","toolkit-recharge",showHomeRechargeCove],
+    ["📖","Read With Me","Read pasted learning text aloud and control the voice pace.","toolkit-read",showReadWithMe],
+    ["🧠","Memory Tools","Use chunking or build a mnemonic from what you need to remember.","toolkit-memory",showMemoryTools],
+    ["🧮","Calculator","Use a simple calculator without leaving your learning space.","toolkit-calculator",showToolkitCalculator],
+    ["🗺️","Idea Map","Turn a topic into connected branches you can edit.","toolkit-idea-map",showIdeaMap],
+    ["🧱","Jigsaw Planner","Split a topic into parts, work on each part, then put them back together.","toolkit-jigsaw",showJigsawPlanner],
+    ["🏠","Memory Palace","Place things to remember in familiar locations, in a fixed order.","toolkit-palace",showMemoryPalace],
+    ["🃏","Study Cards","Make simple question-and-answer cards and reveal answers when you choose.","toolkit-study-cards",showStudyCards],
+    ["🧺","Brain Dump","Write everything down first, then sort it into Now, Later or Not Needed.","toolkit-brain-dump",showBrainDump]
+  ];
+
+  const ordered = [
+    ...tools.filter(
+      (tool) =>
+        favorites.includes(tool[3])
+    ),
+    ...tools.filter(
+      (tool) =>
+        !favorites.includes(tool[3])
+    )
+  ];
 
   main.innerHTML = `
     <section class="material-page" aria-labelledby="toolkit-title">
@@ -4957,22 +5043,47 @@ function showToolkitHub() {
         <h2 id="toolkit-title">Pick the support that helps now.</h2>
         <p class="hero-text">
           Support is a tool, not a penalty. You do not need a reason to use one.
+          Favorite tools appear first on this device.
         </p>
       </div>
 
+      ${
+        notice
+          ? `<div class="undo-message" role="status"><span>${escapeHtml(notice)}</span></div>`
+          : ""
+      }
+
       <div class="home-grid">
-        ${toolkitActionCard("🧩","Make It Smaller","Turn one task into a few concrete moves.","toolkit-smaller")}
-        ${toolkitActionCard("🌱","Starting Sparks","Get several clear ways to begin.","toolkit-sparks")}
-        ${toolkitActionCard("🅿️","Park It","Put an unrelated thought somewhere safe for later.","toolkit-park")}
-        ${toolkitActionCard("🌿","Recharge Cove","Take a pause without losing your place.","toolkit-recharge")}
-        ${toolkitActionCard("📖","Read With Me","Read pasted learning text aloud and control the voice pace.","toolkit-read")}
-        ${toolkitActionCard("🧠","Memory Tools","Use chunking or build a mnemonic from what you need to remember.","toolkit-memory")}
-        ${toolkitActionCard("🧮","Calculator","Use a simple calculator without leaving your learning space.","toolkit-calculator")}
-        ${toolkitActionCard("🗺️","Idea Map","Turn a topic into connected branches you can edit.","toolkit-idea-map")}
-        ${toolkitActionCard("🧱","Jigsaw Planner","Split a topic into parts, work on each part, then put them back together.","toolkit-jigsaw")}
-        ${toolkitActionCard("🏠","Memory Palace","Place things to remember in familiar locations, in a fixed order.","toolkit-palace")}
-        ${toolkitActionCard("🃏","Study Cards","Make simple question-and-answer cards and reveal answers when you choose.","toolkit-study-cards")}
-        ${toolkitActionCard("🧺","Brain Dump","Write everything down first, then sort it into Now, Later or Not Needed.","toolkit-brain-dump")}
+        ${ordered.map((tool) => {
+          const [icon,title,description,id] = tool;
+          const isFavorite =
+            favorites.includes(id);
+
+          return `
+            <article class="home-card">
+              <span class="card-icon" aria-hidden="true">${icon}</span>
+              <h3>${escapeHtml(title)}</h3>
+              <p>${escapeHtml(description)}</p>
+              <div class="hero-actions">
+                <button
+                  type="button"
+                  class="secondary-button toolkit-open-button"
+                  data-tool-id="${id}"
+                >
+                  Open ${escapeHtml(title)}
+                </button>
+                <button
+                  type="button"
+                  class="small-action-button toolkit-favorite-button"
+                  data-tool-id="${id}"
+                  aria-pressed="${isFavorite}"
+                >
+                  ${isFavorite ? "Remove Favorite" : "Add Favorite"}
+                </button>
+              </div>
+            </article>
+          `;
+        }).join("")}
       </div>
 
       <div class="hero-actions">
@@ -4981,26 +5092,54 @@ function showToolkitHub() {
     </section>
   `;
 
-  const actions = {
-    "toolkit-smaller": showStandaloneMakeSmaller,
-    "toolkit-sparks": showStartingSparks,
-    "toolkit-park": () => showStandaloneParkIt(),
-    "toolkit-recharge": showHomeRechargeCove,
-    "toolkit-read": showReadWithMe,
-    "toolkit-memory": showMemoryTools,
-    "toolkit-calculator": showToolkitCalculator,
-    "toolkit-idea-map": showIdeaMap,
-    "toolkit-jigsaw": showJigsawPlanner,
-    "toolkit-palace": showMemoryPalace,
-    "toolkit-study-cards": showStudyCards,
-    "toolkit-brain-dump": showBrainDump,
-  };
+  const actionMap =
+    Object.fromEntries(
+      tools.map(
+        (tool) => [
+          tool[3],
+          tool[4]
+        ]
+      )
+    );
 
-  Object.entries(actions).forEach(([id, action]) => {
-    document.getElementById(id)?.addEventListener("click", action);
-  });
+  document
+    .querySelectorAll(
+      ".toolkit-open-button"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          actionMap[
+            button.dataset.toolId
+          ]?.();
+        }
+      );
+    });
 
-  document.getElementById("toolkit-home-button")?.addEventListener("click", backHome);
+  document
+    .querySelectorAll(
+      ".toolkit-favorite-button"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          toggleToolkitFavorite(
+            button.dataset.toolId
+          );
+        }
+      );
+    });
+
+  document
+    .getElementById(
+      "toolkit-home-button"
+    )
+    ?.addEventListener(
+      "click",
+      backHome
+    );
 }
 
 function toolkitActionCard(icon, title, description, id) {
