@@ -1106,10 +1106,12 @@ function applyCompassPreferences() {
   document.body.style.letterSpacing =
     `${compassPreferences.letterSpacing}px`;
 
-  document.body.style.backgroundColor =
-    backgroundMap[
-      compassPreferences.background
-    ] || "";
+  document.body.style.backgroundColor = "";
+
+  document.body.dataset
+    .comfortBackground =
+    compassPreferences.background ||
+    "default";
 
   document.body.classList.toggle(
     "comfort-high-contrast",
@@ -2136,14 +2138,200 @@ function wireHomeExperience() {
   }
 
   const keepExploringButton =
-    findButtonByLabel("Keep Exploring");
+    findButtonByLabel("Keep Exploring") ||
+    findButtonByLabel(
+      "What would you like to do?"
+    ) ||
+    findButtonByLabel(
+      "Ne yapmak istersin?"
+    );
 
   if (keepExploringButton) {
+    keepExploringButton.textContent =
+      compassText(
+        "What would you like to do?",
+        "Ne yapmak istersin?"
+      );
+
+    keepExploringButton.setAttribute(
+      "aria-expanded",
+      "false"
+    );
+
     keepExploringButton.addEventListener(
       "click",
-      showToolkitHub
+      toggleCompassExplorePanel
     );
   }
+}
+
+function toggleCompassExplorePanel() {
+  const button =
+    findButtonByLabel(
+      "What would you like to do?"
+    ) ||
+    findButtonByLabel(
+      "Ne yapmak istersin?"
+    );
+
+  if (!button) return;
+
+  let panel =
+    document.getElementById(
+      "compass-explore-panel"
+    );
+
+  if (panel) {
+    const willOpen =
+      panel.hidden;
+
+    panel.hidden =
+      !willOpen;
+
+    button.setAttribute(
+      "aria-expanded",
+      String(willOpen)
+    );
+
+    return;
+  }
+
+  panel =
+    document.createElement("section");
+
+  panel.id =
+    "compass-explore-panel";
+  panel.className =
+    "explore-panel";
+
+  panel.setAttribute(
+    "aria-label",
+    compassText(
+      "Choose an activity or support",
+      "Bir etkinlik veya destek seç"
+    )
+  );
+
+  const choices = [
+    [
+      "🧩",
+      compassText(
+        "Make It Smaller",
+        "Daha Küçük Hale Getir"
+      ),
+      showStandaloneMakeSmaller
+    ],
+    [
+      "🌱",
+      compassText(
+        "Starting Sparks",
+        "Başlangıç Fikirleri"
+      ),
+      showStartingSparks
+    ],
+    [
+      "🌿",
+      compassText(
+        "Recharge Cove",
+        "Mola Alanı"
+      ),
+      showHomeRechargeCove
+    ],
+    [
+      "📖",
+      compassText(
+        "Read With Me",
+        "Benimle Oku"
+      ),
+      showReadWithMe
+    ],
+    [
+      "🧠",
+      compassText(
+        "Memory Tools",
+        "Hafıza Araçları"
+      ),
+      showMemoryTools
+    ],
+    [
+      "🧰",
+      compassText(
+        "See all supports",
+        "Tüm destekleri gör"
+      ),
+      showToolkitHub
+    ]
+  ];
+
+  panel.innerHTML = `
+    <p class="explore-panel-intro">
+      ${compassText(
+        "Choose one option. These are shortcuts to supports that are also available elsewhere in Compass Trail.",
+        "Bir seçenek seç. Bunlar Compass Trail'in başka bölümlerinde de bulunan desteklere giden kısayollardır."
+      )}
+    </p>
+
+    <div class="explore-choice-grid">
+      ${choices
+        .map(
+          ([icon, label], index) => `
+            <button
+              type="button"
+              class="explore-choice"
+              data-explore-index="${index}"
+            >
+              <span
+                aria-hidden="true"
+              >${icon}</span>
+              <span>${escapeHtml(label)}</span>
+            </button>
+          `
+        )
+        .join("")}
+    </div>
+  `;
+
+  const hero =
+    button.closest(".hero");
+
+  (hero || button.parentElement)
+    ?.appendChild(panel);
+
+  panel
+    .querySelectorAll(
+      "[data-explore-index]"
+    )
+    .forEach((choice) => {
+      choice.addEventListener(
+        "click",
+        () => {
+          const index =
+            Number(
+              choice.dataset
+                .exploreIndex
+            );
+
+          const action =
+            choices[index]?.[2];
+
+          if (
+            typeof action ===
+            "function"
+          ) {
+            action();
+          }
+        }
+      );
+    });
+
+  button.setAttribute(
+    "aria-expanded",
+    "true"
+  );
+
+  applyCompassExtraTranslations?.(
+    panel
+  );
 }
 
 wireHomeExperience();
@@ -2180,6 +2368,16 @@ function loadCompassFocusState() {
         typeof saved.reflection === "string"
           ? saved.reflection
           : "",
+      plantType:
+        typeof saved.plantType === "string"
+          ? saved.plantType
+          : "sunflower",
+      hideTimer:
+        Boolean(saved.hideTimer),
+      showProgress:
+        saved.showProgress !== false,
+      timerStartedAt:
+        Number(saved.timerStartedAt) || 0,
       lastCheckInAt:
         saved.lastCheckInAt || "",
       lastCheckOutAt:
@@ -2197,6 +2395,10 @@ function loadCompassFocusState() {
       timerEndsAt: 0,
       timerPausedRemaining: 0,
       reflection: "",
+      plantType: "sunflower",
+      hideTimer: false,
+      showProgress: true,
+      timerStartedAt: 0,
       lastCheckInAt: "",
       lastCheckOutAt: "",
     };
@@ -2703,13 +2905,15 @@ function showCompassFocusSpace(
           </p>
 
           <label for="focus-timer-minutes">
-            Minutes
+            ${compassText(
+              "Focus time",
+              "Odak süresi"
+            )}
           </label>
 
           <select id="focus-timer-minutes">
             ${[
-              2, 5, 10, 15, 20,
-              25, 30, 45, 60
+              5, 10, 15, 20, 25, 30
             ]
               .map(
                 (minutes) => `
@@ -2723,19 +2927,95 @@ function showCompassFocusSpace(
                         : ""
                     }
                   >
-                    ${minutes}
+                    ${minutes} ${compassText(
+                      "minutes",
+                      "dakika"
+                    )}
                   </option>
                 `
               )
               .join("")}
           </select>
 
+          <label for="focus-plant-type">
+            ${compassText(
+              "Plant to grow",
+              "Büyüteceğin bitki"
+            )}
+          </label>
+
+          <select id="focus-plant-type">
+            ${[
+              ["sunflower","🌻",compassText("Sunflower","Ayçiçeği")],
+              ["oak","🌳",compassText("Oak tree","Meşe ağacı")],
+              ["fern","🌿",compassText("Fern","Eğrelti otu")],
+              ["cactus","🌵",compassText("Cactus","Kaktüs")],
+              ["monstera","🪴",compassText("Monstera","Monstera")]
+            ]
+              .map(
+                ([value, icon, label]) => `
+                  <option
+                    value="${value}"
+                    ${
+                      compassFocusState
+                        .plantType ===
+                      value
+                        ? "selected"
+                        : ""
+                    }
+                  >
+                    ${icon} ${label}
+                  </option>
+                `
+              )
+              .join("")}
+          </select>
+
+          <label class="inline-choice">
+            <input
+              type="checkbox"
+              id="focus-hide-time"
+              ${
+                compassFocusState.hideTimer
+                  ? "checked"
+                  : ""
+              }
+            />
+            <span>
+              ${compassText(
+                "Hide the remaining time",
+                "Kalan zamanı gizle"
+              )}
+            </span>
+          </label>
+
+          <label class="inline-choice">
+            <input
+              type="checkbox"
+              id="focus-show-progress"
+              ${
+                compassFocusState.showProgress !== false
+                  ? "checked"
+                  : ""
+              }
+            />
+            <span>
+              ${compassText(
+                "Show a progress bar",
+                "İlerleme çubuğunu göster"
+              )}
+            </span>
+          </label>
+
           <button
             type="button"
             class="primary-button"
             id="start-focus-timer"
           >
-            Start Timer
+            ${compassText(
+              "Start Focus Timer",
+              "Odak Zamanlayıcısını Başlat"
+            )}
           </button>
         </div>
 
@@ -2801,8 +3081,31 @@ function showCompassFocusSpace(
         compassFocusState.timerMinutes =
           Number(select?.value) || 10;
 
+        compassFocusState.plantType =
+          document.getElementById(
+            "focus-plant-type"
+          )?.value || "sunflower";
+
+        compassFocusState.hideTimer =
+          Boolean(
+            document.getElementById(
+              "focus-hide-time"
+            )?.checked
+          );
+
+        compassFocusState.showProgress =
+          Boolean(
+            document.getElementById(
+              "focus-show-progress"
+            )?.checked
+          );
+
         compassFocusState
           .timerPausedRemaining = 0;
+
+        compassFocusState
+          .timerStartedAt =
+          Date.now();
 
         compassFocusState.timerEndsAt =
           Date.now() +
@@ -2851,6 +3154,50 @@ function showCompassFocusSpace(
     );
 }
 
+function compassPlantPresentation() {
+  const plants = {
+    sunflower: {
+      name: compassText(
+        "Sunflower",
+        "Ayçiçeği"
+      ),
+      icon: "🌻",
+    },
+    oak: {
+      name: compassText(
+        "Oak tree",
+        "Meşe ağacı"
+      ),
+      icon: "🌳",
+    },
+    fern: {
+      name: compassText(
+        "Fern",
+        "Eğrelti otu"
+      ),
+      icon: "🌿",
+    },
+    cactus: {
+      name: compassText(
+        "Cactus",
+        "Kaktüs"
+      ),
+      icon: "🌵",
+    },
+    monstera: {
+      name: "Monstera",
+      icon: "🪴",
+    },
+  };
+
+  return (
+    plants[
+      compassFocusState.plantType
+    ] ||
+    plants.sunflower
+  );
+}
+
 function showCompassTimer(
   notice = ""
 ) {
@@ -2869,14 +3216,38 @@ function showCompassTimer(
     const remaining =
       compassTimerRemainingMs();
 
-    const finished =
-      remaining <= 0 &&
-      (
-        compassFocusState.timerEndsAt >
-          0 ||
+    const totalMs =
+      Math.max(
+        1,
         compassFocusState
-          .timerPausedRemaining === 0
+          .timerMinutes *
+          60 *
+          1000
       );
+
+    const progress =
+      remaining <= 0
+        ? 1
+        : Math.min(
+            1,
+            Math.max(
+              0,
+              1 -
+                remaining /
+                  totalMs
+            )
+          );
+
+    const percent =
+      Math.round(
+        progress * 100
+      );
+
+    const plant =
+      compassPlantPresentation();
+
+    const finished =
+      remaining <= 0;
 
     main.innerHTML = `
       <section
@@ -2884,22 +3255,37 @@ function showCompassTimer(
         aria-labelledby="timer-title"
       >
         <p class="eyebrow">
-          My Pace Timer
+          ${compassText(
+            "Focus Timer",
+            "Odak Zamanlayıcısı"
+          )}
         </p>
 
         <h2 id="timer-title">
           ${
-            remaining <= 0
-              ? "Timer finished."
-              : "Time remaining"
+            finished
+              ? compassText(
+                  "Your plant has grown.",
+                  "Bitkin büyüdü."
+                )
+              : compassText(
+                  "Grow one thing at a time.",
+                  "Her seferinde bir şeyi büyüt."
+                )
           }
         </h2>
 
         <p class="hero-text">
           ${
-            remaining <= 0
-              ? "The timer ended. Your progress is unchanged. Choose what you want to do next."
-              : "This timer does not grade your work. You can pause, stop, or take a break at any time."
+            finished
+              ? compassText(
+                  "The focus time ended. Your learning progress was not changed.",
+                  "Odak süresi bitti. Öğrenme ilerlemen değiştirilmedi."
+                )
+              : compassText(
+                  "You can pause, stop, hide the time, or take a break whenever you need.",
+                  "İstediğin zaman duraklatabilir, durdurabilir, süreyi gizleyebilir veya mola verebilirsin."
+                )
           }
         </p>
 
@@ -2916,17 +3302,100 @@ function showCompassTimer(
             : ""
         }
 
-        <div class="comfort-panel">
-          <div class="comfort-control">
-            <strong
-              id="focus-timer-display"
-              aria-live="polite"
+        <div
+          class="focus-plant-card ${
+            finished
+              ? "is-grown"
+              : ""
+          }"
+        >
+          <div
+            class="focus-plant-stage"
+            aria-label="${escapeHtml(
+              plant.name
+            )}: ${percent}%"
+          >
+            <span
+              class="focus-seed"
+              aria-hidden="true"
+            >•</span>
+
+            <span
+              class="focus-sprout"
+              aria-hidden="true"
+              style="--plant-progress:${Math.max(
+                0.12,
+                progress
+              )}"
             >
-              ${formatCompassTimer(
-                remaining
-              )}
-            </strong>
+              ${plant.icon}
+            </span>
           </div>
+
+          <strong>
+            ${escapeHtml(
+              plant.name
+            )}
+          </strong>
+
+          ${
+            compassFocusState
+              .showProgress
+              ? `
+                <div
+                  class="focus-progress"
+                  role="progressbar"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="${percent}"
+                >
+                  <span
+                    style="width:${percent}%"
+                  ></span>
+                </div>
+
+                <p
+                  class="focus-progress-label"
+                >
+                  ${percent}%
+                </p>
+              `
+              : ""
+          }
+
+          <strong
+            id="focus-timer-display"
+            aria-live="polite"
+            ${
+              compassFocusState
+                .hideTimer
+                ? "hidden"
+                : ""
+            }
+          >
+            ${formatCompassTimer(
+              remaining
+            )}
+          </strong>
+
+          <button
+            type="button"
+            class="small-action-button"
+            id="toggle-focus-time"
+          >
+            ${
+              compassFocusState
+                .hideTimer
+                ? compassText(
+                    "Show remaining time",
+                    "Kalan zamanı göster"
+                  )
+                : compassText(
+                    "Hide remaining time",
+                    "Kalan zamanı gizle"
+                  )
+            }
+          </button>
         </div>
 
         <div class="hero-actions">
@@ -2938,7 +3407,10 @@ function showCompassTimer(
                   class="primary-button"
                   id="pause-focus-timer"
                 >
-                  Pause
+                  ${compassText(
+                    "Pause",
+                    "Duraklat"
+                  )}
                 </button>
               `
               : ""
@@ -2953,7 +3425,10 @@ function showCompassTimer(
                   class="primary-button"
                   id="resume-focus-timer"
                 >
-                  Resume
+                  ${compassText(
+                    "Resume",
+                    "Devam Et"
+                  )}
                 </button>
               `
               : ""
@@ -2964,7 +3439,10 @@ function showCompassTimer(
             class="secondary-button"
             id="stop-focus-timer"
           >
-            Stop Timer
+            ${compassText(
+              "Stop Timer",
+              "Zamanlayıcıyı Durdur"
+            )}
           </button>
 
           <button
@@ -2972,7 +3450,10 @@ function showCompassTimer(
             class="secondary-button"
             id="timer-break-button"
           >
-            Take a Break
+            ${compassText(
+              "Take a Break",
+              "Mola Ver"
+            )}
           </button>
 
           <button
@@ -2980,11 +3461,31 @@ function showCompassTimer(
             class="secondary-button"
             id="timer-back-button"
           >
-            Back to My Pace
+            ${compassText(
+              "Previous",
+              "Önceki"
+            )}
           </button>
         </div>
       </section>
     `;
+
+    document
+      .getElementById(
+        "toggle-focus-time"
+      )
+      ?.addEventListener(
+        "click",
+        () => {
+          compassFocusState
+            .hideTimer =
+            !compassFocusState
+              .hideTimer;
+
+          saveCompassFocusState();
+          renderTimer();
+        }
+      );
 
     document
       .getElementById(
@@ -3003,7 +3504,10 @@ function showCompassTimer(
           saveCompassFocusState();
 
           showCompassTimer(
-            "Timer paused."
+            compassText(
+              "Timer paused.",
+              "Zamanlayıcı duraklatıldı."
+            )
           );
         }
       );
@@ -3027,7 +3531,10 @@ function showCompassTimer(
           saveCompassFocusState();
 
           showCompassTimer(
-            "Timer resumed."
+            compassText(
+              "Timer resumed.",
+              "Zamanlayıcı devam ediyor."
+            )
           );
         }
       );
@@ -3045,10 +3552,16 @@ function showCompassTimer(
           compassFocusState
             .timerPausedRemaining = 0;
 
+          compassFocusState
+            .timerStartedAt = 0;
+
           saveCompassFocusState();
 
           showCompassFocusSpace(
-            "Timer stopped. Your progress was not changed."
+            compassText(
+              "Timer stopped. Your progress was not changed.",
+              "Zamanlayıcı durduruldu. İlerlemen değiştirilmedi."
+            )
           );
         }
       );
@@ -3074,12 +3587,7 @@ function showCompassTimer(
             saveCompassFocusState();
           }
 
-          if (
-            typeof showHomeRechargeCove ===
-            "function"
-          ) {
-            openRechargeCoveFromMyPace();
-          }
+          openRechargeCoveFromMyPace();
         }
       );
 
@@ -3092,6 +3600,10 @@ function showCompassTimer(
         () =>
           showCompassFocusSpace()
       );
+
+    applyCompassExtraTranslations?.(
+      main
+    );
   };
 
   renderTimer();
@@ -3100,23 +3612,17 @@ function showCompassTimer(
     compassFocusTimerInterval =
       setInterval(
         () => {
-          const display =
-            document.getElementById(
-              "focus-timer-display"
-            );
-
-          if (!display) {
+          if (
+            !document.getElementById(
+              "timer-title"
+            )
+          ) {
             clearCompassFocusTimerInterval();
             return;
           }
 
           const remaining =
             compassTimerRemainingMs();
-
-          display.textContent =
-            formatCompassTimer(
-              remaining
-            );
 
           if (remaining <= 0) {
             clearCompassFocusTimerInterval();
@@ -3127,10 +3633,13 @@ function showCompassTimer(
             compassFocusState
               .timerPausedRemaining = 0;
 
-            saveCompassFocusState();
+            compassFocusState
+              .timerStartedAt = 0;
 
-            showCompassTimer();
+            saveCompassFocusState();
           }
+
+          renderTimer();
         },
         1000
       );
@@ -4025,74 +4534,89 @@ function applyCompassLanguageBasics() {
 }
 
 function addCompassLanguageHomeCard() {
-  if (
+  // Language is a persistent global control in the top navigation.
+  // Keep the old function name so existing load hooks remain compatible.
+  const oldCard =
     document.getElementById(
       "compass-language-home-card"
-    )
-  ) return;
-
-  const grid =
-    document.querySelector(
-      ".home-grid"
     );
 
-  if (!grid) return;
+  oldCard?.remove();
 
-  const current =
+  const nav =
+    document.querySelector(
+      ".site-header nav"
+    ) ||
+    document.querySelector("nav");
+
+  if (!nav) return;
+
+  let wrapper =
+    document.getElementById(
+      "compass-language-control"
+    );
+
+  if (!wrapper) {
+    wrapper =
+      document.createElement("label");
+
+    wrapper.id =
+      "compass-language-control";
+    wrapper.className =
+      "language-switcher";
+
+    wrapper.innerHTML = `
+      <span>
+        ${compassText(
+          "Language",
+          "Dil"
+        )}
+      </span>
+
+      <select
+        id="compass-language-select"
+        aria-label="${compassText(
+          "Interface language",
+          "Arayüz dili"
+        )}"
+      >
+        <option value="en">
+          English
+        </option>
+        <option value="tr">
+          Türkçe
+        </option>
+      </select>
+    `;
+
+    nav.prepend(wrapper);
+  }
+
+  const select =
+    document.getElementById(
+      "compass-language-select"
+    );
+
+  if (!select) return;
+
+  select.value =
     getCompassLanguage();
 
-  const card =
-    document.createElement(
-      "article"
-    );
+  if (
+    !select.dataset.compassLanguageWired
+  ) {
+    select.dataset.compassLanguageWired =
+      "true";
 
-  card.id =
-    "compass-language-home-card";
-  card.className =
-    "home-card";
-
-  card.innerHTML = `
-    <span class="card-icon" aria-hidden="true">🌐</span>
-    <h3>${compassText("Language","Dil")}</h3>
-    <p>
-      ${compassText(
-        "Choose the interface language. Turkish coverage is being completed across V1.",
-        "Arayüz dilini seç. Türkçe kapsamı V1 boyunca tamamlanıyor."
-      )}
-    </p>
-
-    <label for="compass-language-select">
-      <strong>${compassText("Interface language","Arayüz dili")}</strong>
-    </label>
-
-    <select id="compass-language-select">
-      <option value="en" ${current === "en" ? "selected" : ""}>English</option>
-      <option value="tr" ${current === "tr" ? "selected" : ""}>Türkçe</option>
-    </select>
-
-    <div class="hero-actions">
-      <button type="button" id="save-compass-language">
-        ${compassText("Use This Language","Bu Dili Kullan")}
-      </button>
-    </div>
-  `;
-
-  grid.appendChild(card);
-
-  document
-    .getElementById(
-      "save-compass-language"
-    )
-    ?.addEventListener(
-      "click",
+    select.addEventListener(
+      "change",
       () => {
         setCompassLanguage(
-          document.getElementById(
-            "compass-language-select"
-          ).value
+          select.value
         );
       }
     );
+  }
 }
 
 window.addEventListener(
@@ -4101,9 +4625,11 @@ window.addEventListener(
     applyCompassLanguageBasics();
     addCompassLanguageHomeCard();
     applyCompassLanguageBasics();
+    applyCompassExtraTranslations?.(
+      document.body
+    );
   }
 );
-
 
 function ensureCompassStatusRegion() {
   if (
@@ -4409,7 +4935,7 @@ function showAccountSafety() {
           class="secondary-button"
           id="account-safety-home"
         >
-          Back Home
+          Previous
         </button>
       </div>
     </section>
@@ -4439,34 +4965,24 @@ function showAccountSafety() {
     )
     ?.addEventListener(
       "click",
-      backHome
+      () => showCompassAccount()
     );
 }
 
 function addAccountSafetyHomeCard() {
-  if (document.getElementById("account-safety-home-card")) return;
-  const grid = document.querySelector(".home-grid");
-  if (!grid) return;
-
-  const card = document.createElement("article");
-  card.id = "account-safety-home-card";
-  card.className = "home-card";
-  card.innerHTML = `
-    <span class="card-icon" aria-hidden="true">🔐</span>
-    <h3>Account Safety</h3>
-    <p>See account, Secret Code and data-control information.</p>
-    <button type="button" id="open-account-safety-button">
-      Open Account Safety
-    </button>
-  `;
-  grid.appendChild(card);
+  // Account Safety belongs inside My Account.
+  // Remove an older Home card if a cached build left one behind.
   document
-    .getElementById("open-account-safety-button")
-    ?.addEventListener("click", showAccountSafety);
+    .getElementById(
+      "account-safety-home-card"
+    )
+    ?.remove();
 }
 
-window.addEventListener("load", addAccountSafetyHomeCard);
-
+window.addEventListener(
+  "load",
+  addAccountSafetyHomeCard
+);
 
 const COMPASS_UPLOAD_LIMITS = {
   image: 15 * 1024 * 1024,
@@ -12694,21 +13210,44 @@ function connectJourneyStepEvents(
 
           const newTitle =
             window.prompt(
-              "Change this step:",
+              "Change the step title:",
               step.title
             );
 
-          if (
-            newTitle === null ||
-            !newTitle.trim()
-          ) {
+          if (newTitle === null) {
+            return;
+          }
+
+          const cleanTitle =
+            newTitle
+              .trim()
+              .slice(0, 100);
+
+          if (!cleanTitle) {
+            return;
+          }
+
+          const newDescription =
+            window.prompt(
+              "Change what this step asks you to do:",
+              step.description || ""
+            );
+
+          if (newDescription === null) {
             return;
           }
 
           step.title =
-            newTitle
+            cleanTitle;
+
+          step.description =
+            newDescription
               .trim()
-              .slice(0, 100);
+              .slice(0, 600);
+
+          rememberJourney?.(
+            journey
+          );
 
           showFirstJourneyPath(
             journey
@@ -14087,6 +14626,13 @@ function clamp(
 }
 
 function escapeHtml(value) {
+  if (
+    typeof Event !== "undefined" &&
+    value instanceof Event
+  ) {
+    return "";
+  }
+
   return String(value)
     .replaceAll(
       "&",
@@ -14989,6 +15535,23 @@ function showSignedInAccount(
             is never shown.
           </p>
         </div>
+
+        <div class="comfort-control">
+          <strong>
+            Account Safety
+          </strong>
+          <p>
+            Review account deletion, local-data behavior
+            and sensitive account actions here in My Account.
+          </p>
+          <button
+            type="button"
+            class="secondary-button"
+            id="account-open-safety-button"
+          >
+            Open Account Safety
+          </button>
+        </div>
       </div>
 
       <p
@@ -15005,14 +15568,6 @@ function showSignedInAccount(
           id="account-sync-now-button"
         >
           Save My Trail Now
-        </button>
-
-        <button
-          type="button"
-          class="secondary-button"
-          id="account-open-safety-button"
-        >
-          Account Safety
         </button>
 
         <button
@@ -16087,4 +16642,736 @@ async function bootCompassCloudV1() {
 window.addEventListener(
   "load",
   bootCompassCloudV1
+);
+
+// ------------------------------------------------------------
+// Final polish pack: first-use tutorial, break games, translations
+// ------------------------------------------------------------
+
+const COMPASS_TUTORIAL_KEY =
+  "compassTrailTutorialSeenV1";
+
+function showCompassFirstUseTutorial() {
+  if (
+    localStorage.getItem(
+      COMPASS_TUTORIAL_KEY
+    ) === "yes"
+  ) {
+    return;
+  }
+
+  if (
+    document.getElementById(
+      "compass-first-use-tutorial"
+    )
+  ) {
+    return;
+  }
+
+  const steps = [
+    {
+      title: compassText(
+        "Start with your material",
+        "Materyalinle başla"
+      ),
+      body: compassText(
+        "Use Begin My Journey to add text, photos, PDFs or documents. You can review the material before building a path.",
+        "Metin, fotoğraf, PDF veya doküman eklemek için Yolculuğumu Başlat'ı kullan. Yol oluşturmadan önce materyali kontrol edebilirsin."
+      ),
+    },
+    {
+      title: compassText(
+        "Choose support when you need it",
+        "İhtiyacın olduğunda destek seç"
+      ),
+      body: compassText(
+        "Make It Smaller, Recharge Cove, Memory Tools and other supports are optional. Using support does not reduce your progress.",
+        "Daha Küçük Hale Getir, Mola Alanı, Hafıza Araçları ve diğer destekler isteğe bağlıdır. Destek kullanmak ilerlemeni azaltmaz."
+      ),
+    },
+    {
+      title: compassText(
+        "Your settings stay yours",
+        "Ayarların sana aittir"
+      ),
+      body: compassText(
+        "Language is at the top of the screen. Visual comfort is under Make It Mine. My Account contains sign-in and account-safety controls.",
+        "Dil seçimi ekranın üstündedir. Görsel rahatlık ayarları Kendime Göre Ayarla bölümündedir. Hesabım bölümünde giriş ve hesap güvenliği kontrolleri bulunur."
+      ),
+    },
+  ];
+
+  let index = 0;
+
+  const overlay =
+    document.createElement("div");
+
+  overlay.id =
+    "compass-first-use-tutorial";
+  overlay.className =
+    "tutorial-overlay";
+
+  overlay.innerHTML = `
+    <section
+      class="tutorial-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tutorial-title"
+      aria-describedby="tutorial-body"
+    >
+      <p
+        class="eyebrow"
+        id="tutorial-step-label"
+      ></p>
+
+      <h2
+        id="tutorial-title"
+      ></h2>
+
+      <p
+        id="tutorial-body"
+        class="hero-text"
+      ></p>
+
+      <div
+        class="tutorial-dots"
+        aria-hidden="true"
+      ></div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="secondary-button"
+          id="tutorial-previous"
+        >
+          ${compassText(
+            "Previous",
+            "Önceki"
+          )}
+        </button>
+
+        <button
+          type="button"
+          class="primary-button"
+          id="tutorial-next"
+        >
+          ${compassText(
+            "Next",
+            "Sonraki"
+          )}
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          id="tutorial-skip"
+        >
+          ${compassText(
+            "Skip tutorial",
+            "Tanıtımı geç"
+          )}
+        </button>
+      </div>
+    </section>
+  `;
+
+  document.body.appendChild(
+    overlay
+  );
+
+  const render = () => {
+    const step =
+      steps[index];
+
+    overlay.querySelector(
+      "#tutorial-step-label"
+    ).textContent =
+      compassText(
+        `Step ${index + 1} of ${steps.length}`,
+        `${steps.length} adımın ${index + 1}. adımı`
+      );
+
+    overlay.querySelector(
+      "#tutorial-title"
+    ).textContent =
+      step.title;
+
+    overlay.querySelector(
+      "#tutorial-body"
+    ).textContent =
+      step.body;
+
+    overlay.querySelector(
+      "#tutorial-previous"
+    ).disabled =
+      index === 0;
+
+    overlay.querySelector(
+      "#tutorial-next"
+    ).textContent =
+      index === steps.length - 1
+        ? compassText(
+            "Finish",
+            "Bitir"
+          )
+        : compassText(
+            "Next",
+            "Sonraki"
+          );
+
+    overlay.querySelector(
+      ".tutorial-dots"
+    ).innerHTML =
+      steps
+        .map(
+          (_, dotIndex) => `
+            <span
+              class="${
+                dotIndex === index
+                  ? "is-active"
+                  : ""
+              }"
+            ></span>
+          `
+        )
+        .join("");
+  };
+
+  const close = () => {
+    localStorage.setItem(
+      COMPASS_TUTORIAL_KEY,
+      "yes"
+    );
+
+    overlay.remove();
+  };
+
+  overlay.querySelector(
+    "#tutorial-previous"
+  ).addEventListener(
+    "click",
+    () => {
+      index =
+        Math.max(
+          0,
+          index - 1
+        );
+
+      render();
+    }
+  );
+
+  overlay.querySelector(
+    "#tutorial-next"
+  ).addEventListener(
+    "click",
+    () => {
+      if (
+        index >=
+        steps.length - 1
+      ) {
+        close();
+        return;
+      }
+
+      index += 1;
+      render();
+    }
+  );
+
+  overlay.querySelector(
+    "#tutorial-skip"
+  ).addEventListener(
+    "click",
+    close
+  );
+
+  render();
+
+  overlay
+    .querySelector(
+      "#tutorial-next"
+    )
+    .focus();
+}
+
+function addRechargeGames() {
+  const main =
+    document.querySelector("main");
+
+  if (
+    !main ||
+    !/Recharge Cove|Mola Alanı/i.test(
+      main.textContent || ""
+    ) ||
+    document.getElementById(
+      "recharge-games"
+    )
+  ) {
+    return;
+  }
+
+  const actions =
+    main.querySelector(
+      ".hero-actions"
+    );
+
+  const section =
+    document.createElement(
+      "section"
+    );
+
+  section.id =
+    "recharge-games";
+  section.className =
+    "recharge-games";
+
+  section.innerHTML = `
+    <div class="material-heading">
+      <p class="eyebrow">
+        ${compassText(
+          "Optional break games",
+          "İsteğe bağlı mola oyunları"
+        )}
+      </p>
+
+      <h3>
+        ${compassText(
+          "Choose a short activity, or skip this section.",
+          "Kısa bir etkinlik seç veya bu bölümü geç."
+        )}
+      </h3>
+    </div>
+
+    <div class="break-game-grid">
+      <button
+        type="button"
+        class="break-game-card"
+        data-break-game="stars"
+      >
+        <span aria-hidden="true">⭐</span>
+        <strong>
+          ${compassText(
+            "Find five stars",
+            "Beş yıldızı bul"
+          )}
+        </strong>
+        <span>
+          ${compassText(
+            "Tap five stars. There is no score.",
+            "Beş yıldıza dokun. Puan yok."
+          )}
+        </span>
+      </button>
+
+      <button
+        type="button"
+        class="break-game-card"
+        data-break-game="pattern"
+      >
+        <span aria-hidden="true">🌿</span>
+        <strong>
+          ${compassText(
+            "Copy a pattern",
+            "Deseni kopyala"
+          )}
+        </strong>
+        <span>
+          ${compassText(
+            "Repeat a short three-item pattern.",
+            "Kısa, üç öğeli bir deseni tekrarla."
+          )}
+        </span>
+      </button>
+
+      <button
+        type="button"
+        class="break-game-card"
+        data-break-game="breathing"
+      >
+        <span aria-hidden="true">◯</span>
+        <strong>
+          ${compassText(
+            "Quiet breathing guide",
+            "Sakin nefes rehberi"
+          )}
+        </strong>
+        <span>
+          ${compassText(
+            "Follow a slow visual guide, or stop at any time.",
+            "Yavaş görsel rehberi takip et veya istediğin zaman dur."
+          )}
+        </span>
+      </button>
+    </div>
+
+    <div
+      id="break-game-stage"
+      class="break-game-stage"
+      aria-live="polite"
+    ></div>
+  `;
+
+  if (actions) {
+    actions.before(section);
+  } else {
+    main.appendChild(section);
+  }
+
+  section
+    .querySelectorAll(
+      "[data-break-game]"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () =>
+          openRechargeGame(
+            button.dataset
+              .breakGame
+          )
+      );
+    });
+}
+
+function openRechargeGame(type) {
+  const stage =
+    document.getElementById(
+      "break-game-stage"
+    );
+
+  if (!stage) return;
+
+  if (type === "stars") {
+    let found = 0;
+
+    stage.innerHTML = `
+      <p>
+        ${compassText(
+          "Tap each star once.",
+          "Her yıldıza bir kez dokun."
+        )}
+      </p>
+
+      <div class="star-break-board">
+        ${Array.from(
+          { length: 5 },
+          (_, index) => `
+            <button
+              type="button"
+              class="break-star"
+              aria-label="${compassText(
+                `Star ${index + 1}`,
+                `${index + 1}. yıldız`
+              )}"
+            >
+              ⭐
+            </button>
+          `
+        ).join("")}
+      </div>
+
+      <p id="break-game-status">
+        0 / 5
+      </p>
+    `;
+
+    stage
+      .querySelectorAll(
+        ".break-star"
+      )
+      .forEach((star) => {
+        star.addEventListener(
+          "click",
+          () => {
+            if (
+              star.disabled
+            ) {
+              return;
+            }
+
+            star.disabled = true;
+            star.classList.add(
+              "is-found"
+            );
+
+            found += 1;
+
+            const status =
+              stage.querySelector(
+                "#break-game-status"
+              );
+
+            status.textContent =
+              found >= 5
+                ? compassText(
+                    "Finished. You can return whenever you want.",
+                    "Bitti. İstediğin zaman geri dönebilirsin."
+                  )
+                : `${found} / 5`;
+          }
+        );
+      });
+
+    return;
+  }
+
+  if (type === "pattern") {
+    const pattern = [
+      "🍃",
+      "🌼",
+      "🍃",
+    ];
+
+    let entered = [];
+
+    stage.innerHTML = `
+      <p>
+        ${compassText(
+          "Pattern:",
+          "Desen:"
+        )}
+        <strong>
+          ${pattern.join("  ")}
+        </strong>
+      </p>
+
+      <div class="pattern-break-buttons">
+        ${["🍃","🌼","🌱"]
+          .map(
+            (item) => `
+              <button
+                type="button"
+                class="small-action-button pattern-break-choice"
+                data-pattern-item="${item}"
+              >
+                ${item}
+              </button>
+            `
+          )
+          .join("")}
+      </div>
+
+      <p id="break-game-status">
+        ${compassText(
+          "Choose the three items in order.",
+          "Üç öğeyi sırayla seç."
+        )}
+      </p>
+    `;
+
+    stage
+      .querySelectorAll(
+        ".pattern-break-choice"
+      )
+      .forEach((choice) => {
+        choice.addEventListener(
+          "click",
+          () => {
+            entered.push(
+              choice.dataset
+                .patternItem
+            );
+
+            const status =
+              stage.querySelector(
+                "#break-game-status"
+              );
+
+            const target =
+              pattern[
+                entered.length - 1
+              ];
+
+            if (
+              entered[
+                entered.length - 1
+              ] !== target
+            ) {
+              entered = [];
+
+              status.textContent =
+                compassText(
+                  "That order was different. The pattern is still shown above; start again when you want.",
+                  "Sıra farklıydı. Desen yukarıda görünmeye devam ediyor; istediğinde yeniden başla."
+                );
+
+              return;
+            }
+
+            if (
+              entered.length ===
+              pattern.length
+            ) {
+              status.textContent =
+                compassText(
+                  "Pattern complete.",
+                  "Desen tamamlandı."
+                );
+
+              entered = [];
+            } else {
+              status.textContent =
+                `${entered.length} / ${pattern.length}`;
+            }
+          }
+        );
+      });
+
+    return;
+  }
+
+  stage.innerHTML = `
+    <p>
+      ${compassText(
+        "Watch the circle grow and shrink slowly. You do not need to match it exactly.",
+        "Dairenin yavaşça büyüyüp küçülmesini izle. Ritmi tam olarak eşleştirmen gerekmez."
+      )}
+    </p>
+
+    <div
+      class="breathing-guide"
+      aria-hidden="true"
+    ></div>
+
+    <button
+      type="button"
+      class="small-action-button"
+      id="stop-breathing-guide"
+    >
+      ${compassText(
+        "Stop guide",
+        "Rehberi durdur"
+      )}
+    </button>
+  `;
+
+  stage
+    .querySelector(
+      "#stop-breathing-guide"
+    )
+    ?.addEventListener(
+      "click",
+      () => {
+        stage.innerHTML = `
+          <p>
+            ${compassText(
+              "Guide stopped.",
+              "Rehber durduruldu."
+            )}
+          </p>
+        `;
+      }
+    );
+}
+
+Object.assign(
+  COMPASS_I18N_EXTRA.tr,
+  {
+    "Home": "Ana Sayfa",
+    "My Journeys": "Yolculuklarım",
+    "Make It Mine": "Kendime Göre Ayarla",
+    "Your learning space": "Öğrenme alanın",
+    "Bring what you need to learn.": "Öğrenmek istediğin materyali getir.",
+    "We’ll help you find a way through it that works for you.": "Sana uygun bir yoldan ilerlemene yardımcı olacağız.",
+    "Begin My Journey": "Yolculuğumu Başlat",
+    "Keep Exploring": "Keşfetmeye Devam Et",
+    "What would you like to do?": "Ne yapmak istersin?",
+    "Start Something": "Bir Şeye Başla",
+    "Create a Journey": "Yolculuk Oluştur",
+    "Open Little Things": "Küçük İşleri Aç",
+    "Open My Days": "Günlerimi Aç",
+    "Open Idea Garden": "Fikir Bahçesini Aç",
+    "Take a Break": "Mola Ver",
+    "Personalise My Space": "Alanımı Kendime Göre Ayarla",
+    "My Account": "Hesabım",
+    "Account Safety": "Hesap Güvenliği",
+    "Account and data controls": "Hesap ve veri kontrolleri",
+    "Signed-in status": "Oturum durumu",
+    "You are signed in.": "Oturum açık.",
+    "You are signed out.": "Oturum kapalı.",
+    "Change Secret Code": "Gizli Kodu Değiştir",
+    "Current Secret Code": "Mevcut Gizli Kod",
+    "New Secret Code": "Yeni Gizli Kod",
+    "Account recovery": "Hesap kurtarma",
+    "Cloud status": "Bulut durumu",
+    "Signed in.": "Oturum açık.",
+    "Save My Trail Now": "Yolculuğumu Şimdi Kaydet",
+    "Sign Out": "Oturumu Kapat",
+    "Previous": "Önceki",
+    "Delete learner account": "Öğrenci hesabını sil",
+    "Delete my learner account": "Öğrenci hesabımı sil",
+    "Local data": "Yerel veriler",
+    "Back to My Materials": "Materyallerime Dön",
+    "Add a Step": "Adım Ekle",
+    "Start My Journey": "Yolculuğumu Başlat",
+    "Edit": "Düzenle",
+    "Move Up": "Yukarı Taşı",
+    "Move Down": "Aşağı Taşı",
+    "Remove": "Kaldır",
+    "This path is a suggestion. Make it yours.": "Bu yol bir öneridir. Kendine göre değiştirebilirsin.",
+    "Optional timer": "İsteğe bağlı zamanlayıcı",
+    "Current check-in": "Mevcut check-in",
+    "Change Check-in": "Check-in'i Değiştir",
+    "Need a break?": "Molaya mı ihtiyacın var?",
+    "Open Recharge Cove": "Mola Alanını Aç",
+    "Finish for Now": "Şimdilik Bitir",
+    "Focus Timer": "Odak Zamanlayıcısı",
+    "Pause": "Duraklat",
+    "Resume": "Devam Et",
+    "Stop Timer": "Zamanlayıcıyı Durdur",
+    "Language": "Dil",
+    "Interface language": "Arayüz dili",
+    "Dark Theme": "Koyu Tema",
+    "Light Theme": "Açık Tema",
+    "Low energy": "Düşük enerji",
+    "Medium energy": "Orta enerji",
+    "High energy": "Yüksek enerji",
+    "Choose Low Energy": "Düşük Enerjiyi Seç",
+    "Choose Medium Energy": "Orta Enerjiyi Seç",
+    "Choose High Energy": "Yüksek Enerjiyi Seç",
+    "Continue": "Devam Et",
+    "Skip Check-in": "Check-in'i Geç",
+    "Check-in": "Check-in",
+    "My Pace": "Kendi Hızım",
+    "My Pace Timer": "Kendi Hızım Zamanlayıcısı"
+  }
+);
+
+window.addEventListener(
+  "load",
+  () => {
+    window.setTimeout(
+      showCompassFirstUseTutorial,
+      250
+    );
+  }
+);
+
+const compassPolishObserver =
+  new MutationObserver(() => {
+    addRechargeGames();
+    addCompassLanguageHomeCard();
+
+    if (
+      getCompassLanguage() ===
+      "tr"
+    ) {
+      applyCompassExtraTranslations(
+        document.body
+      );
+    }
+  });
+
+window.addEventListener(
+  "DOMContentLoaded",
+  () => {
+    compassPolishObserver.observe(
+      document.body,
+      {
+        childList: true,
+        subtree: true,
+      }
+    );
+  }
 );
