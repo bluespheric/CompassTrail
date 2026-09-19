@@ -1018,3 +1018,623 @@ html[data-compass-theme="dark"] .brand p {
   }
 }
 
+
+
+/* ------------------------------------------------------------
+   Compass Trail — Final polish pass
+------------------------------------------------------------ */
+
+:root {
+  --comfort-bg: var(--bg);
+  --comfort-surface: var(--surface);
+  --accent-2: #2f8f83;
+  --accent-3: #d88645;
+  --accent-4: #6e9b52;
+}
+
+body {
+  background:
+    radial-gradient(
+      circle at 8% 4%,
+      rgba(109, 91, 208, 0.08),
+      transparent 24rem
+    ),
+    radial-gradient(
+      circle at 92% 22%,
+      rgba(47, 143, 131, 0.07),
+      transparent 22rem
+    ),
+    var(--comfort-bg);
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  max-width: none;
+  padding-left: max(1.25rem, calc((100vw - 1180px) / 2 + 1.25rem));
+  padding-right: max(1.25rem, calc((100vw - 1180px) / 2 + 1.25rem));
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.language-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0.35rem 0.55rem 0.35rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.language-switcher select {
+  min-height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--text);
+  padding: 0.25rem 0.6rem;
+}
+
+.home-card,
+.material-card,
+.comfort-control,
+.path-step,
+.material-action,
+.basket-section,
+.paste-text-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.home-card::before,
+.material-card::before,
+.comfort-control::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--accent),
+    var(--accent-2),
+    var(--accent-3)
+  );
+  opacity: 0.72;
+}
+
+.home-card:nth-child(3n + 2)::before {
+  background: linear-gradient(
+    90deg,
+    var(--accent-2),
+    var(--accent-4)
+  );
+}
+
+.home-card:nth-child(3n + 3)::before {
+  background: linear-gradient(
+    90deg,
+    var(--accent-3),
+    var(--accent)
+  );
+}
+
+.home-card,
+.material-card,
+.path-step,
+.material-action {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.home-card:hover,
+.material-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(36, 33, 47, 0.09);
+}
+
+.explore-panel {
+  margin-top: 1.2rem;
+  padding: 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent-soft) 55%, var(--surface)),
+      var(--surface)
+    );
+}
+
+.explore-panel-intro {
+  margin-top: 0;
+  max-width: 56rem;
+}
+
+.explore-choice-grid,
+.break-game-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      auto-fit,
+      minmax(180px, 1fr)
+    );
+  gap: 0.75rem;
+}
+
+.explore-choice,
+.break-game-card {
+  min-height: 100px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 1rem;
+  text-align: left;
+}
+
+.explore-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 750;
+}
+
+.explore-choice > span:first-child,
+.break-game-card > span:first-child {
+  font-size: 1.6rem;
+}
+
+.inline-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.65rem 0;
+}
+
+.inline-choice input {
+  margin-top: 0.25rem;
+}
+
+.focus-plant-card {
+  display: grid;
+  justify-items: center;
+  gap: 0.8rem;
+  max-width: 540px;
+  margin: 1.5rem auto;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #dff4ec 55%, var(--surface)),
+      var(--surface)
+    );
+  box-shadow: var(--shadow);
+}
+
+.focus-plant-stage {
+  position: relative;
+  display: grid;
+  place-items: end center;
+  width: min(100%, 340px);
+  height: 230px;
+  overflow: hidden;
+  border-radius: 24px;
+  background:
+    linear-gradient(
+      180deg,
+      #e9f6ff 0 64%,
+      #e4d8bd 64% 100%
+    );
+}
+
+.focus-seed {
+  position: absolute;
+  bottom: 25px;
+  font-size: 2rem;
+  color: #5c412e;
+}
+
+.focus-sprout {
+  position: absolute;
+  bottom: 28px;
+  display: block;
+  font-size: 7.5rem;
+  line-height: 1;
+  transform-origin: 50% 100%;
+  transform: scale(
+    calc(0.25 + var(--plant-progress) * 0.75)
+  );
+  opacity:
+    calc(0.5 + var(--plant-progress) * 0.5);
+  transition:
+    transform 700ms ease,
+    opacity 700ms ease;
+}
+
+.focus-plant-card.is-grown .focus-sprout {
+  transform: scale(1.05);
+}
+
+.focus-progress {
+  width: min(100%, 400px);
+  height: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.focus-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    var(--accent-2),
+    var(--accent-4)
+  );
+  transition: width 500ms linear;
+}
+
+.focus-progress-label {
+  margin: -0.35rem 0 0;
+  color: var(--muted);
+}
+
+.recharge-games {
+  margin: 2rem 0;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.break-game-card {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.break-game-stage {
+  margin-top: 1rem;
+  padding: 1rem;
+  min-height: 90px;
+  border-radius: 18px;
+  background: var(--accent-soft);
+}
+
+.star-break-board,
+.pattern-break-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.break-star {
+  min-width: 54px;
+  min-height: 54px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  font-size: 1.8rem;
+}
+
+.break-star.is-found {
+  opacity: 0.45;
+}
+
+.breathing-guide {
+  width: 92px;
+  height: 92px;
+  margin: 1.5rem auto;
+  border-radius: 50%;
+  background: color-mix(
+    in srgb,
+    var(--accent-2) 70%,
+    white
+  );
+  animation:
+    compass-breathe 8s ease-in-out infinite;
+}
+
+@keyframes compass-breathe {
+  0%,
+  100% {
+    transform: scale(0.72);
+  }
+
+  50% {
+    transform: scale(1.22);
+  }
+}
+
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(18, 17, 27, 0.62);
+}
+
+.tutorial-card {
+  width: min(100%, 620px);
+  max-height: min(90vh, 760px);
+  overflow: auto;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.26);
+}
+
+.tutorial-card h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+}
+
+.tutorial-dots {
+  display: flex;
+  gap: 0.45rem;
+  margin-top: 1.5rem;
+}
+
+.tutorial-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--border);
+}
+
+.tutorial-dots .is-active {
+  width: 28px;
+  background: var(--accent);
+}
+
+body.comfort-high-contrast {
+  --bg: #ffffff !important;
+  --surface: #ffffff !important;
+  --text: #000000 !important;
+  --muted: #111111 !important;
+  --border: #000000 !important;
+  --accent: #000000 !important;
+  --accent-soft: #fff200 !important;
+  --shadow: none !important;
+  background: #ffffff !important;
+}
+
+body.comfort-high-contrast
+:is(
+  .site-header,
+  .hero,
+  .home-card,
+  .material-card,
+  .path-step,
+  .comfort-control,
+  .material-action,
+  .explore-panel,
+  .recharge-games,
+  .focus-plant-card,
+  .tutorial-card
+) {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 3px solid #000000 !important;
+  box-shadow: none !important;
+}
+
+body.comfort-high-contrast
+:is(
+  button,
+  select,
+  input,
+  textarea
+) {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 3px solid #000000 !important;
+}
+
+body.comfort-high-contrast
+.primary-button {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+body.comfort-high-contrast
+:focus-visible {
+  outline: 4px solid #005fcc !important;
+  outline-offset: 4px !important;
+}
+
+html[data-compass-theme="dark"] {
+  --bg: #10141b;
+  --surface: #19212c;
+  --text: #f7f9fc;
+  --muted: #c3cedb;
+  --border: #47576a;
+  --accent: #b7a7ff;
+  --accent-soft: #2b2a45;
+  --accent-2: #70d4c1;
+  --accent-3: #f1ae72;
+  --accent-4: #a5cf83;
+  --shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
+}
+
+html[data-compass-theme="dark"] body {
+  background:
+    radial-gradient(
+      circle at 8% 4%,
+      rgba(183, 167, 255, 0.08),
+      transparent 24rem
+    ),
+    radial-gradient(
+      circle at 92% 22%,
+      rgba(112, 212, 193, 0.07),
+      transparent 22rem
+    ),
+    var(--bg);
+  color: var(--text);
+}
+
+html[data-compass-theme="dark"]
+.site-header,
+html[data-compass-theme="dark"]
+.home-card,
+html[data-compass-theme="dark"]
+.material-card,
+html[data-compass-theme="dark"]
+.comfort-control,
+html[data-compass-theme="dark"]
+.path-step,
+html[data-compass-theme="dark"]
+.material-action,
+html[data-compass-theme="dark"]
+.basket-section,
+html[data-compass-theme="dark"]
+.paste-text-panel,
+html[data-compass-theme="dark"]
+.explore-panel,
+html[data-compass-theme="dark"]
+.recharge-games,
+html[data-compass-theme="dark"]
+.focus-plant-card,
+html[data-compass-theme="dark"]
+.tutorial-card,
+html[data-compass-theme="dark"]
+.break-game-card,
+html[data-compass-theme="dark"]
+.explore-choice {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+html[data-compass-theme="dark"]
+.focus-plant-stage {
+  background:
+    linear-gradient(
+      180deg,
+      #182b3a 0 64%,
+      #403426 64% 100%
+    );
+}
+
+html[data-compass-theme="dark"]
+.break-game-stage {
+  background: #252b39;
+}
+
+html[data-compass-theme="dark"]
+:is(
+  input,
+  textarea,
+  select
+) {
+  background: #111923;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+html[data-compass-theme="dark"]
+:is(
+  .secondary-button,
+  .small-action-button,
+  .home-card button,
+  .theme-toggle,
+  .nav-button
+) {
+  background: #202a37;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+html[data-compass-theme="dark"]
+.nav-button:hover {
+  background: #283443;
+}
+
+html[data-compass-theme="dark"]
+:is(
+  h1,
+  h2,
+  h3,
+  h4,
+  strong,
+  label
+) {
+  color: var(--text);
+}
+
+/* Background comfort palettes now apply to the whole interface. */
+body:not(.comfort-high-contrast) {
+  --comfort-bg: var(--bg);
+}
+
+html:not([data-compass-theme="dark"]) body[data-comfort-background="warm"] {
+  --comfort-bg: #fff6e7;
+  --surface: #fffdf9;
+  --accent-soft: #f8e9cf;
+}
+
+html:not([data-compass-theme="dark"]) body[data-comfort-background="soft"] {
+  --comfort-bg: #eef7ef;
+  --surface: #fbfefb;
+  --accent-soft: #dfeee1;
+}
+
+html:not([data-compass-theme="dark"]) body[data-comfort-background="blue"] {
+  --comfort-bg: #edf6fc;
+  --surface: #fbfdff;
+  --accent-soft: #dcecf7;
+}
+
+html:not([data-compass-theme="dark"]) body[data-comfort-background="grey"] {
+  --comfort-bg: #f0f1f2;
+  --surface: #fbfbfb;
+  --accent-soft: #e3e5e7;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+body.comfort-reduced-motion *,
+body.comfort-reduced-motion *::before,
+body.comfort-reduced-motion *::after {
+  scroll-behavior: auto !important;
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+}
+
+@media (max-width: 720px) {
+  .site-header {
+    position: static;
+    align-items: flex-start;
+  }
+
+  .language-switcher {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
