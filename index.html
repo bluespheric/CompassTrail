@@ -2,267 +2,130 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
-  <meta
-    name="description"
-    content="Compass Trail — an accessibility-first learning companion."
-  />
-  <meta
-    name="color-scheme"
-    content="light dark"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Compass Trail — an accessibility-first learning companion." />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>Compass Trail</title>
-  <link
-    rel="stylesheet"
-    href="styles.css?v=v1-final-polish"
-  />
+  <link rel="stylesheet" href="styles.css?v=v1-final-polish" />
 </head>
 
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
   <header class="site-header">
     <div class="brand">
-      <span
-        class="brand-mark"
-        aria-hidden="true"
-      >🧭</span>
-
+      <span class="brand-mark" aria-hidden="true">🧭</span>
       <div>
         <h1>Compass Trail</h1>
         <p>Same Goal. Different Paths.</p>
       </div>
     </div>
 
+    <!-- NOT: app.js düğmeleri yazısına göre bağlar (Home, My Journeys, Make It Mine).
+         Bu metinleri değiştirme; ileride data-action'a geçilecek. -->
     <nav aria-label="Main navigation">
-      <label
-        class="language-switcher"
-        id="compass-language-control"
-      >
+      <label class="language-switcher" id="compass-language-control">
         <span>Language</span>
-        <select
-          id="compass-language-select"
-          aria-label="Interface language"
-        >
+        <select id="compass-language-select" aria-label="Interface language">
           <option value="en">English</option>
           <option value="tr">Türkçe</option>
         </select>
       </label>
-      <button
-        type="button"
-        class="nav-button"
-      >
-        Home
-      </button>
-
-      <button
-        type="button"
-        class="nav-button"
-      >
-        My Journeys
-      </button>
-
-      <button
-        type="button"
-        class="nav-button"
-      >
-        Make It Mine
-      </button>
+      <button type="button" class="nav-button">Home</button>
+      <button type="button" class="nav-button">My Journeys</button>
+      <button type="button" class="nav-button">Make It Mine</button>
     </nav>
   </header>
 
-  <main>
-    <section
-      class="hero"
-      aria-labelledby="welcome-title"
-    >
-      <p class="eyebrow">
-        Your learning space
-      </p>
+  <noscript>
+    <p style="padding:1rem;text-align:center">
+      Compass Trail needs JavaScript to run. / Compass Trail'in çalışması için JavaScript gerekir.
+    </p>
+  </noscript>
 
-      <h2 id="welcome-title">
-        Bring what you need to learn.
-      </h2>
-
-      <p class="hero-text">
-        We’ll help you find a way through it
-        that works for you.
-      </p>
+  <main id="main-content" tabindex="-1">
+    <section class="hero" aria-labelledby="welcome-title">
+      <p class="eyebrow">Your learning space</p>
+      <h2 id="welcome-title">Bring what you need to learn.</h2>
+      <p class="hero-text">We’ll help you find a way through it that works for you.</p>
 
       <div class="hero-actions">
-        <button
-          type="button"
-          class="primary-button"
-        >
-          Begin My Journey
-        </button>
-
-        <button
-          type="button"
-          class="secondary-button"
-        >
-          What would you like to do?
-        </button>
+        <button type="button" class="primary-button">Begin My Journey</button>
+        <button type="button" class="secondary-button">What would you like to do?</button>
       </div>
     </section>
 
-    <section
-      class="home-grid"
-      aria-label="Compass Trail tools"
-    >
+    <section class="home-grid" aria-label="Compass Trail tools">
       <article class="home-card">
-        <span
-          class="card-icon"
-          aria-hidden="true"
-        >🧭</span>
-
+        <span class="card-icon" aria-hidden="true">🧭</span>
         <h3>Start Something</h3>
-
-        <p>
-          Turn homework, reading, projects
-          or study into a manageable path.
-        </p>
-
-        <button type="button">
-          Create a Journey
-        </button>
+        <p>Turn homework, reading, projects or study into a manageable path.</p>
+        <button type="button">Create a Journey</button>
       </article>
 
       <article class="home-card">
-        <span
-          class="card-icon"
-          aria-hidden="true"
-        >🍃</span>
-
+        <span class="card-icon" aria-hidden="true">🍃</span>
         <h3>Little Things</h3>
-
-        <p>
-          Keep track of small tasks that do
-          not need a whole Journey.
-        </p>
-
-        <button type="button">
-          Open Little Things
-        </button>
+        <p>Keep track of small tasks that do not need a whole Journey.</p>
+        <button type="button">Open Little Things</button>
       </article>
 
       <article class="home-card">
-        <span
-          class="card-icon"
-          aria-hidden="true"
-        >📅</span>
-
+        <span class="card-icon" aria-hidden="true">📅</span>
         <h3>My Days</h3>
-
-        <p>
-          Plan things when it helps.
-          Leave it alone when it doesn’t.
-        </p>
-
-        <button type="button">
-          Open My Days
-        </button>
+        <p>Plan things when it helps. Leave it alone when it doesn’t.</p>
+        <button type="button">Open My Days</button>
       </article>
 
       <article class="home-card">
-        <span
-          class="card-icon"
-          aria-hidden="true"
-        >🌱</span>
-
+        <span class="card-icon" aria-hidden="true">🌱</span>
         <h3>My Idea Garden</h3>
-
-        <p>
-          Keep useful notes, ideas, questions
-          and things you want to remember.
-        </p>
-
-        <button type="button">
-          Open Idea Garden
-        </button>
+        <p>Keep useful notes, ideas, questions and things you want to remember.</p>
+        <button type="button">Open Idea Garden</button>
       </article>
 
       <article class="home-card">
-        <span
-          class="card-icon"
-          aria-hidden="true"
-        >🌿</span>
-
+        <span class="card-icon" aria-hidden="true">🌿</span>
         <h3>Recharge Cove</h3>
-
-        <p>
-          Take a break without losing your place.
-        </p>
-
-        <button type="button">
-          Take a Break
-        </button>
+        <p>Take a break without losing your place.</p>
+        <button type="button">Take a Break</button>
       </article>
 
       <article class="home-card">
-        <span
-          class="card-icon"
-          aria-hidden="true"
-        >🪄</span>
-
+        <span class="card-icon" aria-hidden="true">🪄</span>
         <h3>Make It Mine</h3>
-
-        <p>
-          Change text, motion, contrast,
-          sound and other comfort settings.
-        </p>
-
-        <button type="button">
-          Personalise My Space
-        </button>
+        <p>Change text, motion, contrast, sound and other comfort settings.</p>
+        <button type="button">Personalise My Space</button>
       </article>
     </section>
   </main>
 
   <footer>
-    <p>
-      Compass Trail — Same Goal. Different Paths.
-    </p>
+    <p>Compass Trail — Same Goal. Different Paths.</p>
   </footer>
 
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.12.3/mammoth.browser.min.js"
-  ></script>
-
-  <script
-    src="https://cdn.jsdelivr.net/npm/@techstark/opencv-js@5.0.0-release.1/dist/opencv.js"
-  ></script>
-
-  <script
-    src="https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js"
-  ></script>
+  <!-- Üçüncü taraf kütüphaneler. Sürümler sabit (pinned). -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.12.3/mammoth.browser.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@techstark/opencv-js@5.0.0-release.1/dist/opencv.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js" crossorigin="anonymous"></script>
 
   <script type="module">
-    import * as pdfjsLib
-      from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.3.289/pdf.min.mjs";
+    import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.3.289/pdf.min.mjs";
 
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.3.289/pdf.worker.min.mjs";
 
-    window.pdfjsLib =
-      pdfjsLib;
+    window.pdfjsLib = pdfjsLib;
   </script>
 
-  <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-  ></script>
+  <!-- supabase-js sabitlendi: "@2" yerine tam sürüm. Yayın öncesi güncel 2.x sürümünü buraya yaz. -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
 
-  <script
-    src="image-reader.js?v=v1-final-polish"
-  ></script>
-
-  <script
-    src="extractors.js?v=v1-final-polish"
-  ></script>
-
-  <script
-    src="app.js?v=v1-final-polish"
-  ></script>
+  <script src="image-reader.js?v=v1-final-polish"></script>
+  <script src="extractors.js?v=v1-final-polish"></script>
+  <script src="app.js?v=v1-final-polish"></script>
+  <!-- app.js'DEN SONRA: Pomodoro bitki zamanlayıcısı eski zamanlayıcının yerini alır. -->
+  <script src="focus-garden.js?v=1"></script>
 </body>
 </html>
